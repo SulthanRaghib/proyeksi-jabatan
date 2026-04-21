@@ -53,6 +53,65 @@
     <script src="{{ asset('assets/extra-libs/jvector/jquery-jvectormap-world-mill-en.js') }}"></script>
     <script src="{{ asset('dist/js/pages/dashboards/dashboard1.min.js') }}"></script>
 
+    <script>
+        (function() {
+            function safeInitDashboardUi() {
+                var preloader = document.querySelector('.preloader');
+                if (preloader) {
+                    preloader.style.display = 'none';
+                }
+
+                var mainWrapper = document.getElementById('main-wrapper');
+                var navTogglers = document.querySelectorAll('.nav-toggler');
+                navTogglers.forEach(function(trigger) {
+                    trigger.addEventListener('click', function(event) {
+                        event.preventDefault();
+
+                        if (!mainWrapper) {
+                            return;
+                        }
+
+                        var wasSidebarShown = mainWrapper.classList.contains('show-sidebar');
+
+                        // Let original template handlers run first; only fallback if no change happened.
+                        setTimeout(function() {
+                            var isSidebarShown = mainWrapper.classList.contains('show-sidebar');
+                            if (isSidebarShown === wasSidebarShown) {
+                                mainWrapper.classList.toggle('show-sidebar');
+                            }
+                        }, 0);
+                    });
+                });
+
+                if (window.bootstrap) {
+                    document.querySelectorAll('[data-bs-toggle="dropdown"]').forEach(function(el) {
+                        window.bootstrap.Dropdown.getOrCreateInstance(el);
+                    });
+
+                    document.querySelectorAll('[data-bs-toggle="collapse"]').forEach(function(el) {
+                        var target = el.getAttribute('data-bs-target');
+                        if (!target) {
+                            return;
+                        }
+
+                        var collapseTarget = document.querySelector(target);
+                        if (collapseTarget) {
+                            window.bootstrap.Collapse.getOrCreateInstance(collapseTarget, {
+                                toggle: false
+                            });
+                        }
+                    });
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', safeInitDashboardUi);
+            } else {
+                safeInitDashboardUi();
+            }
+        })();
+    </script>
+
     @stack('scripts')
 </body>
 

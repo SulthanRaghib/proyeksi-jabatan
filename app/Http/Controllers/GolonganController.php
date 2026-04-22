@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\GolonganRequest;
 use App\Models\Golongan;
 use App\Support\DashboardUiData;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class GolonganController extends Controller
@@ -41,14 +41,9 @@ class GolonganController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(GolonganRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'nama_golongan' => ['required', 'string', 'max:255', 'unique:golongans,nama_golongan'],
-            'pangkat' => ['required', 'string', 'max:255'],
-        ]);
-
-        Golongan::create($validated);
+        Golongan::create($request->validated());
 
         return redirect()
             ->route('golongans.index')
@@ -64,19 +59,9 @@ class GolonganController extends Controller
         ]);
     }
 
-    public function update(Request $request, Golongan $golongan): RedirectResponse
+    public function update(GolonganRequest $request, Golongan $golongan): RedirectResponse
     {
-        $validated = $request->validate([
-            'nama_golongan' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('golongans', 'nama_golongan')->ignore($golongan->id),
-            ],
-            'pangkat' => ['required', 'string', 'max:255'],
-        ]);
-
-        $golongan->update($validated);
+        $golongan->update($request->validated());
 
         return redirect()
             ->route('golongans.index')

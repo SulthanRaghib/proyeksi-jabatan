@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UnitKerjaRequest;
 use App\Models\UnitKerja;
 use App\Support\DashboardUiData;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class UnitKerjaController extends Controller
@@ -39,13 +39,9 @@ class UnitKerjaController extends Controller
         ]);
     }
 
-    public function store(Request $request): RedirectResponse
+    public function store(UnitKerjaRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'nama_unit' => ['required', 'string', 'max:255', 'unique:unit_kerjas,nama_unit'],
-        ]);
-
-        UnitKerja::create($validated);
+        UnitKerja::create($request->validated());
 
         return redirect()
             ->route('unit-kerjas.index')
@@ -61,18 +57,9 @@ class UnitKerjaController extends Controller
         ]);
     }
 
-    public function update(Request $request, UnitKerja $unitKerja): RedirectResponse
+    public function update(UnitKerjaRequest $request, UnitKerja $unitKerja): RedirectResponse
     {
-        $validated = $request->validate([
-            'nama_unit' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('unit_kerjas', 'nama_unit')->ignore($unitKerja->id),
-            ],
-        ]);
-
-        $unitKerja->update($validated);
+        $unitKerja->update($request->validated());
 
         return redirect()
             ->route('unit-kerjas.index')

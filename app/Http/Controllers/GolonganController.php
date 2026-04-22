@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\GolonganRequest;
+use App\Http\Requests\StoreGolonganRequest;
+use App\Http\Requests\UpdateGolonganRequest;
 use App\Models\Golongan;
 use App\Support\DashboardUiData;
 use Illuminate\Http\RedirectResponse;
@@ -41,7 +42,7 @@ class GolonganController extends Controller
         ]);
     }
 
-    public function store(GolonganRequest $request): RedirectResponse
+    public function store(StoreGolonganRequest $request): RedirectResponse
     {
         Golongan::create($request->validated());
 
@@ -59,7 +60,7 @@ class GolonganController extends Controller
         ]);
     }
 
-    public function update(GolonganRequest $request, Golongan $golongan): RedirectResponse
+    public function update(UpdateGolonganRequest $request, Golongan $golongan): RedirectResponse
     {
         $golongan->update($request->validated());
 

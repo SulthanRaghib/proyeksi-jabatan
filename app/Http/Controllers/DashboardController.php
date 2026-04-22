@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Support\DashboardUiData;
+
 class DashboardController extends Controller
 {
     public function index()
@@ -117,49 +119,8 @@ class DashboardController extends Controller
             ],
         ];
 
-        $notifications = [
-            [
-                'iconClass' => 'btn-danger',
-                'icon' => 'airplay',
-                'title' => 'Launch Admin',
-                'message' => 'Just see my new admin!',
-                'time' => '9:30 AM',
-            ],
-            [
-                'iconClass' => 'btn-success',
-                'icon' => 'calendar',
-                'title' => 'Event today',
-                'message' => 'Reminder: you have an event today.',
-                'time' => '9:10 AM',
-            ],
-            [
-                'iconClass' => 'btn-info',
-                'icon' => 'settings',
-                'title' => 'Settings',
-                'message' => 'Customize this template as needed.',
-                'time' => '9:08 AM',
-            ],
-        ];
-
-        $menuGroups = [
-            [
-                'title' => 'Main',
-                'items' => [
-                    ['label' => 'Dashboard', 'icon' => 'home', 'url' => route('dashboard')],
-                    ['label' => 'Ticket List', 'icon' => 'tag', 'url' => 'javascript:void(0)'],
-                    ['label' => 'Chat', 'icon' => 'message-square', 'url' => 'javascript:void(0)'],
-                    ['label' => 'Calendar', 'icon' => 'calendar', 'url' => 'javascript:void(0)'],
-                ],
-            ],
-            [
-                'title' => 'Reports',
-                'items' => [
-                    ['label' => 'Sales', 'icon' => 'bar-chart', 'url' => 'javascript:void(0)'],
-                    ['label' => 'Projects', 'icon' => 'file-text', 'url' => 'javascript:void(0)'],
-                    ['label' => 'Teams', 'icon' => 'users', 'url' => 'javascript:void(0)'],
-                ],
-            ],
-        ];
+        $notifications = DashboardUiData::notifications();
+        $menuGroups = DashboardUiData::menuGroups();
 
         return view('dashboard.index', compact(
             'summaryCards',

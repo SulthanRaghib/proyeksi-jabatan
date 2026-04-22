@@ -6,11 +6,18 @@ use App\Models\UnitKerja;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UnitKerjaRequest extends FormRequest
+class UpdateUnitKerjaRequest extends FormRequest
 {
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'nama_unit' => trim((string) $this->input('nama_unit')),
+        ]);
     }
 
     public function rules(): array
@@ -26,13 +33,6 @@ class UnitKerjaRequest extends FormRequest
                 Rule::unique('unit_kerjas', 'nama_unit')->ignore($unitKerja?->id),
             ],
         ];
-    }
-
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'nama_unit' => trim((string) $this->input('nama_unit')),
-        ]);
     }
 
     public function messages(): array

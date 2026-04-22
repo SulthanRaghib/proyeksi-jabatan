@@ -2,7 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UnitKerjaRequest;
+use App\Http\Requests\StoreUnitKerjaRequest;
+use App\Http\Requests\UpdateUnitKerjaRequest;
 use App\Models\UnitKerja;
 use App\Support\DashboardUiData;
 use Illuminate\Http\RedirectResponse;
@@ -39,7 +40,7 @@ class UnitKerjaController extends Controller
         ]);
     }
 
-    public function store(UnitKerjaRequest $request): RedirectResponse
+    public function store(StoreUnitKerjaRequest $request): RedirectResponse
     {
         UnitKerja::create($request->validated());
 
@@ -57,7 +58,7 @@ class UnitKerjaController extends Controller
         ]);
     }
 
-    public function update(UnitKerjaRequest $request, UnitKerja $unitKerja): RedirectResponse
+    public function update(UpdateUnitKerjaRequest $request, UnitKerja $unitKerja): RedirectResponse
     {
         $unitKerja->update($request->validated());
 

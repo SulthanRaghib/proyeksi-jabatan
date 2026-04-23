@@ -62,6 +62,11 @@ class DashboardUiData
                                 'url' => route('golongans.index'),
                                 'route' => 'golongans.*',
                             ],
+                            [
+                                'label' => 'Jabatan',
+                                'url' => route('jabatans.index'),
+                                'route' => 'jabatans.*',
+                            ],
                         ],
                     ],
                 ],

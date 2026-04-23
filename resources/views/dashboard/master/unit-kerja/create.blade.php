@@ -27,7 +27,7 @@
                         <label for="nama_unit" class="form-label">Nama Unit</label>
                         <input type="text" id="nama_unit" name="nama_unit"
                             class="form-control @error('nama_unit') is-invalid @enderror" value="{{ old('nama_unit') }}"
-                            placeholder="Contoh: P2STPIBN" required>
+                            placeholder="Contoh: P2STPIBN">
                         @error('nama_unit')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

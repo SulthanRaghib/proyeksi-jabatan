@@ -29,8 +29,8 @@
                         <label for="nama_jabatan" class="form-label">Nama Jabatan</label>
                         <input type="text" id="nama_jabatan" name="nama_jabatan"
                             class="form-control @error('nama_jabatan') is-invalid @enderror"
-                            value="{{ old('nama_jabatan', $jabatan->nama_jabatan) }}" placeholder="Contoh: Pengawas Radiasi"
-                            required>
+                            value="{{ old('nama_jabatan', $jabatan->nama_jabatan) }}"
+                            placeholder="Contoh: Pengawas Radiasi">
                         @error('nama_jabatan')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -38,8 +38,7 @@
 
                     <div class="col-12 col-md-4">
                         <label for="jenjang" class="form-label">Jenjang</label>
-                        <select id="jenjang" name="jenjang" class="form-select @error('jenjang') is-invalid @enderror"
-                            required>
+                        <select id="jenjang" name="jenjang" class="form-select @error('jenjang') is-invalid @enderror">
                             <option value="" disabled>Pilih jenjang</option>
                             @foreach ($jenjangOptions as $jenjang)
                                 <option value="{{ $jenjang }}" @selected(old('jenjang', $jabatan->jenjang) === $jenjang)>{{ $jenjang }}
@@ -55,7 +54,7 @@
                         <label for="koefisien_tahunan" class="form-label">Koefisien Tahunan</label>
                         <input type="number" step="0.01" min="0" id="koefisien_tahunan" name="koefisien_tahunan"
                             class="form-control @error('koefisien_tahunan') is-invalid @enderror"
-                            value="{{ old('koefisien_tahunan', $jabatan->koefisien_tahunan) }}" required>
+                            value="{{ old('koefisien_tahunan', $jabatan->koefisien_tahunan) }}">
                         @error('koefisien_tahunan')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -66,7 +65,7 @@
                         <input type="number" step="1" min="0" id="target_ak_kenaikan_pangkat"
                             name="target_ak_kenaikan_pangkat"
                             class="form-control @error('target_ak_kenaikan_pangkat') is-invalid @enderror"
-                            value="{{ old('target_ak_kenaikan_pangkat', $jabatan->target_ak_kenaikan_pangkat) }}" required>
+                            value="{{ old('target_ak_kenaikan_pangkat', $jabatan->target_ak_kenaikan_pangkat) }}">
                         @error('target_ak_kenaikan_pangkat')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -77,7 +76,7 @@
                         <input type="number" step="1" min="0" id="target_ak_kenaikan_jenjang"
                             name="target_ak_kenaikan_jenjang"
                             class="form-control @error('target_ak_kenaikan_jenjang') is-invalid @enderror"
-                            value="{{ old('target_ak_kenaikan_jenjang', $jabatan->target_ak_kenaikan_jenjang) }}" required>
+                            value="{{ old('target_ak_kenaikan_jenjang', $jabatan->target_ak_kenaikan_jenjang) }}">
                         @error('target_ak_kenaikan_jenjang')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

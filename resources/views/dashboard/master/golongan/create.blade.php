@@ -28,7 +28,7 @@
                         <label for="nama_golongan" class="form-label">Nama Golongan</label>
                         <input type="text" id="nama_golongan" name="nama_golongan"
                             class="form-control @error('nama_golongan') is-invalid @enderror"
-                            value="{{ old('nama_golongan') }}" placeholder="Contoh: III/a" required>
+                            value="{{ old('nama_golongan') }}" placeholder="Contoh: III/a">
                         @error('nama_golongan')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -38,7 +38,7 @@
                         <label for="pangkat" class="form-label">Pangkat</label>
                         <input type="text" id="pangkat" name="pangkat"
                             class="form-control @error('pangkat') is-invalid @enderror" value="{{ old('pangkat') }}"
-                            placeholder="Contoh: Penata Muda" required>
+                            placeholder="Contoh: Penata Muda">
                         @error('pangkat')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

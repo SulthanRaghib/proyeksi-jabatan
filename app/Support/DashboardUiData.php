@@ -71,6 +71,17 @@ class DashboardUiData
                     ],
                 ],
             ],
+            [
+                'title' => 'Data Pegawai',
+                'items' => [
+                    [
+                        'label' => 'Pegawai',
+                        'icon' => 'users',
+                        'url' => route('pegawais.index'),
+                        'route' => 'pegawais.*',
+                    ],
+                ],
+            ],
         ];
     }
 }

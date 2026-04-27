@@ -82,6 +82,17 @@ class DashboardUiData
                     ],
                 ],
             ],
+            [
+                'title' => 'Penilaian AK',
+                'items' => [
+                    [
+                        'label' => 'Riwayat PAK',
+                        'icon' => 'file-text',
+                        'url' => route('riwayat-paks.index'),
+                        'route' => 'riwayat-paks.*',
+                    ],
+                ],
+            ],
         ];
     }
 }

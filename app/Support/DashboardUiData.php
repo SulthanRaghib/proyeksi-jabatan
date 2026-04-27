@@ -46,6 +46,17 @@ class DashboardUiData
                 ],
             ],
             [
+                'title' => 'Data Pegawai',
+                'items' => [
+                    [
+                        'label' => 'Pegawai',
+                        'icon' => 'users',
+                        'url' => route('pegawais.index'),
+                        'route' => 'pegawais.*',
+                    ],
+                ],
+            ],
+            [
                 'title' => 'Data Master',
                 'items' => [
                     [
@@ -68,17 +79,6 @@ class DashboardUiData
                                 'route' => 'jabatans.*',
                             ],
                         ],
-                    ],
-                ],
-            ],
-            [
-                'title' => 'Data Pegawai',
-                'items' => [
-                    [
-                        'label' => 'Pegawai',
-                        'icon' => 'users',
-                        'url' => route('pegawais.index'),
-                        'route' => 'pegawais.*',
                     ],
                 ],
             ],

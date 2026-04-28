@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GolonganController;
 use App\Http\Controllers\JabatanController;
 use App\Http\Controllers\PegawaiController;
+use App\Http\Controllers\ProjectionController;
 use App\Http\Controllers\RiwayatPakController;
 use App\Http\Controllers\UnitKerjaController;
 use Illuminate\Support\Facades\Auth;
@@ -15,6 +16,7 @@ Route::resource('golongans', GolonganController::class)->except('show');
 Route::resource('jabatans', JabatanController::class)->except('show');
 Route::resource('pegawais', PegawaiController::class)->except('show');
 Route::resource('riwayat-paks', RiwayatPakController::class)->except('show');
+Route::get('/proyeksi-jabatan', [ProjectionController::class, 'index'])->name('projections.index');
 
 Route::post('/logout', function () {
     Auth::logout();

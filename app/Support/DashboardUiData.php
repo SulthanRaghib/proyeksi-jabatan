@@ -54,6 +54,12 @@ class DashboardUiData
                         'url' => route('pegawais.index'),
                         'route' => 'pegawais.*',
                     ],
+                    [
+                        'label' => 'Proyeksi Jabatan',
+                        'icon' => 'trending-up',
+                        'url' => route('projections.index'),
+                        'route' => 'projections.*',
+                    ],
                 ],
             ],
             [

@@ -72,6 +72,20 @@ class ProjectionService
         // ============================================================================
 
         $jabatan = $pegawai->jabatan;
+
+        if (!$jabatan) {
+            return [
+                'current_ak' => 0.0,
+                'target_ak' => 0.0,
+                'deficit_ak' => 0.0,
+                'estimated_years' => 0,
+                'projected_year' => (int) now()->year,
+                'is_ready_mathematically' => false,
+                'is_held_by_speedbump' => false,
+                'progress_percentage' => 0.0,
+            ];
+        }
+
         $targetAk = (float) ($jabatan->target_ak_kenaikan_pangkat ?? 0);
         $koefisienTahunan = (float) ($jabatan->koefisien_tahunan ?? 1);
 

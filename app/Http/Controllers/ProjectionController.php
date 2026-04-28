@@ -13,6 +13,19 @@ class ProjectionController extends Controller
     {
         $search = trim((string) $request->input('q', ''));
         $status = (string) $request->input('status', 'all');
+        $performance = (string) $request->input('performance', 'baik');
+        $targetType = (string) $request->input('target', 'pangkat');
+
+        // Map performance label to multiplier
+        $performanceMap = [
+            'sangat_baik' => 1.5,
+            'baik' => 1.0,
+            'butuh_perbaikan' => 0.75,
+            'kurang' => 0.5,
+            'sangat_kurang' => 0.25,
+        ];
+
+        $multiplier = $performanceMap[$performance] ?? 1.0;
 
         $pegawais = Pegawai::query()
             ->with(['jabatan', 'golongan', 'unitKerja', 'riwayatPaks' => function ($query) {
@@ -26,8 +39,8 @@ class ProjectionController extends Controller
             })
             ->orderBy('nama_lengkap')
             ->get()
-            ->map(function (Pegawai $pegawai) use ($projectionService) {
-                $projection = $projectionService->calculateProjection($pegawai);
+            ->map(function (Pegawai $pegawai) use ($projectionService, $multiplier, $targetType) {
+                $projection = $projectionService->calculateProjection($pegawai, $multiplier, $targetType, 6);
 
                 return [
                     'pegawai' => $pegawai,

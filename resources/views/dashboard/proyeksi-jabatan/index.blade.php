@@ -100,11 +100,25 @@
                             <form method="GET" action="{{ route('projections.index') }}" class="d-flex flex-wrap gap-2">
                                 <input type="text" name="q" value="{{ $search }}" class="form-control"
                                     style="min-width: 220px;" placeholder="Cari nama atau NIP">
-                                <select name="status" class="form-select" style="min-width: 180px;">
+                                <select name="status" class="form-select" style="min-width: 160px;">
                                     <option value="all" @selected($status === 'all')>Semua Status</option>
                                     <option value="ready" @selected($status === 'ready')>Siap Secara AK</option>
                                     <option value="waiting" @selected($status === 'waiting')>Tertahan Minimum Waktu</option>
                                 </select>
+
+                                <select name="performance" class="form-select" style="min-width: 180px;">
+                                    <option value="sangat_baik">Sangat Baik (150%)</option>
+                                    <option value="baik" selected>Baik (100%)</option>
+                                    <option value="butuh_perbaikan">Butuh Perbaikan (75%)</option>
+                                    <option value="kurang">Kurang (50%)</option>
+                                    <option value="sangat_kurang">Sangat Kurang (25%)</option>
+                                </select>
+
+                                <select name="target" class="form-select" style="min-width: 180px;">
+                                    <option value="pangkat" selected>Target: PANGKAT</option>
+                                    <option value="jenjang">Target: JENJANG</option>
+                                </select>
+
                                 <button type="submit" class="btn btn-primary">Terapkan</button>
                             </form>
                         </div>
@@ -152,9 +166,13 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                <div class="fw-semibold">{{ $projection['estimated_years'] }} tahun</div>
-                                                <div class="text-muted small">Target: {{ $projection['projected_year'] }}
-                                                </div>
+                                                @if(isset($projection['estimated_periods']))
+                                                    <div class="fw-semibold">{{ $projection['estimated_periods'] }} periode</div>
+                                                    <div class="text-muted small">(≈ {{ $projection['estimated_years'] }} tahun) • Target: {{ $projection['projected_year'] }}</div>
+                                                @else
+                                                    <div class="fw-semibold text-warning">Tidak dapat dihitung</div>
+                                                    <div class="text-muted small">Periksa koefisien atau data jabatan</div>
+                                                @endif
                                             </td>
                                             <td>
                                                 @if ($ready)

@@ -62,7 +62,7 @@ class ProjectionService
      *               - is_held_by_speedbump (bool): Mathematically ready but waiting for 4-year rule
      *               - progress_percentage (float): Current AK as percentage of target (0-100)
      */
-    public function calculateProjection(Pegawai $pegawai, float $performanceMultiplier = 1.0): array
+    public function calculateProjection(Pegawai $pegawai, float $performanceMultiplier = 1.0, string $targetType = 'pangkat', int $periodsPerYear = 6): array
     {
         // Pre-load relationships to avoid N+1 queries
         $pegawai->load('jabatan', 'riwayatPaks');
@@ -86,7 +86,11 @@ class ProjectionService
             ];
         }
 
-        $targetAk = (float) ($jabatan->target_ak_kenaikan_pangkat ?? 0);
+        // Choose target AK based on requested target type: 'pangkat' or 'jenjang'
+        $targetAk = (float) (($targetType === 'jenjang'
+            ? $jabatan->target_ak_kenaikan_jenjang
+            : $jabatan->target_ak_kenaikan_pangkat) ?? 0);
+
         $koefisienTahunan = (float) ($jabatan->koefisien_tahunan ?? 1);
 
         // ============================================================================
@@ -107,17 +111,31 @@ class ProjectionService
 
         $annualAddition = $koefisienTahunan * $performanceMultiplier;
 
-        // Safety check: prevent division by zero in next step
-        if ($annualAddition <= 0) {
-            $annualAddition = 1.0;
+        // Convert to per-period addition (e.g. BKN has 6 periodisasi per year)
+        $periodAddition = $annualAddition / max(1, $periodsPerYear);
+
+        // If periodAddition is zero or negative then calculation cannot proceed accurately
+        if ($periodAddition <= 0.0) {
+            return [
+                'current_ak' => $currentAk,
+                'target_ak' => $targetAk,
+                'deficit_ak' => $deficitAk,
+                'estimated_periods' => null,
+                'estimated_years' => null,
+                'projected_year' => (int) now()->year,
+                'is_ready_mathematically' => $deficitAk <= 0,
+                'is_held_by_speedbump' => false,
+                'progress_percentage' => round($progressPercentage ?? 0.0, 2),
+                'error' => 'invalid_coefficient',
+            ];
         }
 
         // ============================================================================
-        // STEP 5: CALCULATE MATHEMATICAL YEARS NEEDED
+        // STEP 5: CALCULATE MATHEMATICAL PERIODS NEEDED
         // ============================================================================
-        // Using ceil() ensures we round up (5.1 years needed → 6 years)
+        // Using ceil() ensures we round up to the next whole period
 
-        $mathematicalYearsNeeded = (int) ceil($deficitAk / $annualAddition);
+        $mathematicalPeriodsNeeded = (int) ceil($deficitAk / $periodAddition);
 
         // ============================================================================
         // STEP 6: CALCULATE YEARS SERVED IN CURRENT RANK
@@ -125,56 +143,33 @@ class ProjectionService
 
         $yearsServed = $this->calculateYearsServed($pegawai);
 
-        // ============================================================================
-        // STEP 7: APPLY REGULATORY MINIMUM (SPEED BUMP)
-        // ============================================================================
-        // Permen PANRB 1/2023 requires minimum 4 years in rank before promotion.
-        // $remainingMinimumYears is how many years are still needed to satisfy this rule.
+        // Convert years served to periods served
+        $periodsServed = (int) floor($yearsServed * $periodsPerYear);
 
-        $remainingMinimumYears = max(0, self::MINIMUM_YEARS_IN_RANK - $yearsServed);
+        // Remaining minimum periods to satisfy regulatory 4-year requirement
+        $remainingMinimumPeriods = max(0, (self::MINIMUM_YEARS_IN_RANK * $periodsPerYear) - $periodsServed);
 
-        // ============================================================================
-        // STEP 8: DETERMINE ACTUAL YEARS NEEDED
-        // ============================================================================
-        // The projection is the LONGER of:
-        // a) Years needed to accumulate sufficient AK, OR
-        // b) Years still needed to satisfy 4-year minimum service requirement
-        // This prevents promotions before both conditions are met.
+        // Determine actual periods needed (max of mathematical vs regulatory)
+        $actualPeriodsNeeded = max($mathematicalPeriodsNeeded, $remainingMinimumPeriods);
 
-        $actualYearsNeeded = max($mathematicalYearsNeeded, $remainingMinimumYears);
-
-        // ============================================================================
-        // STEP 9: DETERMINE STATUS FLAGS
-        // ============================================================================
-
+        // Status flags
         $isReadyMathematically = $deficitAk <= 0;
-        $isHeldBySpeedbump = $isReadyMathematically && $remainingMinimumYears > 0;
+        $isHeldBySpeedbump = $isReadyMathematically && $remainingMinimumPeriods > 0;
 
-        // ============================================================================
-        // STEP 10: CALCULATE PROGRESS PERCENTAGE
-        // ============================================================================
-        // Shows current AK as percentage of target. Capped at 100% even if
-        // employee has exceeded target AK (in case of retroactive adjustments).
-
+        // Progress percentage
         $progressPercentage = $targetAk > 0
             ? min(100.0, ($currentAk / $targetAk) * 100.0)
             : 100.0;
 
-        // ============================================================================
-        // STEP 11: CALCULATE PROJECTED PROMOTION YEAR
-        // ============================================================================
-
-        $projectedYear = (int) now()->year + $actualYearsNeeded;
-
-        // ============================================================================
-        // RETURN STRUCTURED RESULT
-        // ============================================================================
+        // Projected year (approx) — convert periods to years and add to current year
+        $projectedYear = (int) now()->year + (int) ceil($actualPeriodsNeeded / max(1, $periodsPerYear));
 
         return [
             'current_ak' => $currentAk,
             'target_ak' => $targetAk,
             'deficit_ak' => $deficitAk,
-            'estimated_years' => $actualYearsNeeded,
+            'estimated_periods' => $actualPeriodsNeeded,
+            'estimated_years' => round($actualPeriodsNeeded / max(1, $periodsPerYear), 2),
             'projected_year' => $projectedYear,
             'is_ready_mathematically' => $isReadyMathematically,
             'is_held_by_speedbump' => $isHeldBySpeedbump,

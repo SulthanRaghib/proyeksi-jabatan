@@ -23,6 +23,12 @@ class Pegawai extends Model
         'status_ukom',
     ];
 
+    protected $casts = [
+        'tmt_jabatan' => 'date',
+        'tmt_golongan' => 'date',
+        'status_ukom' => 'boolean',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

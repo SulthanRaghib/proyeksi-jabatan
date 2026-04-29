@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Login">
     <title>@yield('title', 'Login')</title>
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/icon.jpg') }}">
     <link href="{{ asset('dist/css/style.min.css') }}" rel="stylesheet">
     @stack('styles')
 </head>

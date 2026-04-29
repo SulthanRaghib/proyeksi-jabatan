@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Dashboard Proyeksi Jabatan">
     <meta name="author" content="BAPETEN">
-    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/favicon.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/icon.jpg') }}">
     <title>@yield('title', 'Dashboard')</title>
 
     <link href="{{ asset('assets/extra-libs/c3/c3.min.css') }}" rel="stylesheet">

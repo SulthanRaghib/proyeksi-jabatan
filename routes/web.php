@@ -1,35 +1,29 @@
 <?php
 
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GolonganController;
 use App\Http\Controllers\JabatanController;
 use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\ProjectionController;
 use App\Http\Controllers\RiwayatPakController;
 use App\Http\Controllers\UnitKerjaController;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-Route::resource('unit-kerjas', UnitKerjaController::class)->except('show');
-Route::resource('golongans', GolonganController::class)->except('show');
-Route::resource('jabatans', JabatanController::class)->except('show');
-Route::resource('pegawais', PegawaiController::class)->except('show');
-Route::resource('riwayat-paks', RiwayatPakController::class)->except('show');
-Route::get('/proyeksi-jabatan', [ProjectionController::class, 'index'])->name('projections.index');
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'create'])->name('login');
+    Route::post('/login', [AuthController::class, 'store'])->name('login.attempt');
+});
 
-Route::post('/logout', function () {
-    Auth::logout();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
+// Protected routes - only authenticated admin users can access
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('unit-kerjas', UnitKerjaController::class)->except('show');
+    Route::resource('golongans', GolonganController::class)->except('show');
+    Route::resource('jabatans', JabatanController::class)->except('show');
+    Route::resource('pegawais', PegawaiController::class)->except('show');
+    Route::resource('riwayat-paks', RiwayatPakController::class)->except('show');
+    Route::get('/proyeksi-jabatan', [ProjectionController::class, 'index'])->name('projections.index');
 
-    return redirect('/');
-})->name('logout');
-
-Route::get('/logout', function () {
-    Auth::logout();
-    request()->session()->invalidate();
-    request()->session()->regenerateToken();
-
-    return redirect('/');
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

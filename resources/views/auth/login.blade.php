@@ -8,25 +8,27 @@
             min-height: 100vh;
             padding: 24px;
             background: #f6f8fb;
+            align-items: flex-start !important;
         }
 
         .auth-box {
             width: 100%;
-            max-width: 980px;
+            max-width: 920px;
             border-radius: 18px;
             overflow: hidden;
             box-shadow: 0 18px 45px rgba(31, 45, 61, 0.12);
             background: #fff;
+            margin: 24px 0;
         }
 
         .modal-bg-img {
-            min-height: 520px;
+            min-height: 460px;
             background-size: cover;
             background-position: center;
         }
 
         .login-brand {
-            width: 96px;
+            width: 76px;
             height: auto;
         }
 
@@ -43,10 +45,15 @@
         @media (max-width: 767.98px) {
             .auth-wrapper {
                 padding: 12px;
+                align-items: center !important;
             }
 
             .modal-bg-img {
-                min-height: 240px;
+                min-height: 220px;
+            }
+
+            .auth-box {
+                margin: 12px 0;
             }
         }
     </style>

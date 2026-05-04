@@ -191,7 +191,7 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                <a href="{{ route('pegawais.edit', $pegawai) }}" class="btn btn-sm btn-outline-primary">Detail</a>
+                                                <a href="{{ route('projections.show', $pegawai) }}" class="btn btn-sm btn-outline-primary">Detail</a>
                                             </td>
                                         </tr>
                                     @empty

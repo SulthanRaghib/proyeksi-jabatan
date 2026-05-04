@@ -83,4 +83,33 @@ class ProjectionController extends Controller
             'highlights' => $highlights,
         ]);
     }
+
+    public function show(Pegawai $pegawai, ProjectionService $projectionService)
+    {
+        $pegawai->load([
+            'jabatan',
+            'golongan',
+            'unitKerja',
+            'riwayatPaks' => function ($query) {
+                $query->orderBy('tanggal_pak', 'asc');
+            }
+        ]);
+
+        $projection = $projectionService->calculateProjection($pegawai);
+
+        $chartYears = $pegawai->riwayatPaks->map(function ($pak) {
+            return \Carbon\Carbon::parse($pak->tanggal_pak)->format('Y');
+        })->toArray();
+
+        $chartAk = $pegawai->riwayatPaks->pluck('ak_total')->toArray();
+
+        return view('dashboard.proyeksi-jabatan.show', [
+            'pegawai' => $pegawai,
+            'projection' => $projection,
+            'chartYears' => $chartYears,
+            'chartAk' => $chartAk,
+            'menuGroups' => DashboardUiData::menuGroups(),
+            'notifications' => DashboardUiData::notifications(),
+        ]);
+    }
 }

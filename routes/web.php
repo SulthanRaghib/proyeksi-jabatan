@@ -24,6 +24,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('pegawais', PegawaiController::class)->except('show');
     Route::resource('riwayat-paks', RiwayatPakController::class)->except('show');
     Route::get('/proyeksi-jabatan', [ProjectionController::class, 'index'])->name('projections.index');
+    Route::get('/proyeksi-jabatan/{pegawai}', [ProjectionController::class, 'show'])->name('projections.show');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

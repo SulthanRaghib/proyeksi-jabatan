@@ -121,11 +121,11 @@
                                 </div>
                                 <div class="col-md-3">
                                     <select name="performance" class="form-select">
-                                        <option value="sangat_baik">Kinerja: Sangat Baik</option>
-                                        <option value="baik" selected>Kinerja: Baik</option>
-                                        <option value="butuh_perbaikan">Kinerja: Butuh Perbaikan</option>
-                                        <option value="kurang">Kinerja: Kurang</option>
-                                        <option value="sangat_kurang">Kinerja: Sangat Kurang</option>
+                                        <option value="sangat_baik" @selected($performance === 'sangat_baik')>Kinerja: Sangat Baik</option>
+                                        <option value="baik" @selected($performance === 'baik')>Kinerja: Baik</option>
+                                        <option value="butuh_perbaikan" @selected($performance === 'butuh_perbaikan')>Kinerja: Butuh Perbaikan</option>
+                                        <option value="kurang" @selected($performance === 'kurang')>Kinerja: Kurang</option>
+                                        <option value="sangat_kurang" @selected($performance === 'sangat_kurang')>Kinerja: Sangat Kurang</option>
                                     </select>
                                 </div>
                                 <div class="col-md-1">
@@ -170,7 +170,7 @@
                                                     <span class="fw-medium">{{ number_format($progress, 1, ',', '.') }}%</span>
                                                 </div>
                                                 <div class="progress" style="height: 6px;">
-                                                    <div class="progress-bar {{ $ready ? 'bg-success' : ($held ? 'bg-warning' : 'bg-primary') }}" role="progressbar" style="width: {{ min($progress, 100) }}%"></div>
+                                                    <div class="progress-bar {{ $held ? 'bg-warning' : ($ready ? 'bg-success' : 'bg-primary') }}" role="progressbar" style="width: {{ min($progress, 100) }}%"></div>
                                                 </div>
                                             </td>
                                             <td>
@@ -182,10 +182,10 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @if ($ready)
-                                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Siap AK</span>
-                                                @elseif ($held)
+                                                @if ($held)
                                                     <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Tertahan Waktu</span>
+                                                @elseif ($ready)
+                                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Siap AK</span>
                                                 @else
                                                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Proses AK</span>
                                                 @endif

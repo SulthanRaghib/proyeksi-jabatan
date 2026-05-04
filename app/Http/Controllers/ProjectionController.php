@@ -50,7 +50,7 @@ class ProjectionController extends Controller
 
         $filteredPegawais = $pegawais->filter(function (array $item) use ($status) {
             if ($status === 'ready') {
-                return $item['projection']['is_ready_mathematically'];
+                return $item['projection']['is_ready_mathematically'] && !$item['projection']['is_held_by_speedbump'];
             }
 
             if ($status === 'waiting') {
@@ -62,7 +62,7 @@ class ProjectionController extends Controller
 
         $stats = [
             'total' => $filteredPegawais->count(),
-            'ready' => $filteredPegawais->where('projection.is_ready_mathematically', true)->count(),
+            'ready' => $filteredPegawais->where('projection.is_ready_mathematically', true)->where('projection.is_held_by_speedbump', false)->count(),
             'speedbump' => $filteredPegawais->where('projection.is_held_by_speedbump', true)->count(),
             'avg_progress' => round($filteredPegawais->avg(fn(array $item) => $item['projection']['progress_percentage']) ?? 0, 2),
         ];
@@ -77,6 +77,7 @@ class ProjectionController extends Controller
             'notifications' => DashboardUiData::notifications(),
             'search' => $search,
             'status' => $status,
+            'performance' => $performance,
             'stats' => $stats,
             'projections' => $filteredPegawais,
             'highlights' => $highlights,

@@ -46,6 +46,23 @@ class DashboardUiData
                 ],
             ],
             [
+                'title' => 'Penilaian AK',
+                'items' => [
+                    [
+                        'label' => 'Riwayat PAK',
+                        'icon' => 'file-text',
+                        'url' => route('riwayat-paks.index'),
+                        'route' => 'riwayat-paks.*',
+                    ],
+                    [
+                        'label' => 'Proyeksi Jabatan',
+                        'icon' => 'trending-up',
+                        'url' => route('projections.index'),
+                        'route' => 'projections.*',
+                    ],
+                ],
+            ],
+            [
                 'title' => 'Data Pegawai',
                 'items' => [
                     [
@@ -53,12 +70,6 @@ class DashboardUiData
                         'icon' => 'users',
                         'url' => route('pegawais.index'),
                         'route' => 'pegawais.*',
-                    ],
-                    [
-                        'label' => 'Proyeksi Jabatan',
-                        'icon' => 'trending-up',
-                        'url' => route('projections.index'),
-                        'route' => 'projections.*',
                     ],
                 ],
             ],
@@ -85,17 +96,6 @@ class DashboardUiData
                                 'route' => 'jabatans.*',
                             ],
                         ],
-                    ],
-                ],
-            ],
-            [
-                'title' => 'Penilaian AK',
-                'items' => [
-                    [
-                        'label' => 'Riwayat PAK',
-                        'icon' => 'file-text',
-                        'url' => route('riwayat-paks.index'),
-                        'route' => 'riwayat-paks.*',
                     ],
                 ],
             ],

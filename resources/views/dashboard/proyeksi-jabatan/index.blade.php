@@ -12,7 +12,7 @@
 @endpush
 
 @section('content')
-    <div class="page-breadcrumb mb-4">
+    <div class="page-breadcrumb">
         <div class="row align-items-center">
             <div class="col-12 col-md-7">
                 <h3 class="page-title text-dark font-weight-medium mb-1">Proyeksi Kenaikan Jabatan</h3>
@@ -30,7 +30,7 @@
         </div>
     </div>
 
-    <div class="container-fluid px-0">
+    <div class="container-fluid">
         <!-- Stats Row -->
         <div class="row mb-4">
             <div class="col-12 col-sm-6 col-lg-3">

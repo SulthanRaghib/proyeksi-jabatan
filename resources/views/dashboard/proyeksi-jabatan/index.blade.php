@@ -3,12 +3,23 @@
 @section('title', 'Proyeksi Jabatan')
 
 @push('styles')
-<style>
-    .border-left-primary { border-left: 4px solid #4f46e5 !important; }
-    .border-left-success { border-left: 4px solid #10b981 !important; }
-    .border-left-warning { border-left: 4px solid #f59e0b !important; }
-    .border-left-info { border-left: 4px solid #0ea5e9 !important; }
-</style>
+    <style>
+        .border-left-primary {
+            border-left: 4px solid #4f46e5 !important;
+        }
+
+        .border-left-success {
+            border-left: 4px solid #10b981 !important;
+        }
+
+        .border-left-warning {
+            border-left: 4px solid #f59e0b !important;
+        }
+
+        .border-left-info {
+            border-left: 4px solid #0ea5e9 !important;
+        }
+    </style>
 @endpush
 
 @section('content')
@@ -102,7 +113,8 @@
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <div>
                                 <h4 class="card-title mb-1">Radar Proyeksi Jabatan</h4>
-                                <p class="text-muted mb-0 small">Pantau status kenaikan pangkat berdasarkan Angka Kredit (AK).</p>
+                                <p class="text-muted mb-0 small">Pantau status kenaikan pangkat berdasarkan Angka Kredit
+                                    (AK).</p>
                             </div>
                         </div>
 
@@ -110,7 +122,8 @@
                         <form method="GET" action="{{ route('projections.index') }}" class="mb-4">
                             <div class="row g-2">
                                 <div class="col-md-5">
-                                    <input type="text" name="q" value="{{ $search }}" class="form-control" placeholder="Cari nama atau NIP...">
+                                    <input type="text" name="q" value="{{ $search }}" class="form-control"
+                                        placeholder="Cari nama atau NIP...">
                                 </div>
                                 <div class="col-md-3">
                                     <select name="status" class="form-select">
@@ -121,11 +134,14 @@
                                 </div>
                                 <div class="col-md-3">
                                     <select name="performance" class="form-select">
-                                        <option value="sangat_baik" @selected($performance === 'sangat_baik')>Kinerja: Sangat Baik</option>
+                                        <option value="sangat_baik" @selected($performance === 'sangat_baik')>Kinerja: Sangat Baik
+                                        </option>
                                         <option value="baik" @selected($performance === 'baik')>Kinerja: Baik</option>
-                                        <option value="butuh_perbaikan" @selected($performance === 'butuh_perbaikan')>Kinerja: Butuh Perbaikan</option>
+                                        <option value="butuh_perbaikan" @selected($performance === 'butuh_perbaikan')>Kinerja: Butuh
+                                            Perbaikan</option>
                                         <option value="kurang" @selected($performance === 'kurang')>Kinerja: Kurang</option>
-                                        <option value="sangat_kurang" @selected($performance === 'sangat_kurang')>Kinerja: Sangat Kurang</option>
+                                        <option value="sangat_kurang" @selected($performance === 'sangat_kurang')>Kinerja: Sangat Kurang
+                                        </option>
                                     </select>
                                 </div>
                                 <div class="col-md-1">
@@ -162,36 +178,50 @@
                                             </td>
                                             <td>
                                                 <div>{{ $pegawai->jabatan->nama_jabatan }}</div>
-                                                <div class="text-muted small">{{ $pegawai->golongan->nama_golongan }} • {{ $pegawai->unitKerja->nama_unit }}</div>
+                                                <div class="text-muted small">{{ $pegawai->golongan->nama_golongan }} •
+                                                    {{ $pegawai->unitKerja->nama_unit }}</div>
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-between small mb-1">
-                                                    <span>{{ number_format($projection['current_ak'], 2, ',', '.') }} / {{ number_format($projection['target_ak'], 0, ',', '.') }}</span>
-                                                    <span class="fw-medium">{{ number_format($progress, 1, ',', '.') }}%</span>
+                                                    <span>{{ number_format($projection['current_ak'], 2, ',', '.') }} /
+                                                        {{ number_format($projection['target_ak'], 0, ',', '.') }}</span>
+                                                    <span
+                                                        class="fw-medium">{{ number_format($progress, 1, ',', '.') }}%</span>
                                                 </div>
                                                 <div class="progress" style="height: 6px;">
-                                                    <div class="progress-bar {{ $held ? 'bg-warning' : ($ready ? 'bg-success' : 'bg-primary') }}" role="progressbar" style="width: {{ min($progress, 100) }}%"></div>
+                                                    <div class="progress-bar {{ $held ? 'bg-warning' : ($ready ? 'bg-success' : 'bg-primary') }}"
+                                                        role="progressbar" style="width: {{ min($progress, 100) }}%">
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td>
-                                                @if(isset($projection['estimated_periods']))
-                                                    <div class="fw-medium">{{ $projection['estimated_periods'] }} Periode</div>
-                                                    <div class="text-muted small">Target: {{ $projection['projected_year'] }}</div>
+                                                @if (isset($projection['estimated_periods']))
+                                                    <div class="fw-medium">{{ $projection['estimated_periods'] }} Periode
+                                                    </div>
+                                                    <div class="text-muted small">Target:
+                                                        {{ $projection['projected_year'] }}</div>
                                                 @else
                                                     <div class="text-danger small">Tak Terukur</div>
                                                 @endif
                                             </td>
                                             <td>
                                                 @if ($held)
-                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle">Tertahan Waktu</span>
+                                                    <span
+                                                        class="badge bg-warning-subtle text-warning border border-warning-subtle">Tertahan
+                                                        Waktu</span>
                                                 @elseif ($ready)
-                                                    <span class="badge bg-success-subtle text-success border border-success-subtle">Siap AK</span>
+                                                    <span
+                                                        class="badge bg-success-subtle text-success border border-success-subtle">Siap
+                                                        AK</span>
                                                 @else
-                                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">Proses AK</span>
+                                                    <span
+                                                        class="badge bg-primary-subtle text-primary border border-primary-subtle">Proses
+                                                        AK</span>
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                <a href="{{ route('projections.show', $pegawai) }}" class="btn btn-sm btn-outline-primary">Detail</a>
+                                                <a href="{{ route('projections.show', $pegawai) }}"
+                                                    class="btn btn-sm btn-outline-primary">Detail</a>
                                             </td>
                                         </tr>
                                     @empty
@@ -215,7 +245,7 @@
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h4 class="card-title mb-0">Sorotan Cepat</h4>
                         </div>
-                        
+
                         <div>
                             @forelse ($highlights as $item)
                                 @php
@@ -228,16 +258,19 @@
                                             <div class="fw-medium text-dark">{{ $pegawai->nama_lengkap }}</div>
                                             <div class="text-muted small">{{ $pegawai->jabatan->nama_jabatan }}</div>
                                         </div>
-                                        <span class="badge bg-primary">{{ number_format($projection['progress_percentage'], 0) }}%</span>
+                                        <span
+                                            class="badge bg-primary">{{ number_format($projection['progress_percentage'], 0) }}%</span>
                                     </div>
-                                    
+
                                     <div class="progress mb-2" style="height: 5px;">
-                                        <div class="progress-bar bg-primary" style="width: {{ min($projection['progress_percentage'], 100) }}%"></div>
+                                        <div class="progress-bar bg-primary"
+                                            style="width: {{ min($projection['progress_percentage'], 100) }}%"></div>
                                     </div>
-                                    
+
                                     <div class="d-flex justify-content-between text-muted small">
                                         <span>Estimasi {{ $projection['estimated_years'] }} tahun</span>
-                                        <span class="fw-medium text-dark">Target {{ $projection['projected_year'] }}</span>
+                                        <span class="fw-medium text-dark">Target
+                                            {{ $projection['projected_year'] }}</span>
                                     </div>
                                 </div>
                             @empty
@@ -246,10 +279,11 @@
                                 </div>
                             @endforelse
                         </div>
-                        
-                        @if(count($highlights) > 0)
+
+                        @if (count($highlights) > 0)
                             <div class="text-center mt-3">
-                                <a href="{{ route('projections.index', ['status' => 'ready']) }}" class="text-primary text-decoration-none small">Lihat Semua Siap AK &rarr;</a>
+                                <a href="{{ route('projections.index', ['status' => 'ready']) }}"
+                                    class="text-primary text-decoration-none small">Lihat Semua Siap AK &rarr;</a>
                             </div>
                         @endif
                     </div>

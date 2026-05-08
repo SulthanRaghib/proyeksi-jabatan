@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Pegawai extends Model
 {
@@ -52,5 +53,14 @@ class Pegawai extends Model
     public function riwayatPaks(): HasMany
     {
         return $this->hasMany(RiwayatPak::class);
+    }
+
+    /**
+     * Get the latest (most recent) RiwayatPak record.
+     * Auto-detected by tanggal_pak DESC, id DESC — no manual flag needed.
+     */
+    public function latestRiwayatPak(): HasOne
+    {
+        return $this->hasOne(RiwayatPak::class)->latestPak();
     }
 }

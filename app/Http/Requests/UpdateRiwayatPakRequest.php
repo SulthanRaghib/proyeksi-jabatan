@@ -17,8 +17,7 @@ class UpdateRiwayatPakRequest extends FormRequest
             'pegawai_id' => $this->input('pegawai_id'),
             'no_pak' => trim((string) $this->input('no_pak')),
             'tanggal_pak' => $this->input('tanggal_pak'),
-            'ak_total' => $this->input('ak_total'),
-            'is_latest' => $this->boolean('is_latest'),
+            'ak_tambahan' => $this->input('ak_tambahan'),
         ]);
     }
 
@@ -28,8 +27,7 @@ class UpdateRiwayatPakRequest extends FormRequest
             'pegawai_id' => ['required', 'exists:pegawais,id'],
             'no_pak' => ['required', 'string', 'max:255'],
             'tanggal_pak' => ['required', 'date'],
-            'ak_total' => ['required', 'numeric', 'min:0', 'max:99999.999'],
-            'is_latest' => ['required', 'boolean'],
+            'ak_tambahan' => ['required', 'numeric', 'min:0', 'max:99999.999'],
         ];
     }
 
@@ -42,11 +40,10 @@ class UpdateRiwayatPakRequest extends FormRequest
             'no_pak.max' => 'Nomor PAK maksimal 255 karakter.',
             'tanggal_pak.required' => 'Tanggal PAK wajib diisi.',
             'tanggal_pak.date' => 'Format tanggal PAK tidak valid.',
-            'ak_total.required' => 'AK total wajib diisi.',
-            'ak_total.numeric' => 'AK total harus berupa angka.',
-            'ak_total.min' => 'AK total tidak boleh kurang dari 0.',
-            'ak_total.max' => 'AK total melebihi batas yang diizinkan.',
-            'is_latest.boolean' => 'Status data terbaru tidak valid.',
+            'ak_tambahan.required' => 'AK tambahan wajib diisi.',
+            'ak_tambahan.numeric' => 'AK tambahan harus berupa angka.',
+            'ak_tambahan.min' => 'AK tambahan tidak boleh kurang dari 0.',
+            'ak_tambahan.max' => 'AK tambahan melebihi batas yang diizinkan.',
         ];
     }
 }

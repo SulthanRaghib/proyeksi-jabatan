@@ -34,6 +34,32 @@ class RiwayatPakController extends Controller
             ->paginate(10)
             ->withQueryString();
 
+        // Determine which record is the latest per pegawai for badge display
+        $latestIds = RiwayatPak::query()
+            ->select(DB::raw('MAX(id) as id'))
+            ->whereIn('pegawai_id', $riwayatPaks->getCollection()->pluck('pegawai_id')->unique())
+            ->groupBy('pegawai_id')
+            ->havingRaw('id = (SELECT r2.id FROM riwayat_paks r2 WHERE r2.pegawai_id = riwayat_paks.pegawai_id ORDER BY r2.tanggal_pak DESC, r2.id DESC LIMIT 1)')
+            ->pluck('id')
+            ->toArray();
+
+        // Alternative simpler approach — just compute latest per pegawai
+        $latestPerPegawai = [];
+        foreach ($riwayatPaks->getCollection()->pluck('pegawai_id')->unique() as $pegawaiId) {
+            $latest = RiwayatPak::query()
+                ->where('pegawai_id', $pegawaiId)
+                ->latestPak()
+                ->value('id');
+            if ($latest) {
+                $latestPerPegawai[] = $latest;
+            }
+        }
+
+        $riwayatPaks->getCollection()->transform(function ($item) use ($latestPerPegawai) {
+            $item->is_computed_latest = in_array($item->id, $latestPerPegawai);
+            return $item;
+        });
+
         return view('dashboard.riwayat-pak.index', [
             'riwayatPaks' => $riwayatPaks,
             'search' => $search,
@@ -44,7 +70,7 @@ class RiwayatPakController extends Controller
     public function create(): View
     {
         return view('dashboard.riwayat-pak.create', [
-            'pegawais' => $this->pegawaiOptions(),
+            'pegawais' => $this->pegawaiWithFullContext(),
             ...$this->baseViewData(),
         ]);
     }
@@ -52,8 +78,18 @@ class RiwayatPakController extends Controller
     public function store(StoreRiwayatPakRequest $request): RedirectResponse
     {
         DB::transaction(function () use ($request): void {
-            $riwayatPak = RiwayatPak::create($request->validated());
-            $this->syncLatestFlag($riwayatPak, (bool) $riwayatPak->is_latest);
+            $validated = $request->validated();
+
+            // Get the current latest AK for this pegawai
+            $currentAk = RiwayatPak::query()
+                ->where('pegawai_id', $validated['pegawai_id'])
+                ->latestPak()
+                ->value('ak_total') ?? 0;
+
+            // Accumulate: new total = old total + tambahan
+            $validated['ak_total'] = (float) $currentAk + (float) $validated['ak_tambahan'];
+
+            RiwayatPak::create($validated);
         });
 
         return redirect()
@@ -65,7 +101,7 @@ class RiwayatPakController extends Controller
     {
         return view('dashboard.riwayat-pak.edit', [
             'riwayatPak' => $riwayatPak,
-            'pegawais' => $this->pegawaiOptions(),
+            'pegawais' => $this->pegawaiWithFullContext(),
             ...$this->baseViewData(),
         ]);
     }
@@ -73,8 +109,28 @@ class RiwayatPakController extends Controller
     public function update(UpdateRiwayatPakRequest $request, RiwayatPak $riwayatPak): RedirectResponse
     {
         DB::transaction(function () use ($request, $riwayatPak): void {
-            $riwayatPak->update($request->validated());
-            $this->syncLatestFlag($riwayatPak, (bool) $riwayatPak->is_latest);
+            $validated = $request->validated();
+
+            // Get the previous record's AK total (the one before this record)
+            $previousAk = RiwayatPak::query()
+                ->where('pegawai_id', $riwayatPak->pegawai_id)
+                ->where(function ($query) use ($riwayatPak) {
+                    $query->where('tanggal_pak', '<', $riwayatPak->tanggal_pak)
+                        ->orWhere(function ($q) use ($riwayatPak) {
+                            $q->where('tanggal_pak', '=', $riwayatPak->tanggal_pak)
+                              ->where('id', '<', $riwayatPak->id);
+                        });
+                })
+                ->latestPak()
+                ->value('ak_total') ?? 0;
+
+            // Recalculate total based on new tambahan
+            $validated['ak_total'] = (float) $previousAk + (float) $validated['ak_tambahan'];
+
+            $riwayatPak->update($validated);
+
+            // Recalculate all subsequent records for this pegawai
+            $this->recalculateSubsequentRecords($riwayatPak);
         });
 
         return redirect()
@@ -86,23 +142,50 @@ class RiwayatPakController extends Controller
     {
         DB::transaction(function () use ($riwayatPak): void {
             $pegawaiId = $riwayatPak->pegawai_id;
-            $wasLatest = (bool) $riwayatPak->is_latest;
+            $tanggalPak = $riwayatPak->tanggal_pak;
+            $recordId = $riwayatPak->id;
 
             $riwayatPak->delete();
 
-            if ($wasLatest) {
-                RiwayatPak::query()
-                    ->where('pegawai_id', $pegawaiId)
-                    ->orderByDesc('tanggal_pak')
-                    ->orderByDesc('id')
-                    ->limit(1)
-                    ->update(['is_latest' => true]);
+            // Recalculate all records after the deleted one
+            $subsequentRecords = RiwayatPak::query()
+                ->where('pegawai_id', $pegawaiId)
+                ->orderBy('tanggal_pak')
+                ->orderBy('id')
+                ->get();
+
+            $runningTotal = 0;
+            foreach ($subsequentRecords as $record) {
+                $runningTotal += (float) $record->ak_tambahan;
+                if ((float) $record->ak_total !== $runningTotal) {
+                    $record->update(['ak_total' => $runningTotal]);
+                }
             }
         });
 
         return redirect()
             ->route('riwayat-paks.index')
             ->with('success', 'Riwayat PAK berhasil dihapus.');
+    }
+
+    /**
+     * Recalculate ak_total for all records after the given record (for edit scenarios).
+     */
+    private function recalculateSubsequentRecords(RiwayatPak $fromRecord): void
+    {
+        $allRecords = RiwayatPak::query()
+            ->where('pegawai_id', $fromRecord->pegawai_id)
+            ->orderBy('tanggal_pak')
+            ->orderBy('id')
+            ->get();
+
+        $runningTotal = 0;
+        foreach ($allRecords as $record) {
+            $runningTotal += (float) $record->ak_tambahan;
+            if (round((float) $record->ak_total, 3) !== round($runningTotal, 3)) {
+                $record->updateQuietly(['ak_total' => $runningTotal]);
+            }
+        }
     }
 
     /**
@@ -116,22 +199,21 @@ class RiwayatPakController extends Controller
         ];
     }
 
-    private function syncLatestFlag(RiwayatPak $riwayatPak, bool $isLatest): void
-    {
-        if (! $isLatest) {
-            return;
-        }
-
-        RiwayatPak::query()
-            ->where('pegawai_id', $riwayatPak->pegawai_id)
-            ->whereKeyNot($riwayatPak->id)
-            ->update(['is_latest' => false]);
-    }
-
-    private function pegawaiOptions()
+    /**
+     * Load pegawais with full context for the form display:
+     * latest AK, jabatan, golongan, and recent riwayat records.
+     */
+    private function pegawaiWithFullContext()
     {
         return Pegawai::query()
-            ->select(['id', 'nip', 'nama_lengkap'])
+            ->select(['id', 'nip', 'nama_lengkap', 'jabatan_id', 'golongan_id'])
+            ->with([
+                'jabatan:id,nama_jabatan,jenjang,target_ak_kenaikan_pangkat,koefisien_tahunan',
+                'golongan:id,nama_golongan',
+                'riwayatPaks' => function ($query) {
+                    $query->latestPak()->limit(5);
+                },
+            ])
             ->orderBy('nama_lengkap')
             ->get();
     }

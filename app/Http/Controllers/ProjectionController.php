@@ -28,9 +28,7 @@ class ProjectionController extends Controller
         $multiplier = $performanceMap[$performance] ?? 1.0;
 
         $pegawais = Pegawai::query()
-            ->with(['jabatan', 'golongan', 'unitKerja', 'riwayatPaks' => function ($query) {
-                $query->where('is_latest', true);
-            }])
+            ->with(['jabatan', 'golongan', 'unitKerja', 'riwayatPaks'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($innerQuery) use ($search) {
                     $innerQuery->where('nama_lengkap', 'like', '%' . $search . '%')

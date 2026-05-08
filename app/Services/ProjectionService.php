@@ -114,6 +114,11 @@ class ProjectionService
         // Convert to per-period addition (e.g. BKN has 6 periodisasi per year)
         $periodAddition = $annualAddition / max(1, $periodsPerYear);
 
+        // Progress percentage (calculate early so it's available for error returns)
+        $progressPercentage = $targetAk > 0
+            ? min(100.0, ($currentAk / $targetAk) * 100.0)
+            : 100.0;
+
         // If periodAddition is zero or negative then calculation cannot proceed accurately
         if ($periodAddition <= 0.0) {
             return [
@@ -125,7 +130,7 @@ class ProjectionService
                 'projected_year' => (int) now()->year,
                 'is_ready_mathematically' => $deficitAk <= 0,
                 'is_held_by_speedbump' => false,
-                'progress_percentage' => round($progressPercentage ?? 0.0, 2),
+                'progress_percentage' => round($progressPercentage, 2),
                 'error' => 'invalid_coefficient',
             ];
         }
@@ -156,11 +161,6 @@ class ProjectionService
         $isReadyMathematically = $deficitAk <= 0;
         $isHeldBySpeedbump = $isReadyMathematically && $remainingMinimumPeriods > 0;
 
-        // Progress percentage
-        $progressPercentage = $targetAk > 0
-            ? min(100.0, ($currentAk / $targetAk) * 100.0)
-            : 100.0;
-
         // Projected year (approx) — convert periods to years and add to current year
         $projectedYear = (int) now()->year + (int) ceil($actualPeriodsNeeded / max(1, $periodsPerYear));
 
@@ -180,11 +180,8 @@ class ProjectionService
     /**
      * Get the latest Angka Kredit (AK) for an employee.
      *
-     * Retrieves the most recent performance evaluation (RiwayatPak) record marked
-     * as the latest. If no evaluation history exists, defaults to 0.
-     *
-     * BUSINESS RULE: Only one RiwayatPak record should have is_latest = true at any time.
-     * If multiple records exist, this method returns the most recent by tanggal_pak.
+     * Retrieves the most recent performance evaluation (RiwayatPak) record
+     * auto-detected by tanggal_pak DESC, id DESC. No manual flag needed.
      *
      * @param Pegawai $pegawai The employee
      * @return float Current accumulated AK, minimum 0
@@ -192,11 +189,10 @@ class ProjectionService
     private function getCurrentAk(Pegawai $pegawai): float
     {
         if ($pegawai->relationLoaded('riwayatPaks')) {
-            $latestPak = $pegawai->riwayatPaks->where('is_latest', true)->sortByDesc('tanggal_pak')->first();
+            $latestPak = $pegawai->riwayatPaks->sortByDesc('tanggal_pak')->sortByDesc('id')->first();
         } else {
             $latestPak = $pegawai->riwayatPaks()
-                ->where('is_latest', true)
-                ->orderBy('tanggal_pak', 'desc')
+                ->latestPak()
                 ->first();
         }
 

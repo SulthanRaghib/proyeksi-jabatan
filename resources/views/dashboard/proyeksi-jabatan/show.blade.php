@@ -138,7 +138,7 @@
         </div>
 
         <div class="row">
-            <!-- Card 4: History Table -->
+            <!-- Card 4: History Table with +/- column -->
             <div class="col-12">
                 <div class="card shadow-sm border-0">
                     <div class="card-body">
@@ -150,27 +150,60 @@
                                     <tr>
                                         <th class="border-top-0">Tahun</th>
                                         <th class="border-top-0">No. PAK</th>
-                                        <th class="border-top-0">Total AK</th>
-                                        <th class="border-top-0">Status</th>
+                                        <th class="border-top-0 text-end">AK Tambahan</th>
+                                        <th class="border-top-0 text-end">Total AK</th>
+                                        <th class="border-top-0 text-center">Perubahan</th>
+                                        <th class="border-top-0 text-center">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
+                                    @php
+                                        $previousAk = null;
+                                        $latestId = $pegawai->riwayatPaks->sortByDesc('tanggal_pak')->sortByDesc('id')->first()?->id;
+                                    @endphp
                                     @forelse ($pegawai->riwayatPaks as $pak)
-                                        <tr>
-                                            <td>{{ \Carbon\Carbon::parse($pak->tanggal_pak)->format('Y') }}</td>
+                                        @php
+                                            $akTotal = (float) $pak->ak_total;
+                                            $akTambahan = (float) $pak->ak_tambahan;
+                                            $difference = $previousAk !== null ? $akTotal - $previousAk : null;
+                                            $isLatest = $pak->id === $latestId;
+                                        @endphp
+                                        <tr class="{{ $isLatest ? 'table-primary' : '' }}">
+                                            <td>{{ \Carbon\Carbon::parse($pak->tanggal_pak)->format('d/m/Y') }}</td>
                                             <td>{{ $pak->no_pak ?? '-' }}</td>
-                                            <td class="fw-medium">{{ number_format($pak->ak_total, 3, ',', '.') }}</td>
-                                            <td>
-                                                @if ($pak->is_latest)
+                                            <td class="text-end">
+                                                @if ($akTambahan > 0)
+                                                    <span class="text-success fw-medium">+{{ number_format($akTambahan, 3, ',', '.') }}</span>
+                                                @else
+                                                    <span class="text-muted">{{ number_format($akTambahan, 3, ',', '.') }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-end fw-medium">{{ number_format($akTotal, 3, ',', '.') }}</td>
+                                            <td class="text-center">
+                                                @if ($difference !== null)
+                                                    @if ($difference > 0)
+                                                        <span class="badge bg-success">+{{ number_format($difference, 3, ',', '.') }}</span>
+                                                    @elseif ($difference < 0)
+                                                        <span class="badge bg-danger">{{ number_format($difference, 3, ',', '.') }}</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">0</span>
+                                                    @endif
+                                                @else
+                                                    <span class="badge bg-info">Awal</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">
+                                                @if ($isLatest)
                                                     <span class="badge bg-primary">Terbaru</span>
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
                                             </td>
                                         </tr>
+                                        @php $previousAk = $akTotal; @endphp
                                     @empty
                                         <tr>
-                                            <td colspan="4" class="text-center py-4 text-muted">Belum ada riwayat PAK.
+                                            <td colspan="6" class="text-center py-4 text-muted">Belum ada riwayat PAK.
                                             </td>
                                         </tr>
                                     @endforelse

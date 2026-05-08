@@ -48,13 +48,19 @@
                                 <th>Pegawai</th>
                                 <th>Nomor PAK</th>
                                 <th>Tanggal PAK</th>
-                                <th>AK Total</th>
-                                <th>Status</th>
+                                <th class="text-end">AK Tambahan</th>
+                                <th class="text-end">AK Total</th>
+                                <th class="text-center">Status</th>
                                 <th width="220" class="text-end">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse ($riwayatPaks as $riwayatPak)
+                                @php
+                                    $akTotal = (float) $riwayatPak->ak_total;
+                                    $akTambahan = (float) $riwayatPak->ak_tambahan;
+                                    $isLatest = $riwayatPak->is_computed_latest ?? false;
+                                @endphp
                                 <tr>
                                     <td>{{ $loop->iteration + ($riwayatPaks->currentPage() - 1) * $riwayatPaks->perPage() }}
                                     </td>
@@ -64,12 +70,21 @@
                                     </td>
                                     <td>{{ $riwayatPak->no_pak }}</td>
                                     <td>{{ $riwayatPak->tanggal_pak?->format('d/m/Y') }}</td>
-                                    <td>{{ number_format((float) $riwayatPak->ak_total, 3, ',', '.') }}</td>
-                                    <td>
-                                        @if ($riwayatPak->is_latest)
+                                    <td class="text-end">
+                                        @if ($akTambahan > 0)
+                                            <span class="text-success fw-medium">+{{ number_format($akTambahan, 3, ',', '.') }}</span>
+                                        @else
+                                            <span class="text-muted">{{ number_format($akTambahan, 3, ',', '.') }}</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-end">
+                                        <strong>{{ number_format($akTotal, 3, ',', '.') }}</strong>
+                                    </td>
+                                    <td class="text-center">
+                                        @if ($isLatest)
                                             <span class="badge bg-success">Terbaru</span>
                                         @else
-                                            <span class="badge bg-secondary">Arsip</span>
+                                            <span class="badge bg-secondary">Riwayat</span>
                                         @endif
                                     </td>
                                     <td class="text-end">
@@ -86,7 +101,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center text-muted py-4">Belum ada riwayat PAK.</td>
+                                    <td colspan="8" class="text-center text-muted py-4">Belum ada riwayat PAK.</td>
                                 </tr>
                             @endforelse
                         </tbody>

@@ -32,5 +32,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/proyeksi-jabatan', [ProjectionController::class, 'index'])->name('projections.index');
     Route::get('/proyeksi-jabatan/{pegawai}', [ProjectionController::class, 'show'])->name('projections.show');
 
+    // API: Fetch konversi AK for a pegawai + predikat (used by Riwayat PAK form AJAX)
+    Route::get('/api/konversi-ak/{pegawai}/{predikat}', [RiwayatPakController::class, 'getKonversiAk'])
+        ->name('api.konversi-ak');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

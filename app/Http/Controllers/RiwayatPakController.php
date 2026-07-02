@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreRiwayatPakRequest;
 use App\Http\Requests\UpdateRiwayatPakRequest;
+use App\Models\KonversiPredikatKinerja;
 use App\Models\Pegawai;
 use App\Models\RiwayatPak;
 use App\Support\DashboardUiData;
@@ -201,7 +202,7 @@ class RiwayatPakController extends Controller
 
     /**
      * Load pegawais with full context for the form display:
-     * latest AK, jabatan, golongan, and recent riwayat records.
+     * latest AK, jabatan, golongan, konversi predikat, and recent riwayat records.
      */
     private function pegawaiWithFullContext()
     {
@@ -209,6 +210,7 @@ class RiwayatPakController extends Controller
             ->select(['id', 'nip', 'nama_lengkap', 'jabatan_id', 'golongan_id'])
             ->with([
                 'jabatan:id,nama_jabatan,jenjang,target_ak_kenaikan_pangkat,koefisien_tahunan',
+                'jabatan.konversiPredikat',
                 'golongan:id,nama_golongan',
                 'riwayatPaks' => function ($query) {
                     $query->latestPak()->limit(5);
@@ -217,4 +219,45 @@ class RiwayatPakController extends Controller
             ->orderBy('nama_lengkap')
             ->get();
     }
+
+    /**
+     * API: Get the konversi AK value for a specific pegawai + predikat combination.
+     *
+     * Returns JSON with the nilai_ak from the konversi_predikat_kinerjas table
+     * based on the pegawai's jabatan. Used by the Riwayat PAK form to auto-fill
+     * the AK tambahan field when a predikat kinerja is selected.
+     *
+     * @param Pegawai $pegawai
+     * @param string $predikat
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getKonversiAk(Pegawai $pegawai, string $predikat)
+    {
+        $pegawai->load('jabatan.konversiPredikat');
+
+        if (!$pegawai->jabatan) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pegawai belum memiliki jabatan.',
+                'nilai_ak' => 0,
+            ]);
+        }
+
+        $nilaiAk = $pegawai->jabatan->getKonversiByPredikat($predikat);
+
+        $konversi = $pegawai->jabatan->konversiPredikat
+            ->where('predikat', $predikat)
+            ->first();
+
+        return response()->json([
+            'success' => true,
+            'nilai_ak' => $nilaiAk,
+            'persentase' => $konversi ? (float) $konversi->persentase : (KonversiPredikatKinerja::PREDIKAT_PERSENTASE[$predikat] ?? 100),
+            'jabatan' => $pegawai->jabatan->nama_jabatan,
+            'jenjang' => $pegawai->jabatan->jenjang,
+            'koefisien' => (float) $pegawai->jabatan->koefisien_tahunan,
+            'source' => $konversi ? 'database' : 'calculated',
+        ]);
+    }
 }
+

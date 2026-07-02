@@ -48,6 +48,7 @@
                                 <th>Pegawai</th>
                                 <th>Nomor PAK</th>
                                 <th>Tanggal PAK</th>
+                                <th class="text-center">Predikat</th>
                                 <th class="text-end">AK Tambahan</th>
                                 <th class="text-end">AK Total</th>
                                 <th class="text-center">Status</th>
@@ -70,6 +71,15 @@
                                     </td>
                                     <td>{{ $riwayatPak->no_pak }}</td>
                                     <td>{{ $riwayatPak->tanggal_pak?->format('d/m/Y') }}</td>
+                                    <td class="text-center">
+                                        @if ($riwayatPak->predikat_kinerja)
+                                            <span class="badge border {{ $riwayatPak->predikat_badge_class }} px-2 py-1">
+                                                {{ $riwayatPak->predikat_label }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted small">—</span>
+                                        @endif
+                                    </td>
                                     <td class="text-end">
                                         @if ($akTambahan > 0)
                                             <span class="text-success fw-medium">+{{ number_format($akTambahan, 3, ',', '.') }}</span>
@@ -101,7 +111,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center text-muted py-4">Belum ada riwayat PAK.</td>
+                                    <td colspan="9" class="text-center text-muted py-4">Belum ada riwayat PAK.</td>
                                 </tr>
                             @endforelse
                         </tbody>

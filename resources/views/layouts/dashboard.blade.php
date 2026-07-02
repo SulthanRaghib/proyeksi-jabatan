@@ -1,14 +1,15 @@
 <!DOCTYPE html>
-<html dir="ltr" lang="en">
+<html dir="ltr" lang="id">
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Dashboard Proyeksi Jabatan">
+    <meta name="description" content="Dashboard Proyeksi Jabatan - Sistem Manajemen Proyeksi Kenaikan Pangkat Pegawai">
     <meta name="author" content="BAPETEN">
+    <meta name="theme-color" content="#4f46e5">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('assets/images/icon.jpg') }}">
-    <title>@yield('title', 'Dashboard')</title>
+    <title>@yield('title', 'Dashboard') - Proyeksi Jabatan BAPETEN</title>
 
     <link href="{{ asset('assets/extra-libs/c3/c3.min.css') }}" rel="stylesheet">
     <link href="{{ asset('assets/libs/chartist/dist/chartist.min.css') }}" rel="stylesheet">
@@ -21,11 +22,18 @@
 </head>
 
 <body>
-    <div class="preloader">
+    {{-- Skip to main content link for accessibility --}}
+    <a href="#main-content" class="skip-to-main">
+        Skip to main content
+    </a>
+
+    {{-- Preloader with ARIA label --}}
+    <div class="preloader" role="status" aria-label="Loading application">
         <div class="lds-ripple">
             <div class="lds-pos"></div>
             <div class="lds-pos"></div>
         </div>
+        <span class="sr-only">Loading...</span>
     </div>
 
     <div id="main-wrapper" data-theme="light" data-layout="vertical" data-navbarbg="skin6" data-sidebartype="full"
@@ -35,7 +43,9 @@
         @include('dashboard.partials.sidebar')
 
         <div class="page-wrapper">
-            @yield('content')
+            <main id="main-content" role="main" aria-label="Main content">
+                @yield('content')
+            </main>
             @include('dashboard.partials.footer')
         </div>
     </div>

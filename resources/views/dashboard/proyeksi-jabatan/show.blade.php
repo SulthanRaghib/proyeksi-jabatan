@@ -2,122 +2,107 @@
 
 @section('title', 'Detail Proyeksi Jabatan - ' . $pegawai->nama_lengkap)
 
-@push('styles')
-    <style>
-        .konversi-table th,
-        .konversi-table td {
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .konversi-table .active-predikat {
-            background: #eef2ff;
-            border: 2px solid #4f46e5;
-            font-weight: 700;
-        }
-
-        .projection-comparison-card {
-            border: 1px solid #e5e7eb;
-            border-radius: 0.75rem;
-            transition: all 0.2s ease;
-        }
-
-        .projection-comparison-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
-
-        .projection-comparison-card.active {
-            border-color: #4f46e5;
-            background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
-    </style>
-@endpush
-
 @section('content')
-    <div class="page-breadcrumb">
-        <div class="row align-items-center">
-            <div class="col-12 col-md-6">
-                <h3 class="page-title text-dark font-weight-medium mb-1">Detail Proyeksi Jabatan</h3>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb m-0 p-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-muted">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('projections.index') }}" class="text-muted">Proyeksi
-                                Jabatan</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">{{ $pegawai->nama_lengkap }}</li>
-                    </ol>
-                </nav>
-            </div>
-            <div class="col-12 col-md-6 mt-3 mt-md-0 text-md-end">
-                <a href="{{ route('projections.index') }}" class="btn btn-outline-secondary">
-                    <i data-feather="arrow-left" class="feather-icon me-1"></i>
-                    Kembali
-                </a>
+    {{-- Page Header with Breadcrumbs --}}
+    <x-page-header 
+        title="Detail Proyeksi Jabatan"
+        :breadcrumbs="[
+            ['label' => 'Dashboard', 'url' => route('dashboard')],
+            ['label' => 'Proyeksi Jabatan', 'url' => route('projections.index')],
+            ['label' => $pegawai->nama_lengkap]
+        ]"
+        :hasAction="true">
+        <x-slot:action>
+            <a href="{{ route('projections.index') }}" class="btn btn-outline-secondary">
+                <i data-feather="arrow-left" class="feather-icon me-1"></i>
+                Kembali
+            </a>
+        </x-slot:action>
+    </x-page-header>
+
+    {{-- Sticky Action Bar --}}
+    <div class="sticky-action-bar no-print" id="stickyActionBar">
+        <div class="container-fluid">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ route('riwayat-paks.create', ['pegawai_id' => $pegawai->id]) }}" 
+                       class="btn btn-sm btn-primary">
+                        <i data-feather="plus" width="16" height="16" class="me-1"></i>
+                        Tambah Riwayat PAK
+                    </a>
+                    <a href="{{ route('pegawais.edit', $pegawai) }}" 
+                       class="btn btn-sm btn-outline-secondary">
+                        <i data-feather="edit-2" width="16" height="16" class="me-1"></i>
+                        Edit Pegawai
+                    </a>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">
+                        <i data-feather="printer" width="16" height="16" class="me-1"></i>
+                        Cetak
+                    </button>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="text-muted small">Terakhir diperbarui: {{ now()->format('d M Y, H:i') }}</span>
+                </div>
             </div>
         </div>
     </div>
 
     <div class="container-fluid">
+        {{-- Employee Header with Status Badge --}}
         <div class="row mb-4 align-items-center">
             <div class="col-12">
-                <div class="d-flex align-items-center">
-                    <h2 class="mb-0 me-3">{{ $pegawai->nama_lengkap }}</h2>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <h2 class="mb-0 me-2">{{ $pegawai->nama_lengkap }}</h2>
                     @if ($projection['is_held_by_speedbump'])
-                        <span
-                            class="badge bg-warning-subtle text-dark border border-warning-subtle fs-6 px-3 py-2">Tertahan
-                            Waktu</span>
+                        <span class="badge bg-warning-subtle text-dark border border-warning-subtle fs-6 px-3 py-2">
+                            <i data-feather="clock" width="16" height="16" class="me-1"></i>
+                            Tertahan Waktu
+                        </span>
                     @elseif ($projection['is_ready_mathematically'])
-                        <span class="badge bg-success-subtle text-dark border border-success-subtle fs-6 px-3 py-2">Siap
-                            AK</span>
+                        <span class="badge bg-success-subtle text-dark border border-success-subtle fs-6 px-3 py-2">
+                            <i data-feather="check-circle" width="16" height="16" class="me-1"></i>
+                            Siap AK
+                        </span>
                     @else
-                        <span
-                            class="badge bg-primary-subtle text-dark border border-primary-subtle fs-6 px-3 py-2">Proses
-                            AK</span>
+                        <span class="badge bg-primary-subtle text-dark border border-primary-subtle fs-6 px-3 py-2">
+                            <i data-feather="trending-up" width="16" height="16" class="me-1"></i>
+                            Proses AK
+                        </span>
                     @endif
                 </div>
-                <p class="text-muted mt-1 fs-5 mb-0">NIP: {{ $pegawai->nip }}</p>
+                <p class="text-muted mt-1 mb-0">
+                    <i data-feather="user" width="16" height="16" class="me-1"></i>
+                    NIP: {{ $pegawai->nip }}
+                </p>
             </div>
         </div>
 
         <div class="row">
-            {{-- Card 1: Profile Info --}}
+            {{-- Card 1: Profile Info - Using info-card component --}}
             <div class="col-md-5 col-lg-4 mb-4">
-                <div class="card shadow-sm border-0 h-100">
-                    <div class="card-body">
-                        <h4 class="card-title mb-4">Informasi Pegawai</h4>
-
-                        <div class="mb-3">
-                            <small class="text-muted d-block mb-1">Unit Kerja</small>
-                            <div class="fw-medium text-dark">{{ $pegawai->unitKerja->nama_unit ?? '-' }}</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <small class="text-muted d-block mb-1">Golongan Saat Ini</small>
-                            <div class="fw-medium text-dark">{{ $pegawai->golongan->nama_golongan ?? '-' }}</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <small class="text-muted d-block mb-1">Jabatan Saat Ini</small>
-                            <div class="fw-medium text-dark">{{ $pegawai->jabatan->nama_jabatan ?? '-' }}</div>
-                        </div>
-
-                        <div class="mb-3">
-                            <small class="text-muted d-block mb-1">Jenjang / Kategori</small>
-                            <div class="fw-medium text-dark">
-                                {{ $pegawai->jabatan->jenjang ?? '-' }}
-                                @if ($pegawai->jabatan?->kategori)
-                                    <span class="badge bg-light text-dark border ms-1">
-                                        {{ ucfirst($pegawai->jabatan->kategori) }}
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-
-                        <div class="mb-0">
-                            <small class="text-muted d-block mb-1">Koefisien AK Tahunan</small>
-                            <div class="fw-medium text-primary fs-5">
-                                {{ number_format((float) ($pegawai->jabatan->koefisien_tahunan ?? 0), 2, ',', '.') }}
-                            </div>
-                        </div>
-                    </div>
+                <div class="position-sticky" style="top: 90px;">
+                    @php
+                        $infoItems = [
+                            ['label' => 'Unit Kerja', 'value' => $pegawai->unitKerja->nama_unit ?? '-'],
+                            ['label' => 'Golongan Saat Ini', 'value' => $pegawai->golongan->nama_golongan ?? '-'],
+                            ['label' => 'Jabatan Saat Ini', 'value' => $pegawai->jabatan->nama_jabatan ?? '-'],
+                            [
+                                'label' => 'Jenjang / Kategori',
+                                'value' => ($pegawai->jabatan->jenjang ?? '-') .
+                                    ($pegawai->jabatan?->kategori
+                                        ? ' <span class="badge bg-light text-dark border ms-1">' . ucfirst($pegawai->jabatan->kategori) . '</span>'
+                                        : '')
+                            ],
+                            ['label' => 'TMT Jabatan', 'value' => \Carbon\Carbon::parse($pegawai->tmt_jabatan)->format('d F Y')],
+                            [
+                                'label' => 'Koefisien AK Tahunan',
+                                'value' => '<span class="text-primary fs-5 fw-bold">' .
+                                    number_format((float)($pegawai->jabatan->koefisien_tahunan ?? 0), 2, ',', '.') .
+                                    '</span>'
+                            ],
+                        ];
+                    @endphp
+                    <x-info-card title="Informasi Pegawai" :items="$infoItems" />
                 </div>
             </div>
 
@@ -399,8 +384,8 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                <div class="d-flex justify-content-center gap-2">
-                                                    <x-action-button type="edit" href="{{ route('riwayat-paks.edit', $pak) }}" />
+                                                <div class="d-flex justify-content-center gap-2 no-print">
+                                                    <x-action-button type="edit" :href="route('riwayat-paks.edit', $pak)" />
                                                     <form action="{{ route('riwayat-paks.destroy', $pak) }}" method="POST"
                                                         class="d-inline"
                                                         onsubmit="return confirm('Yakin ingin menghapus riwayat PAK ini?')">
@@ -414,7 +399,14 @@
                                         @php $previousAk = $akTotal; @endphp
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center py-4 text-muted">Belum ada riwayat PAK.
+                                            <td colspan="8" class="text-center py-5">
+                                                <x-empty-state 
+                                                    icon="file-text"
+                                                    title="Belum ada riwayat PAK"
+                                                    description="Mulai tambahkan riwayat PAK untuk melihat proyeksi yang akurat"
+                                                    :actionUrl="route('riwayat-paks.create', ['pegawai_id' => $pegawai->id])"
+                                                    actionText="Tambah Riwayat PAK"
+                                                />
                                             </td>
                                         </tr>
                                     @endforelse
@@ -431,6 +423,19 @@
 @push('scripts')
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // Sticky action bar scroll effect
+            const stickyBar = document.getElementById('stickyActionBar');
+            if (stickyBar) {
+                window.addEventListener('scroll', function() {
+                    if (window.scrollY > 100) {
+                        stickyBar.classList.add('scrolled');
+                    } else {
+                        stickyBar.classList.remove('scrolled');
+                    }
+                });
+            }
+
+            // Chart initialization
             if (typeof c3 !== 'undefined') {
                 var chartYears = {!! json_encode($chartYears) !!};
                 var chartAk = {!! json_encode($chartAk) !!};
@@ -474,6 +479,12 @@
                         },
                         point: {
                             r: 4
+                        },
+                        tooltip: {
+                            format: {
+                                title: function (d) { return 'Tahun ' + chartYears[d]; },
+                                value: function (value) { return value.toFixed(3); }
+                            }
                         }
                     });
 
@@ -483,7 +494,10 @@
                     }, 300);
                 } else {
                     document.getElementById('ak-trend-chart').innerHTML =
-                        '<div class="d-flex justify-content-center align-items-center h-100 text-muted">Data trend tidak tersedia.</div>';
+                        '<div class="d-flex flex-column justify-content-center align-items-center h-100 text-muted">' +
+                        '<i data-feather="bar-chart-2" width="48" height="48" class="mb-3 opacity-50"></i>' +
+                        '<p class="mb-0">Data trend tidak tersedia</p>' +
+                        '</div>';
                 }
 
                 // Re-render icons if feather is available
@@ -491,6 +505,20 @@
                     feather.replace();
                 }
             }
+
+            // Smooth scroll to sections
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
         });
     </script>
 @endpush

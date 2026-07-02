@@ -188,6 +188,33 @@
         @enderror
     </div>
 
+    {{-- Predikat Kinerja --}}
+    <div class="col-12 col-md-6">
+        <label for="predikat_kinerja" class="form-label">
+            Predikat Kinerja <small class="text-muted">(opsional)</small>
+        </label>
+        <select id="predikat_kinerja" name="predikat_kinerja"
+            class="form-select @error('predikat_kinerja') is-invalid @enderror">
+            <option value="" @selected(!old('predikat_kinerja', $currentRiwayatPak?->predikat_kinerja))>
+                Tidak ditentukan
+            </option>
+            @foreach (\App\Models\KonversiPredikatKinerja::PREDIKAT_LABELS as $key => $label)
+                <option value="{{ $key }}" @selected(old('predikat_kinerja', $currentRiwayatPak?->predikat_kinerja) === $key)>
+                    {{ $label }}
+                    ({{ number_format(\App\Models\KonversiPredikatKinerja::PREDIKAT_PERSENTASE[$key] ?? 0, 0) }}%)
+                </option>
+            @endforeach
+        </select>
+        @error('predikat_kinerja')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+        <div class="form-text">Predikat kinerja yang diperoleh pada periode ini.</div>
+    </div>
+
+    <div class="col-12 col-md-6">
+        {{-- spacer for alignment --}}
+    </div>
+
     {{-- Live Preview Panel --}}
     <div class="col-12" id="previewPanel" style="display: none;">
         <div class="card border-primary border mb-0">

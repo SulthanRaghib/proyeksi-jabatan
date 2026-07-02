@@ -134,14 +134,11 @@
                                 </div>
                                 <div class="col-md-3">
                                     <select name="performance" class="form-select">
-                                        <option value="sangat_baik" @selected($performance === 'sangat_baik')>Kinerja: Sangat Baik
-                                        </option>
-                                        <option value="baik" @selected($performance === 'baik')>Kinerja: Baik</option>
-                                        <option value="butuh_perbaikan" @selected($performance === 'butuh_perbaikan')>Kinerja: Butuh
-                                            Perbaikan</option>
-                                        <option value="kurang" @selected($performance === 'kurang')>Kinerja: Kurang</option>
-                                        <option value="sangat_kurang" @selected($performance === 'sangat_kurang')>Kinerja: Sangat Kurang
-                                        </option>
+                                        @foreach ($predikatLabels as $key => $label)
+                                            <option value="{{ $key }}" @selected($performance === $key)>
+                                                Kinerja: {{ $label }}
+                                            </option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-1">

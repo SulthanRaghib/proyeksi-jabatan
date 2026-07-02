@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             AdminUserSeeder::class,
             MasterDataSeeder::class,
             JabatanSeeder::class,
+            KonversiPredikatKinerjaSeeder::class,
             PegawaiSeeder::class,
         ]);
     }

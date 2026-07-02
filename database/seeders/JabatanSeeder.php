@@ -12,8 +12,10 @@ class JabatanSeeder extends Seeder
         $now = now();
 
         $rows = [
+            // ─── Kategori: Keahlian ─────────────────────────────────────
             [
                 'nama_jabatan' => 'Pengawas Radiasi',
+                'kategori' => 'keahlian',
                 'jenjang' => 'Pertama',
                 'koefisien_tahunan' => 12.50,
                 'target_ak_kenaikan_pangkat' => 50,
@@ -23,6 +25,7 @@ class JabatanSeeder extends Seeder
             ],
             [
                 'nama_jabatan' => 'Pengawas Radiasi',
+                'kategori' => 'keahlian',
                 'jenjang' => 'Muda',
                 'koefisien_tahunan' => 25.00,
                 'target_ak_kenaikan_pangkat' => 100,
@@ -32,6 +35,7 @@ class JabatanSeeder extends Seeder
             ],
             [
                 'nama_jabatan' => 'Pengawas Radiasi',
+                'kategori' => 'keahlian',
                 'jenjang' => 'Madya',
                 'koefisien_tahunan' => 37.50,
                 'target_ak_kenaikan_pangkat' => 150,
@@ -41,9 +45,52 @@ class JabatanSeeder extends Seeder
             ],
             [
                 'nama_jabatan' => 'Pengawas Radiasi',
+                'kategori' => 'keahlian',
                 'jenjang' => 'Utama',
                 'koefisien_tahunan' => 50.00,
                 'target_ak_kenaikan_pangkat' => 200,
+                'target_ak_kenaikan_jenjang' => 0,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+
+            // ─── Kategori: Keterampilan ─────────────────────────────────
+            [
+                'nama_jabatan' => 'Pengawas Radiasi',
+                'kategori' => 'keterampilan',
+                'jenjang' => 'Pemula',
+                'koefisien_tahunan' => 3.75,
+                'target_ak_kenaikan_pangkat' => 15,
+                'target_ak_kenaikan_jenjang' => 15,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'nama_jabatan' => 'Pengawas Radiasi',
+                'kategori' => 'keterampilan',
+                'jenjang' => 'Terampil',
+                'koefisien_tahunan' => 5.00,
+                'target_ak_kenaikan_pangkat' => 20,
+                'target_ak_kenaikan_jenjang' => 60,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'nama_jabatan' => 'Pengawas Radiasi',
+                'kategori' => 'keterampilan',
+                'jenjang' => 'Mahir',
+                'koefisien_tahunan' => 12.50,
+                'target_ak_kenaikan_pangkat' => 50,
+                'target_ak_kenaikan_jenjang' => 100,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            [
+                'nama_jabatan' => 'Pengawas Radiasi',
+                'kategori' => 'keterampilan',
+                'jenjang' => 'Penyelia',
+                'koefisien_tahunan' => 25.00,
+                'target_ak_kenaikan_pangkat' => 100,
                 'target_ak_kenaikan_jenjang' => 0,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -54,6 +101,7 @@ class JabatanSeeder extends Seeder
             $rows,
             ['nama_jabatan', 'jenjang'],
             [
+                'kategori',
                 'koefisien_tahunan',
                 'target_ak_kenaikan_pangkat',
                 'target_ak_kenaikan_jenjang',

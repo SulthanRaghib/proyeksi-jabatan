@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\KonversiPredikatKinerja;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateRiwayatPakRequest extends FormRequest
 {
@@ -28,6 +30,7 @@ class UpdateRiwayatPakRequest extends FormRequest
             'no_pak' => ['required', 'string', 'max:255'],
             'tanggal_pak' => ['required', 'date'],
             'ak_tambahan' => ['required', 'numeric', 'min:0', 'max:99999.999'],
+            'predikat_kinerja' => ['nullable', Rule::in(KonversiPredikatKinerja::PREDIKAT_OPTIONS)],
         ];
     }
 
@@ -44,6 +47,7 @@ class UpdateRiwayatPakRequest extends FormRequest
             'ak_tambahan.numeric' => 'AK tambahan harus berupa angka.',
             'ak_tambahan.min' => 'AK tambahan tidak boleh kurang dari 0.',
             'ak_tambahan.max' => 'AK tambahan melebihi batas yang diizinkan.',
+            'predikat_kinerja.in' => 'Predikat kinerja yang dipilih tidak valid.',
         ];
     }
 }

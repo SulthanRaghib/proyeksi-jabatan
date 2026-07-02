@@ -17,6 +17,7 @@ class UpdateJabatanRequest extends FormRequest
     {
         $this->merge([
             'nama_jabatan' => trim((string) $this->input('nama_jabatan')),
+            'kategori' => trim((string) $this->input('kategori')),
             'jenjang' => trim((string) $this->input('jenjang')),
             'koefisien_tahunan' => $this->input('koefisien_tahunan'),
             'target_ak_kenaikan_pangkat' => $this->input('target_ak_kenaikan_pangkat'),
@@ -28,6 +29,7 @@ class UpdateJabatanRequest extends FormRequest
     {
         return [
             'nama_jabatan' => ['required', 'string', 'max:255'],
+            'kategori' => ['required', Rule::in(Jabatan::KATEGORI_OPTIONS)],
             'jenjang' => ['required', Rule::in(Jabatan::JENJANG_OPTIONS)],
             'koefisien_tahunan' => ['required', 'numeric', 'min:0', 'max:999999.99'],
             'target_ak_kenaikan_pangkat' => ['required', 'integer', 'min:0'],

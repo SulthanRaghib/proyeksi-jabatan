@@ -81,16 +81,13 @@ class RiwayatPakController extends Controller
         DB::transaction(function () use ($request): void {
             $validated = $request->validated();
 
-            // Get the current latest AK for this pegawai
-            $currentAk = RiwayatPak::query()
-                ->where('pegawai_id', $validated['pegawai_id'])
-                ->latestPak()
-                ->value('ak_total') ?? 0;
+            // Set a temporary total (will be immediately overwritten by recalculation)
+            $validated['ak_total'] = $validated['ak_tambahan'];
 
-            // Accumulate: new total = old total + tambahan
-            $validated['ak_total'] = (float) $currentAk + (float) $validated['ak_tambahan'];
-
-            RiwayatPak::create($validated);
+            $riwayatPak = RiwayatPak::create($validated);
+            
+            // Recalculate all records sequentially to fix out-of-order inserts
+            $this->recalculateSubsequentRecords($riwayatPak);
         });
 
         return redirect()
@@ -112,25 +109,12 @@ class RiwayatPakController extends Controller
         DB::transaction(function () use ($request, $riwayatPak): void {
             $validated = $request->validated();
 
-            // Get the previous record's AK total (the one before this record)
-            $previousAk = RiwayatPak::query()
-                ->where('pegawai_id', $riwayatPak->pegawai_id)
-                ->where(function ($query) use ($riwayatPak) {
-                    $query->where('tanggal_pak', '<', $riwayatPak->tanggal_pak)
-                        ->orWhere(function ($q) use ($riwayatPak) {
-                            $q->where('tanggal_pak', '=', $riwayatPak->tanggal_pak)
-                              ->where('id', '<', $riwayatPak->id);
-                        });
-                })
-                ->latestPak()
-                ->value('ak_total') ?? 0;
-
-            // Recalculate total based on new tambahan
-            $validated['ak_total'] = (float) $previousAk + (float) $validated['ak_tambahan'];
+            // Set a temporary total (will be immediately overwritten by recalculation)
+            $validated['ak_total'] = $validated['ak_tambahan'];
 
             $riwayatPak->update($validated);
 
-            // Recalculate all subsequent records for this pegawai
+            // Recalculate all records sequentially to ensure chronological correctness
             $this->recalculateSubsequentRecords($riwayatPak);
         });
 

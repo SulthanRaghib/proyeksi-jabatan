@@ -61,8 +61,8 @@ class ProjectionService
         string $targetType = 'pangkat',
         int $periodsPerYear = 6
     ): array {
-        // Pre-load relationships to avoid N+1 queries
-        $pegawai->load('jabatan.konversiPredikat', 'riwayatPaks');
+        // Pre-load relationships to avoid N+1 queries if not already loaded
+        $pegawai->loadMissing('jabatan.konversiPredikat', 'riwayatPaks');
 
         // ============================================================================
         // STEP 1: RETRIEVE BASELINE DATA

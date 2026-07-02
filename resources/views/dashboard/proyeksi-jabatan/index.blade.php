@@ -48,76 +48,6 @@
             opacity: 0.08;
         }
 
-        /* Modern Filters */
-        .filter-card {
-            border-radius: 1rem;
-            border: none;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-        
-        .custom-input {
-            border-radius: 0.75rem;
-            padding: 0.6rem 1rem;
-            border: 1px solid #e5e7eb;
-            background-color: #f9fafb;
-            transition: all 0.2s;
-        }
-        
-        .custom-input:focus {
-            background-color: #ffffff;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-            outline: none;
-        }
-
-        /* Modern Table Card */
-        .table-card {
-            border-radius: 1rem;
-            border: none;
-            background: #ffffff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-        }
-        
-        .modern-table th {
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            color: #6b7280;
-            background-color: #f9fafb;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 1rem;
-        }
-        
-        .modern-table td {
-            padding: 1rem;
-            vertical-align: middle;
-            border-bottom: 1px solid #f3f4f6;
-            color: #374151;
-        }
-        
-        .action-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.4rem 1rem;
-            border-radius: 0.5rem;
-            background: #eef2ff;
-            color: #4f46e5;
-            transition: all 0.2s;
-            border: none;
-            font-weight: 500;
-            font-size: 0.875rem;
-            text-decoration: none;
-        }
-        
-        .action-btn:hover {
-            background: #4f46e5;
-            color: #ffffff;
-        }
     </style>
 @endpush
 
@@ -316,7 +246,9 @@
                                             </td>
                                             <td class="text-center">
                                                 <a href="{{ route('projections.show', $pegawai) }}"
-                                                    class="action-btn">Detail</a>
+                                                    class="action-btn action-btn--view" style="width: auto; padding: 0.4rem 1rem;" title="Lihat Detail">
+                                                    <i data-feather="eye" width="14" height="14" class="me-1"></i> Detail
+                                                </a>
                                             </td>
                                         </tr>
                                     @empty

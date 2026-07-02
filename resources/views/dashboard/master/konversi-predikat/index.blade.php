@@ -177,44 +177,14 @@
             font-weight: 600;
         }
 
-        .action-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
+        /* Action buttons inherited from shared-styles, just add opacity hover effect */
+        .konversi-item .d-flex.justify-content-center {
             opacity: 0.7;
             transition: opacity 0.2s;
         }
 
-        .konversi-item:hover .action-buttons {
+        .konversi-item:hover .d-flex.justify-content-center {
             opacity: 1;
-        }
-        
-        .action-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            background: #f3f4f6;
-            color: #6b7280;
-            transition: all 0.2s;
-        }
-        
-        .action-btn:hover {
-            background: #e5e7eb;
-            color: #374151;
-        }
-        
-        .action-btn.edit:hover {
-            background: #fef3c7;
-            color: #d97706;
-        }
-        
-        .action-btn.delete:hover {
-            background: #fee2e2;
-            color: #dc2626;
         }
     </style>
 @endpush
@@ -423,20 +393,14 @@
                                                     {{ number_format((float) $konversi->persentase, 0) }}%
                                                 </div>
                                             </div>
-                                            <div class="action-buttons">
-                                                <a href="{{ route('konversi-predikats.edit', $konversi) }}"
-                                                    class="action-btn edit" title="Edit">
-                                                    <i data-feather="edit-2" width="12" height="12"></i>
-                                                </a>
+                                            <div class="d-flex justify-content-center gap-2 mt-2">
+                                                <x-action-button type="edit" :href="route('konversi-predikats.edit', $konversi)" />
                                                 <form action="{{ route('konversi-predikats.destroy', $konversi) }}"
                                                     method="POST" class="d-inline"
                                                     onsubmit="return confirm('Hapus konversi ini?')">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="action-btn delete border-0"
-                                                        title="Hapus">
-                                                        <i data-feather="trash-2" width="12" height="12"></i>
-                                                    </button>
+                                                    <x-action-button type="delete" />
                                                 </form>
                                             </div>
                                         @else

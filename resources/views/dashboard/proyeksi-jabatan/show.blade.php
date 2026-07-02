@@ -29,7 +29,6 @@
         .projection-comparison-card.active {
             border-color: #4f46e5;
             background: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
-        }
     </style>
 @endpush
 
@@ -340,6 +339,7 @@
                                         <th class="border-top-0 text-end">Total AK</th>
                                         <th class="border-top-0 text-center">Perubahan</th>
                                         <th class="border-top-0 text-center">Status</th>
+                                        <th class="border-top-0 text-center" style="width: 100px;">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -398,11 +398,23 @@
                                                     <span class="text-muted">-</span>
                                                 @endif
                                             </td>
+                                            <td>
+                                                <div class="d-flex justify-content-center gap-2">
+                                                    <x-action-button type="edit" href="{{ route('riwayat-paks.edit', $pak) }}" />
+                                                    <form action="{{ route('riwayat-paks.destroy', $pak) }}" method="POST"
+                                                        class="d-inline"
+                                                        onsubmit="return confirm('Yakin ingin menghapus riwayat PAK ini?')">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <x-action-button type="delete" />
+                                                    </form>
+                                                </div>
+                                            </td>
                                         </tr>
                                         @php $previousAk = $akTotal; @endphp
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="text-center py-4 text-muted">Belum ada riwayat PAK.
+                                            <td colspan="8" class="text-center py-4 text-muted">Belum ada riwayat PAK.
                                             </td>
                                         </tr>
                                     @endforelse

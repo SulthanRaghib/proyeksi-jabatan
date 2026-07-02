@@ -17,6 +17,7 @@ class RiwayatPak extends Model
         'tanggal_pak',
         'ak_total',
         'ak_tambahan',
+        'predikat_kinerja',
     ];
 
     protected $casts = [
@@ -36,5 +37,32 @@ class RiwayatPak extends Model
     public function scopeLatestPak(Builder $query): Builder
     {
         return $query->orderByDesc('tanggal_pak')->orderByDesc('id');
+    }
+
+    // ─── Accessors ──────────────────────────────────────────────────
+
+    /**
+     * Get the human-readable predikat kinerja label.
+     */
+    public function getPredikatLabelAttribute(): string
+    {
+        if (!$this->predikat_kinerja) {
+            return '-';
+        }
+
+        return KonversiPredikatKinerja::PREDIKAT_LABELS[$this->predikat_kinerja] ?? $this->predikat_kinerja;
+    }
+
+    /**
+     * Get badge CSS class for the predikat.
+     */
+    public function getPredikatBadgeClassAttribute(): string
+    {
+        if (!$this->predikat_kinerja) {
+            return 'bg-secondary-subtle text-secondary';
+        }
+
+        return KonversiPredikatKinerja::PREDIKAT_BADGE_CLASSES[$this->predikat_kinerja]
+            ?? 'bg-secondary-subtle text-secondary';
     }
 }

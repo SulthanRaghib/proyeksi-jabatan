@@ -49,10 +49,10 @@ class KonversiPredikatKinerja extends Model
      * Badge CSS classes for each predikat (Bootstrap 5).
      */
     public const PREDIKAT_BADGE_CLASSES = [
-        'sangat_baik' => 'bg-success-subtle text-success border-success-subtle',
-        'baik' => 'bg-primary-subtle text-primary border-primary-subtle',
-        'butuh_perbaikan' => 'bg-warning-subtle text-warning border-warning-subtle',
-        'kurang' => 'bg-danger-subtle text-danger border-danger-subtle',
+        'sangat_baik' => 'bg-success-subtle text-dark border-success-subtle',
+        'baik' => 'bg-primary-subtle text-dark border-primary-subtle',
+        'butuh_perbaikan' => 'bg-warning-subtle text-dark border-warning-subtle',
+        'kurang' => 'bg-danger-subtle text-dark border-danger-subtle',
         'sangat_kurang' => 'bg-dark-subtle text-dark border-dark-subtle',
     ];
 

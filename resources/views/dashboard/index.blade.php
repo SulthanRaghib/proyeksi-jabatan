@@ -2,6 +2,91 @@
 
 @section('title', 'Dashboard Proyeksi Jabatan')
 
+@push('styles')
+    <style>
+        /* Modern Stat Cards */
+        .stat-card {
+            border-radius: 1rem;
+            border: none;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
+            height: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .stat-bg-icon {
+            position: absolute;
+            right: -15px;
+            bottom: -15px;
+            opacity: 0.04;
+            transform: rotate(-15deg);
+            transition: all 0.5s ease;
+        }
+
+        .stat-card:hover .stat-bg-icon {
+            transform: rotate(0) scale(1.2);
+            opacity: 0.08;
+        }
+
+        /* Modern Table Card */
+        .table-card {
+            border-radius: 1rem;
+            border: none;
+            background: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        
+        .modern-table th {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: #6b7280;
+            background-color: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem;
+        }
+        
+        .modern-table td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+        }
+        
+        .modern-card {
+            border-radius: 1rem;
+            border: none;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+        }
+    </style>
+@endpush
+
 @section('content')
     <div class="page-breadcrumb">
         <div class="row">
@@ -32,19 +117,15 @@
         <div class="row">
             @foreach ($summaryCards as $card)
                 <div class="col-sm-6 col-lg-3 mb-3">
-                    <div class="card h-100 shadow-sm border-0">
-                        <div class="card-body">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <div>
-                                    <h2 class="text-dark mb-1 font-weight-bold">{{ $card['value'] }}</h2>
-                                    <p class="text-muted mb-0">{{ $card['title'] }}</p>
-                                </div>
-                                <div class="icon-circle bg-light rounded-circle d-flex align-items-center justify-content-center"
-                                    style="width:48px;height:48px;">
-                                    <i data-feather="{{ $card['icon'] }}"></i>
-                                </div>
-                            </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i data-feather="{{ $card['icon'] }}" width="24" height="24"></i>
                         </div>
+                        <div>
+                            <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">{{ $card['title'] }}</p>
+                            <h3 class="mb-0 text-dark fw-bolder">{{ $card['value'] }}</h3>
+                        </div>
+                        <i data-feather="{{ $card['icon'] }}" width="100" height="100" class="stat-bg-icon"></i>
                     </div>
                 </div>
             @endforeach
@@ -52,7 +133,7 @@
 
         <div class="row">
             <div class="col-lg-6 col-md-12 mb-3">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card modern-card h-100">
                     <div class="card-body">
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
@@ -102,7 +183,7 @@
             </div>
 
             <div class="col-lg-6 col-md-12 mb-3">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card modern-card h-100">
                     <div class="card-body">
                         <div class="d-flex align-items-center justify-content-between mb-3">
                             <div>
@@ -148,55 +229,57 @@
 
         <div class="row">
             <div class="col-xl-8 col-lg-12 mb-3">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="table-card h-100">
                     <div class="card-body">
                         <div class="d-flex align-items-center justify-content-between mb-4">
                             <div>
                                 <h4 class="card-title mb-0">Pegawai Terbaru</h4>
-                                <p class="text-muted small mb-0">Menampilkan 5 entri terkahir</p>
+                                <p class="text-muted small mb-0">Menampilkan 5 entri terakhir</p>
                             </div>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table modern-table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Nama</th>
+                                    <th>Unit Kerja</th>
+                                    <th>Jabatan</th>
+                                    <th>Golongan</th>
+                                    <th class="text-center">Ukom</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse ($latestEmployees as $employee)
                                     <tr>
-                                        <th>Nama</th>
-                                        <th>Unit Kerja</th>
-                                        <th>Jabatan</th>
-                                        <th>Golongan</th>
-                                        <th class="text-center">Ukom</th>
+                                        <td>
+                                            <div class="fw-medium text-dark">{{ $employee->nama_lengkap }}</div>
+                                            <div class="text-muted small">{{ $employee->nip }}</div>
+                                        </td>
+                                        <td>{{ $employee->unitKerja->nama_unit ?? '-' }}</td>
+                                        <td>{{ $employee->jabatan->nama_jabatan ?? '-' }}</td>
+                                        <td><span class="badge bg-light text-dark border">{{ $employee->golongan->nama_golongan ?? '-' }}</span></td>
+                                        <td class="text-center">
+                                            @if ($employee->status_ukom)
+                                                <span class="badge bg-success bg-opacity-10 text-success border-0 px-2 py-1">Ya</span>
+                                            @else
+                                                <span class="badge bg-secondary bg-opacity-10 text-secondary border-0 px-2 py-1">Tidak</span>
+                                            @endif
+                                        </td>
                                     </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse ($latestEmployees as $employee)
-                                        <tr>
-                                            <td>{{ $employee->nama_lengkap }}</td>
-                                            <td>{{ $employee->unitKerja->nama_unit ?? '-' }}</td>
-                                            <td>{{ $employee->jabatan->nama_jabatan ?? '-' }}</td>
-                                            <td>{{ $employee->golongan->nama_golongan ?? '-' }}</td>
-                                            <td class="text-center">
-                                                @if ($employee->status_ukom)
-                                                    <span class="badge bg-success">Ya</span>
-                                                @else
-                                                    <span class="badge bg-secondary">Tidak</span>
-                                                @endif
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="5" class="text-center text-muted py-4">Belum ada data pegawai
-                                                terbaru.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
+                                @empty
+                                    <tr>
+                                        <td colspan="5" class="text-center text-muted py-4">Belum ada data pegawai terbaru.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
 
             <div class="col-xl-4 col-lg-12 mb-3">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card modern-card h-100">
                     <div class="card-body">
                         <div class="d-flex align-items-center justify-content-between mb-4">
                             <div>

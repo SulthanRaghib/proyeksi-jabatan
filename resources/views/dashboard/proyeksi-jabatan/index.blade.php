@@ -4,20 +4,119 @@
 
 @push('styles')
     <style>
-        .border-left-primary {
-            border-left: 4px solid #4f46e5 !important;
+        /* Modern Stat Cards */
+        .stat-card {
+            border-radius: 1rem;
+            border: none;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            display: flex;
+            align-items: center;
+            padding: 1.5rem;
         }
 
-        .border-left-success {
-            border-left: 4px solid #10b981 !important;
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
 
-        .border-left-warning {
-            border-left: 4px solid #f59e0b !important;
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            flex-shrink: 0;
         }
 
-        .border-left-info {
-            border-left: 4px solid #0ea5e9 !important;
+        .stat-bg-icon {
+            position: absolute;
+            right: -15px;
+            bottom: -15px;
+            opacity: 0.04;
+            transform: rotate(-15deg);
+            transition: all 0.5s ease;
+        }
+
+        .stat-card:hover .stat-bg-icon {
+            transform: rotate(0) scale(1.2);
+            opacity: 0.08;
+        }
+
+        /* Modern Filters */
+        .filter-card {
+            border-radius: 1rem;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        
+        .custom-input {
+            border-radius: 0.75rem;
+            padding: 0.6rem 1rem;
+            border: 1px solid #e5e7eb;
+            background-color: #f9fafb;
+            transition: all 0.2s;
+        }
+        
+        .custom-input:focus {
+            background-color: #ffffff;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            outline: none;
+        }
+
+        /* Modern Table Card */
+        .table-card {
+            border-radius: 1rem;
+            border: none;
+            background: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+        
+        .modern-table th {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: #6b7280;
+            background-color: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 1rem;
+        }
+        
+        .modern-table td {
+            padding: 1rem;
+            vertical-align: middle;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+        }
+        
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.4rem 1rem;
+            border-radius: 0.5rem;
+            background: #eef2ff;
+            color: #4f46e5;
+            transition: all 0.2s;
+            border: none;
+            font-weight: 500;
+            font-size: 0.875rem;
+            text-decoration: none;
+        }
+        
+        .action-btn:hover {
+            background: #4f46e5;
+            color: #ffffff;
         }
     </style>
 @endpush
@@ -43,65 +142,53 @@
 
     <div class="container-fluid">
         <!-- Stats Row -->
-        <div class="row mb-4">
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="card shadow-sm border-0 border-left-primary h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div>
-                                <p class="text-muted mb-1">Total Pegawai Dipantau</p>
-                                <h3 class="mb-0 text-dark">{{ $stats['total'] }}</h3>
-                            </div>
-                            <div class="ms-auto text-primary">
-                                <i data-feather="users" width="32" height="32"></i>
-                            </div>
-                        </div>
+        <div class="row mb-4 g-3">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary-subtle text-primary">
+                        <i data-feather="users" width="24" height="24"></i>
                     </div>
+                    <div>
+                        <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Pegawai Dipantau</p>
+                        <h3 class="mb-0 text-dark fw-bolder">{{ $stats['total'] }}</h3>
+                    </div>
+                    <i data-feather="users" width="100" height="100" class="stat-bg-icon text-primary"></i>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="card shadow-sm border-0 border-left-success h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div>
-                                <p class="text-muted mb-1">Siap Secara AK</p>
-                                <h3 class="mb-0 text-success">{{ $stats['ready'] }}</h3>
-                            </div>
-                            <div class="ms-auto text-success">
-                                <i data-feather="check-circle" width="32" height="32"></i>
-                            </div>
-                        </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-success-subtle text-success">
+                        <i data-feather="check-circle" width="24" height="24"></i>
                     </div>
+                    <div>
+                        <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Siap Secara AK</p>
+                        <h3 class="mb-0 text-success fw-bolder">{{ $stats['ready'] }}</h3>
+                    </div>
+                    <i data-feather="check-circle" width="100" height="100" class="stat-bg-icon text-success"></i>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="card shadow-sm border-0 border-left-warning h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div>
-                                <p class="text-muted mb-1">Tertahan Waktu</p>
-                                <h3 class="mb-0 text-warning">{{ $stats['speedbump'] }}</h3>
-                            </div>
-                            <div class="ms-auto text-warning">
-                                <i data-feather="clock" width="32" height="32"></i>
-                            </div>
-                        </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning-subtle text-warning">
+                        <i data-feather="clock" width="24" height="24"></i>
                     </div>
+                    <div>
+                        <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Tertahan Waktu</p>
+                        <h3 class="mb-0 text-warning fw-bolder">{{ $stats['speedbump'] }}</h3>
+                    </div>
+                    <i data-feather="clock" width="100" height="100" class="stat-bg-icon text-warning"></i>
                 </div>
             </div>
-            <div class="col-12 col-sm-6 col-lg-3">
-                <div class="card shadow-sm border-0 border-left-info h-100">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <div>
-                                <p class="text-muted mb-1">Rata-rata Progres</p>
-                                <h3 class="mb-0 text-info">{{ $stats['avg_progress'] }}%</h3>
-                            </div>
-                            <div class="ms-auto text-info">
-                                <i data-feather="trending-up" width="32" height="32"></i>
-                            </div>
-                        </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="stat-card">
+                    <div class="stat-icon bg-info-subtle text-info">
+                        <i data-feather="trending-up" width="24" height="24"></i>
                     </div>
+                    <div>
+                        <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Rata-rata Progres</p>
+                        <h3 class="mb-0 text-info fw-bolder">{{ $stats['avg_progress'] }}%</h3>
+                    </div>
+                    <i data-feather="trending-up" width="100" height="100" class="stat-bg-icon text-info"></i>
                 </div>
             </div>
         </div>
@@ -119,46 +206,57 @@
                         </div>
 
                         <!-- Filter Form yang lebih clean menyatu dengan background putih -->
-                        <form method="GET" action="{{ route('projections.index') }}" class="mb-4">
-                            <div class="row g-2">
-                                <div class="col-md-5">
-                                    <input type="text" name="q" value="{{ $search }}" class="form-control"
-                                        placeholder="Cari nama atau NIP...">
-                                </div>
-                                <div class="col-md-3">
-                                    <select name="status" class="form-select">
-                                        <option value="all" @selected($status === 'all')>Semua Status</option>
-                                        <option value="ready" @selected($status === 'ready')>Siap AK</option>
-                                        <option value="waiting" @selected($status === 'waiting')>Tertahan Waktu</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-3">
-                                    <select name="performance" class="form-select">
-                                        @foreach ($predikatLabels as $key => $label)
-                                            <option value="{{ $key }}" @selected($performance === $key)>
-                                                Kinerja: {{ $label }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-1">
-                                    <button type="submit" class="btn btn-outline-primary w-100">Cari</button>
-                                </div>
+                        <div class="filter-card mb-4">
+                            <div class="card-body p-3">
+                                <form method="GET" action="{{ route('projections.index') }}" class="row g-2 align-items-center">
+                                    <div class="col-12 col-md-5">
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-transparent border-end-0 text-muted ps-3">
+                                                <i data-feather="search" width="16" height="16"></i>
+                                            </span>
+                                            <input type="text" name="q" value="{{ $search }}" class="form-control custom-input border-start-0 ps-0"
+                                                placeholder="Cari nama atau NIP...">
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-3">
+                                        <select name="status" class="form-select custom-input">
+                                            <option value="all" @selected($status === 'all')>Semua Status</option>
+                                            <option value="ready" @selected($status === 'ready')>Siap AK</option>
+                                            <option value="waiting" @selected($status === 'waiting')>Tertahan Waktu</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-md-3">
+                                        <select name="performance" class="form-select custom-input">
+                                            @foreach ($predikatLabels as $key => $label)
+                                                <option value="{{ $key }}" @selected($performance === $key)>
+                                                    Kinerja: {{ $label }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-md-1 d-grid">
+                                        <button type="submit" class="btn btn-primary rounded-pill fw-medium shadow-sm">
+                                            Cari
+                                        </button>
+                                    </div>
+                                </form>
                             </div>
-                        </form>
+                        </div>
 
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle mb-0">
-                                <thead>
-                                    <tr>
-                                        <th class="border-top-0">Pegawai</th>
-                                        <th class="border-top-0">Jabatan & Unit</th>
-                                        <th class="border-top-0" style="min-width: 180px;">Progress AK</th>
-                                        <th class="border-top-0">Estimasi</th>
-                                        <th class="border-top-0">Status</th>
-                                        <th class="border-top-0 text-center">Aksi</th>
-                                    </tr>
-                                </thead>
+                        <div class="table-card">
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table modern-table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Pegawai</th>
+                                                <th>Jabatan & Unit</th>
+                                                <th style="min-width: 180px;">Progress AK</th>
+                                                <th>Estimasi</th>
+                                                <th>Status</th>
+                                                <th class="text-center">Aksi</th>
+                                            </tr>
+                                        </thead>
                                 <tbody>
                                     @forelse ($projections as $item)
                                         @php
@@ -204,21 +302,21 @@
                                             <td>
                                                 @if ($held)
                                                     <span
-                                                        class="badge bg-warning-subtle text-warning border border-warning-subtle">Tertahan
+                                                        class="badge bg-warning-subtle text-dark border border-warning-subtle">Tertahan
                                                         Waktu</span>
                                                 @elseif ($ready)
                                                     <span
-                                                        class="badge bg-success-subtle text-success border border-success-subtle">Siap
+                                                        class="badge bg-success-subtle text-dark border border-success-subtle">Siap
                                                         AK</span>
                                                 @else
                                                     <span
-                                                        class="badge bg-primary-subtle text-primary border border-primary-subtle">Proses
+                                                        class="badge bg-primary-subtle text-dark border border-primary-subtle">Proses
                                                         AK</span>
                                                 @endif
                                             </td>
                                             <td class="text-center">
                                                 <a href="{{ route('projections.show', $pegawai) }}"
-                                                    class="btn btn-sm btn-outline-primary">Detail</a>
+                                                    class="action-btn">Detail</a>
                                             </td>
                                         </tr>
                                     @empty
@@ -229,7 +327,9 @@
                                         </tr>
                                     @endforelse
                                 </tbody>
-                            </table>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

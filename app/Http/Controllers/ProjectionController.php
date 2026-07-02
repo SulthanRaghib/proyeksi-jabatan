@@ -90,7 +90,15 @@ class ProjectionController extends Controller
             }
         ]);
 
-        $projection = $projectionService->calculateProjection($pegawai);
+        // Determine default performance predicate for simulation
+        // Use the latest historical predicate if available, otherwise default to 'baik'
+        $latestPredikat = $pegawai->riwayatPaks->last()?->predikat_kinerja ?? 'baik';
+        // Validate against options just in case
+        if (!in_array($latestPredikat, KonversiPredikatKinerja::PREDIKAT_OPTIONS)) {
+            $latestPredikat = 'baik';
+        }
+
+        $projection = $projectionService->calculateProjection($pegawai, $latestPredikat);
 
         // Get konversi summary for this pegawai's jabatan
         $konversiSummary = $pegawai->jabatan

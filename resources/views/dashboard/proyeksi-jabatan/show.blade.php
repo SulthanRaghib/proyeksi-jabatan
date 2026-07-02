@@ -63,14 +63,14 @@
                     <h2 class="mb-0 me-3">{{ $pegawai->nama_lengkap }}</h2>
                     @if ($projection['is_held_by_speedbump'])
                         <span
-                            class="badge bg-warning-subtle text-warning border border-warning-subtle fs-6 px-3 py-2">Tertahan
+                            class="badge bg-warning-subtle text-dark border border-warning-subtle fs-6 px-3 py-2">Tertahan
                             Waktu</span>
                     @elseif ($projection['is_ready_mathematically'])
-                        <span class="badge bg-success-subtle text-success border border-success-subtle fs-6 px-3 py-2">Siap
+                        <span class="badge bg-success-subtle text-dark border border-success-subtle fs-6 px-3 py-2">Siap
                             AK</span>
                     @else
                         <span
-                            class="badge bg-primary-subtle text-primary border border-primary-subtle fs-6 px-3 py-2">Proses
+                            class="badge bg-primary-subtle text-dark border border-primary-subtle fs-6 px-3 py-2">Proses
                             AK</span>
                     @endif
                 </div>
@@ -203,14 +203,14 @@
                             </div>
 
                             <div class="table-responsive">
-                                <table class="table table-bordered konversi-table mb-0">
-                                    <thead class="table-light">
+                                <table class="table table-hover align-middle mb-0">
+                                    <thead>
                                         <tr>
-                                            <th>Predikat</th>
-                                            <th>Persentase</th>
-                                            <th>AK Tahunan</th>
-                                            <th>AK per Periode (6×/tahun)</th>
-                                            <th>Status</th>
+                                            <th class="border-top-0">Predikat</th>
+                                            <th class="border-top-0">Persentase</th>
+                                            <th class="border-top-0">AK Tahunan</th>
+                                            <th class="border-top-0">AK per Periode (6×/tahun)</th>
+                                            <th class="border-top-0">Status</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -438,6 +438,10 @@
                                 'Total AK': '#4f46e5'
                             }
                         },
+                        padding: {
+                            right: 30,
+                            left: 40
+                        },
                         axis: {
                             x: {
                                 type: 'category',
@@ -460,6 +464,11 @@
                             r: 4
                         }
                     });
+
+                    // Fix for C3 graph overflow on initial load (wait for layout to settle)
+                    setTimeout(function() {
+                        chart.resize();
+                    }, 300);
                 } else {
                     document.getElementById('ak-trend-chart').innerHTML =
                         '<div class="d-flex justify-content-center align-items-center h-100 text-muted">Data trend tidak tersedia.</div>';

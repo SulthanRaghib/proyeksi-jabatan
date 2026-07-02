@@ -162,7 +162,7 @@
                     </div>
                     <div>
                         <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Siap Secara AK</p>
-                        <h3 class="mb-0 text-success fw-bolder">{{ $stats['ready'] }}</h3>
+                        <h3 class="mb-0 text-dark fw-bolder">{{ $stats['ready'] }}</h3>
                     </div>
                     <i data-feather="check-circle" width="100" height="100" class="stat-bg-icon text-success"></i>
                 </div>
@@ -174,7 +174,7 @@
                     </div>
                     <div>
                         <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Tertahan Waktu</p>
-                        <h3 class="mb-0 text-warning fw-bolder">{{ $stats['speedbump'] }}</h3>
+                        <h3 class="mb-0 text-dark fw-bolder">{{ $stats['speedbump'] }}</h3>
                     </div>
                     <i data-feather="clock" width="100" height="100" class="stat-bg-icon text-warning"></i>
                 </div>

@@ -4,6 +4,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\GolonganController;
 use App\Http\Controllers\JabatanController;
+use App\Http\Controllers\KonversiPredikatKinerjaController;
 use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\ProjectionController;
 use App\Http\Controllers\RiwayatPakController;
@@ -23,6 +24,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('jabatans', JabatanController::class)->except('show');
     Route::resource('pegawais', PegawaiController::class)->except('show');
     Route::resource('riwayat-paks', RiwayatPakController::class)->except('show');
+
+    // Konversi Predikat Kinerja management
+    Route::resource('konversi-predikats', KonversiPredikatKinerjaController::class)->except('show');
+    Route::post('konversi-predikats/generate', [KonversiPredikatKinerjaController::class, 'generate'])->name('konversi-predikats.generate');
+
     Route::get('/proyeksi-jabatan', [ProjectionController::class, 'index'])->name('projections.index');
     Route::get('/proyeksi-jabatan/{pegawai}', [ProjectionController::class, 'show'])->name('projections.show');
 

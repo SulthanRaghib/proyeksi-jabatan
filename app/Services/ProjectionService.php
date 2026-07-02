@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\KonversiPredikatKinerja;
 use App\Models\Pegawai;
 use Carbon\Carbon;
 
@@ -13,6 +14,10 @@ use Carbon\Carbon;
  * Calculates civil servant career progression based on Permen PANRB 1/2023 regulations.
  * Determines promotion eligibility by considering both mathematical (AK accumulation) and
  * regulatory (minimum service time) requirements.
+ *
+ * KEY CHANGE (v2): Now uses database-driven konversi predikat kinerja values instead of
+ * hardcoded multipliers. Each jabatan × predikat combination has a specific AK value
+ * stored in the konversi_predikat_kinerjas table.
  *
  * @package App\Services
  */
@@ -31,41 +36,33 @@ class ProjectionService
      * based on their current Angka Kredit (AK/credit score) and the dual requirements
      * established in Permen PANRB 1/2023:
      *
-     * 1. MATHEMATICAL REQUIREMENT: Accumulate sufficient AK based on annual coefficient
-     *    and performance multiplier.
+     * 1. MATHEMATICAL REQUIREMENT: Accumulate sufficient AK based on annual AK obtained
+     *    from predikat kinerja conversion table (database-driven).
      * 2. REGULATORY REQUIREMENT: Serve a minimum of 4 years in the current rank.
      *
-     * The projection accounts for the "speed bump" scenario where an employee has achieved
-     * the required AK mathematically but must wait the minimum regulatory period before
-     * becoming eligible for promotion.
-     *
      * CALCULATION FLOW:
-     * - Retrieves target AK and annual coefficient from employee's assigned position
+     * - Retrieves target AK and annual AK from konversi predikat kinerja table
      * - Fetches current AK from latest performance evaluation record
-     * - Computes annual AK accumulation rate: koefisien × performanceMultiplier
+     * - Computes annual AK accumulation rate from konversi table (not hardcoded multiplier)
      * - Calculates mathematical years needed to close AK gap
      * - Determines how long employee has served in current rank
      * - Applies regulatory 4-year minimum requirement
      * - Returns projection data indicating both status and timeline
      *
      * @param Pegawai $pegawai The employee to calculate projection for
-     * @param float $performanceMultiplier Performance rating multiplier
-     *                                       1.0 = Good performance (standard)
-     *                                       1.5 = Very Good performance (accelerated)
-     * @return array Structured projection data containing:
-     *               - current_ak (float): Current accumulated Angka Kredit
-     *               - target_ak (float): Required AK for next promotion
-     *               - deficit_ak (float): Gap between target and current AK
-     *               - estimated_years (int): Years until promotion eligible
-     *               - projected_year (int): Expected calendar year of eligibility
-     *               - is_ready_mathematically (bool): Deficit is zero or negative
-     *               - is_held_by_speedbump (bool): Mathematically ready but waiting for 4-year rule
-     *               - progress_percentage (float): Current AK as percentage of target (0-100)
+     * @param string $predikat The performance predicate key (e.g. 'baik', 'sangat_baik')
+     * @param string $targetType Whether calculating for 'pangkat' or 'jenjang' promotion
+     * @param int $periodsPerYear Number of BKN periodisasi per year (default 6)
+     * @return array Structured projection data
      */
-    public function calculateProjection(Pegawai $pegawai, float $performanceMultiplier = 1.0, string $targetType = 'pangkat', int $periodsPerYear = 6): array
-    {
+    public function calculateProjection(
+        Pegawai $pegawai,
+        string $predikat = 'baik',
+        string $targetType = 'pangkat',
+        int $periodsPerYear = 6
+    ): array {
         // Pre-load relationships to avoid N+1 queries
-        $pegawai->load('jabatan', 'riwayatPaks');
+        $pegawai->load('jabatan.konversiPredikat', 'riwayatPaks');
 
         // ============================================================================
         // STEP 1: RETRIEVE BASELINE DATA
@@ -74,16 +71,7 @@ class ProjectionService
         $jabatan = $pegawai->jabatan;
 
         if (!$jabatan) {
-            return [
-                'current_ak' => 0.0,
-                'target_ak' => 0.0,
-                'deficit_ak' => 0.0,
-                'estimated_years' => 0,
-                'projected_year' => (int) now()->year,
-                'is_ready_mathematically' => false,
-                'is_held_by_speedbump' => false,
-                'progress_percentage' => 0.0,
-            ];
+            return $this->emptyProjection();
         }
 
         // Choose target AK based on requested target type: 'pangkat' or 'jenjang'
@@ -91,28 +79,33 @@ class ProjectionService
             ? $jabatan->target_ak_kenaikan_jenjang
             : $jabatan->target_ak_kenaikan_pangkat) ?? 0);
 
-        $koefisienTahunan = (float) ($jabatan->koefisien_tahunan ?? 1);
+        // ============================================================================
+        // STEP 2: GET ANNUAL AK FROM KONVERSI TABLE (DATABASE-DRIVEN)
+        // ============================================================================
+
+        $annualAk = $jabatan->getKonversiByPredikat($predikat);
+
+        // Also get the "Baik" (100%) baseline for comparison display
+        $annualAkBaik = $jabatan->getKonversiByPredikat('baik');
 
         // ============================================================================
-        // STEP 2: GET CURRENT AK FROM LATEST EVALUATION
+        // STEP 3: GET CURRENT AK FROM LATEST EVALUATION
         // ============================================================================
 
         $currentAk = $this->getCurrentAk($pegawai);
 
         // ============================================================================
-        // STEP 3: CALCULATE AK DEFICIT
+        // STEP 4: CALCULATE AK DEFICIT
         // ============================================================================
 
         $deficitAk = max(0.0, $targetAk - $currentAk);
 
         // ============================================================================
-        // STEP 4: CALCULATE ANNUAL AK ADDITION RATE
+        // STEP 5: CALCULATE PERIOD-BASED ADDITION
         // ============================================================================
 
-        $annualAddition = $koefisienTahunan * $performanceMultiplier;
-
-        // Convert to per-period addition (e.g. BKN has 6 periodisasi per year)
-        $periodAddition = $annualAddition / max(1, $periodsPerYear);
+        // Convert annual AK to per-period addition
+        $periodAddition = $annualAk / max(1, $periodsPerYear);
 
         // Progress percentage (calculate early so it's available for error returns)
         $progressPercentage = $targetAk > 0
@@ -125,6 +118,10 @@ class ProjectionService
                 'current_ak' => $currentAk,
                 'target_ak' => $targetAk,
                 'deficit_ak' => $deficitAk,
+                'annual_ak' => $annualAk,
+                'annual_ak_baik' => $annualAkBaik,
+                'predikat' => $predikat,
+                'predikat_label' => KonversiPredikatKinerja::labelFor($predikat),
                 'estimated_periods' => null,
                 'estimated_years' => null,
                 'projected_year' => (int) now()->year,
@@ -136,14 +133,13 @@ class ProjectionService
         }
 
         // ============================================================================
-        // STEP 5: CALCULATE MATHEMATICAL PERIODS NEEDED
+        // STEP 6: CALCULATE MATHEMATICAL PERIODS NEEDED
         // ============================================================================
-        // Using ceil() ensures we round up to the next whole period
 
         $mathematicalPeriodsNeeded = (int) ceil($deficitAk / $periodAddition);
 
         // ============================================================================
-        // STEP 6: CALCULATE YEARS SERVED IN CURRENT RANK
+        // STEP 7: CALCULATE YEARS SERVED IN CURRENT RANK
         // ============================================================================
 
         $yearsServed = $this->calculateYearsServed($pegawai);
@@ -168,12 +164,61 @@ class ProjectionService
             'current_ak' => $currentAk,
             'target_ak' => $targetAk,
             'deficit_ak' => $deficitAk,
+            'annual_ak' => $annualAk,
+            'annual_ak_baik' => $annualAkBaik,
+            'predikat' => $predikat,
+            'predikat_label' => KonversiPredikatKinerja::labelFor($predikat),
             'estimated_periods' => $actualPeriodsNeeded,
             'estimated_years' => round($actualPeriodsNeeded / max(1, $periodsPerYear), 2),
             'projected_year' => $projectedYear,
             'is_ready_mathematically' => $isReadyMathematically,
             'is_held_by_speedbump' => $isHeldBySpeedbump,
             'progress_percentage' => round($progressPercentage, 2),
+        ];
+    }
+
+    /**
+     * Get the conversion table summary for a jabatan across all predikats.
+     *
+     * Returns an array of konversi data for display in UI tables.
+     *
+     * @param int $jabatanId
+     * @return array<string, array{predikat: string, label: string, persentase: float, nilai_ak: float}>
+     */
+    public function getKonversiSummary(int $jabatanId): array
+    {
+        $konversis = KonversiPredikatKinerja::query()
+            ->where('jabatan_id', $jabatanId)
+            ->orderByRaw("FIELD(predikat, 'sangat_baik', 'baik', 'butuh_perbaikan', 'kurang', 'sangat_kurang')")
+            ->get();
+
+        return $konversis->map(fn(KonversiPredikatKinerja $k) => [
+            'predikat' => $k->predikat,
+            'label' => $k->predikat_label,
+            'persentase' => (float) $k->persentase,
+            'nilai_ak' => (float) $k->nilai_ak,
+            'badge_class' => $k->predikat_badge_class,
+        ])->keyBy('predikat')->toArray();
+    }
+
+    /**
+     * Return an empty projection array (no jabatan assigned).
+     */
+    private function emptyProjection(): array
+    {
+        return [
+            'current_ak' => 0.0,
+            'target_ak' => 0.0,
+            'deficit_ak' => 0.0,
+            'annual_ak' => 0.0,
+            'annual_ak_baik' => 0.0,
+            'predikat' => 'baik',
+            'predikat_label' => 'Baik',
+            'estimated_years' => 0,
+            'projected_year' => (int) now()->year,
+            'is_ready_mathematically' => false,
+            'is_held_by_speedbump' => false,
+            'progress_percentage' => 0.0,
         ];
     }
 

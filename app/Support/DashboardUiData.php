@@ -95,6 +95,11 @@ class DashboardUiData
                                 'url' => route('jabatans.index'),
                                 'route' => 'jabatans.*',
                             ],
+                            [
+                                'label' => 'Konversi Predikat',
+                                'url' => route('konversi-predikats.index'),
+                                'route' => 'konversi-predikats.*',
+                            ],
                         ],
                     ],
                 ],

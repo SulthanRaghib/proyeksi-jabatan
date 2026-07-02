@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\KonversiPredikatKinerja;
 use App\Models\Pegawai;
 use App\Services\ProjectionService;
 use App\Support\DashboardUiData;
@@ -16,19 +17,13 @@ class ProjectionController extends Controller
         $performance = (string) $request->input('performance', 'baik');
         $targetType = (string) $request->input('target', 'pangkat');
 
-        // Map performance label to multiplier
-        $performanceMap = [
-            'sangat_baik' => 1.5,
-            'baik' => 1.0,
-            'butuh_perbaikan' => 0.75,
-            'kurang' => 0.5,
-            'sangat_kurang' => 0.25,
-        ];
-
-        $multiplier = $performanceMap[$performance] ?? 1.0;
+        // Validate predikat against allowed values
+        if (!in_array($performance, KonversiPredikatKinerja::PREDIKAT_OPTIONS)) {
+            $performance = 'baik';
+        }
 
         $pegawais = Pegawai::query()
-            ->with(['jabatan', 'golongan', 'unitKerja', 'riwayatPaks'])
+            ->with(['jabatan.konversiPredikat', 'golongan', 'unitKerja', 'riwayatPaks'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($innerQuery) use ($search) {
                     $innerQuery->where('nama_lengkap', 'like', '%' . $search . '%')
@@ -37,8 +32,8 @@ class ProjectionController extends Controller
             })
             ->orderBy('nama_lengkap')
             ->get()
-            ->map(function (Pegawai $pegawai) use ($projectionService, $multiplier, $targetType) {
-                $projection = $projectionService->calculateProjection($pegawai, $multiplier, $targetType, 6);
+            ->map(function (Pegawai $pegawai) use ($projectionService, $performance, $targetType) {
+                $projection = $projectionService->calculateProjection($pegawai, $performance, $targetType, 6);
 
                 return [
                     'pegawai' => $pegawai,
@@ -79,13 +74,15 @@ class ProjectionController extends Controller
             'stats' => $stats,
             'projections' => $filteredPegawais,
             'highlights' => $highlights,
+            'predikatOptions' => KonversiPredikatKinerja::PREDIKAT_OPTIONS,
+            'predikatLabels' => KonversiPredikatKinerja::PREDIKAT_LABELS,
         ]);
     }
 
     public function show(Pegawai $pegawai, ProjectionService $projectionService)
     {
         $pegawai->load([
-            'jabatan',
+            'jabatan.konversiPredikat',
             'golongan',
             'unitKerja',
             'riwayatPaks' => function ($query) {
@@ -94,6 +91,17 @@ class ProjectionController extends Controller
         ]);
 
         $projection = $projectionService->calculateProjection($pegawai);
+
+        // Get konversi summary for this pegawai's jabatan
+        $konversiSummary = $pegawai->jabatan
+            ? $projectionService->getKonversiSummary($pegawai->jabatan->id)
+            : [];
+
+        // Calculate all projections (one per predikat) for comparison table
+        $projectionComparison = [];
+        foreach (KonversiPredikatKinerja::PREDIKAT_OPTIONS as $predikat) {
+            $projectionComparison[$predikat] = $projectionService->calculateProjection($pegawai, $predikat);
+        }
 
         $chartYears = $pegawai->riwayatPaks->map(function ($pak) {
             return \Carbon\Carbon::parse($pak->tanggal_pak)->format('Y');
@@ -104,8 +112,12 @@ class ProjectionController extends Controller
         return view('dashboard.proyeksi-jabatan.show', [
             'pegawai' => $pegawai,
             'projection' => $projection,
+            'konversiSummary' => $konversiSummary,
+            'projectionComparison' => $projectionComparison,
             'chartYears' => $chartYears,
             'chartAk' => $chartAk,
+            'predikatLabels' => KonversiPredikatKinerja::PREDIKAT_LABELS,
+            'predikatBadgeClasses' => KonversiPredikatKinerja::PREDIKAT_BADGE_CLASSES,
             'menuGroups' => DashboardUiData::menuGroups(),
             'notifications' => DashboardUiData::notifications(),
         ]);

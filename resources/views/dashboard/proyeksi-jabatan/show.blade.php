@@ -145,15 +145,24 @@
                             </div>
                         </div>
 
-                        <div class="d-flex align-items-center bg-light rounded p-3">
-                            <div class="me-3 text-primary">
-                                <i data-feather="calendar" width="24" height="24"></i>
+                        @php
+                            $activeScenario = $estimationScenarios['scenarios'][$estimationScenarios['active_predikat']] ?? null;
+                            $boxYear = $activeScenario ? $activeScenario['projected_year'] : $projection['projected_year'];
+                            $boxYearsNeeded = $activeScenario ? $activeScenario['years_needed'] : $projection['estimated_years'];
+                            
+                            $isFast = $boxYearsNeeded <= 3;
+                            $alertClass = $isFast ? 'success' : 'primary';
+                            $icon = $isFast ? 'zap' : 'calendar';
+                        @endphp
+                        <div class="estimation-alert-box {{ $alertClass }} mb-2">
+                            <div class="icon-wrapper">
+                                <i data-feather="{{ $icon }}" width="24" height="24"></i>
                             </div>
                             <div>
-                                <h5 class="mb-0 text-dark">Estimasi Kenaikan: Tahun {{ $projection['projected_year'] }}
-                                </h5>
-                                <small class="text-muted">Dibutuhkan sekitar {{ $projection['estimated_years'] }} tahun
-                                    dari sekarang.</small>
+                                <h5 class="mb-1 text-dark fw-bold">Estimasi Kenaikan: Tahun {{ $boxYear }}</h5>
+                                <div class="text-dark opacity-75" style="font-size: 0.9rem; line-height: 1.5;">
+                                    ✨ Dengan mempertahankan kinerja <strong class="fw-bold">{{ $projection['predikat_label'] }}</strong>, target pencapaian Anda diperkirakan akan tercapai sekitar <strong>{{ $boxYearsNeeded }} tahun</strong> dari sekarang.
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -230,7 +230,7 @@
 .sticky-action-bar {
     position: sticky;
     top: 0;
-    z-index: 99;
+    z-index: 40;
     background: #ffffff;
     border-bottom: 1px solid #e5e7eb;
     margin-bottom: 1rem;
@@ -869,4 +869,56 @@ html {
 .btn-modern.btn-light.hover-soft:hover {
     background-color: #d1d5db !important; 
     border-color: #d1d5db !important;
+}
+
+/* --- Estimation Alert Box --- */
+.estimation-alert-box {
+    border-radius: 16px;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.estimation-alert-box:hover {
+    transform: translateY(-2px);
+}
+
+.estimation-alert-box .icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.estimation-alert-box.success {
+    background-color: #f0fdf4; /* green-50 */
+    border-color: #bbf7d0; /* green-200 */
+}
+.estimation-alert-box.success .icon-wrapper {
+    background-color: #dcfce7; /* green-100 */
+    color: #15803d; /* green-700 */
+}
+
+.estimation-alert-box.primary {
+    background-color: #eff6ff; /* blue-50 */
+    border-color: #bfdbfe; /* blue-200 */
+}
+.estimation-alert-box.primary .icon-wrapper {
+    background-color: #dbeafe; /* blue-100 */
+    color: #1d4ed8; /* blue-700 */
+}
+
+.estimation-alert-box.warning {
+    background-color: #fefce8; /* yellow-50 */
+    border-color: #fef08a; /* yellow-200 */
+}
+.estimation-alert-box.warning .icon-wrapper {
+    background-color: #fef9c3; /* yellow-100 */
+    color: #a16207; /* yellow-700 */
 }

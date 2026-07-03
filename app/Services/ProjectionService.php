@@ -372,13 +372,13 @@ class ProjectionService
      */
     private function calculateYearsServed(Pegawai $pegawai): int
     {
-        if (!$pegawai->tmt_golongan) {
+        $tmt = $pegawai->tmt_golongan ?? $pegawai->tmt_jabatan;
+
+        if (!$tmt) {
             return 0;
         }
 
-        $yearsServed = (int) now()->diffInYears(
-            Carbon::parse($pegawai->tmt_golongan)
-        );
+        $yearsServed = (int) Carbon::parse($tmt)->diffInYears(now());
 
         return max(0, $yearsServed);
     }

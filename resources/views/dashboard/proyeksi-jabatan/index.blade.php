@@ -221,39 +221,43 @@
                                             </td>
                                             <td>
                                                 @if (isset($projection['estimated_periods']))
-                                                    <div class="fw-medium">{{ $projection['estimated_periods'] }} Periode
+                                                    <div class="d-flex align-items-center">
+                                                        <div class="bg-primary-subtle text-primary rounded px-2 py-1 me-2 fw-bold text-center" style="min-width: 48px; font-size: 0.85rem; white-space: nowrap;">
+                                                            {{ $projection['projected_year'] }}
+                                                        </div>
+                                                        <div class="text-muted small" style="white-space: nowrap;">
+                                                            {{ $projection['estimated_periods'] }} Periode
+                                                        </div>
                                                     </div>
-                                                    <div class="text-muted small">Target:
-                                                        {{ $projection['projected_year'] }}</div>
                                                 @else
-                                                    <div class="text-danger small">Tak Terukur</div>
+                                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1" style="white-space: nowrap;">Tak Terukur</span>
                                                 @endif
                                             </td>
                                             <td>
                                                 @if ($held)
                                                     <span
-                                                        class="badge bg-warning-subtle text-dark border border-warning-subtle">Tertahan
+                                                        class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1">Tertahan
                                                         Waktu</span>
                                                 @elseif ($ready)
                                                     <span
-                                                        class="badge bg-success-subtle text-dark border border-success-subtle">Siap
+                                                        class="badge bg-success-subtle text-dark border border-success-subtle px-2 py-1">Siap
                                                         AK</span>
                                                 @else
                                                     <span
-                                                        class="badge bg-primary-subtle text-dark border border-primary-subtle">Proses
+                                                        class="badge bg-primary-subtle text-dark border border-primary-subtle px-2 py-1">Proses
                                                         AK</span>
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                <a href="{{ route('projections.show', $pegawai) }}"
-                                                    class="action-btn action-btn--view" style="width: auto; padding: 0.4rem 1rem;" title="Lihat Detail">
-                                                    <i data-feather="eye" width="14" height="14" class="me-1"></i> Detail
-                                                </a>
+                                                <x-btn href="{{ route('projections.show', $pegawai) }}" variant="soft" size="sm" icon="eye">
+                                                    Detail
+                                                </x-btn>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center py-4 text-muted">
+                                            <td colspan="6" class="text-center py-5 text-muted">
+                                                <div class="mb-3"><i data-feather="inbox" width="48" height="48" class="text-secondary opacity-50"></i></div>
                                                 Tidak ada data yang cocok dengan filter pencarian Anda.
                                             </td>
                                         </tr>
@@ -273,6 +277,7 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h4 class="card-title mb-0">Sorotan Cepat</h4>
+                            <span class="badge bg-primary-subtle text-primary rounded-pill">Top 3</span>
                         </div>
 
                         <div>
@@ -281,25 +286,28 @@
                                     $pegawai = $item['pegawai'];
                                     $projection = $item['projection'];
                                 @endphp
-                                <div class="border rounded p-3 mb-3">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <div>
-                                            <div class="fw-medium text-dark">{{ $pegawai->nama_lengkap }}</div>
-                                            <div class="text-muted small">{{ $pegawai->jabatan->nama_jabatan }}</div>
+                                <div class="estimation-alert-box p-3 mb-3 border bg-white" style="border-radius: 12px;">
+                                    <div class="w-100">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <div class="fw-bold text-dark">{{ $pegawai->nama_lengkap }}</div>
+                                                <div class="text-muted" style="font-size: 0.8rem;">{{ $pegawai->jabatan->nama_jabatan }}</div>
+                                            </div>
+                                            <span class="badge bg-primary rounded-pill">{{ number_format($projection['progress_percentage'], 0) }}%</span>
                                         </div>
-                                        <span
-                                            class="badge bg-primary">{{ number_format($projection['progress_percentage'], 0) }}%</span>
-                                    </div>
 
-                                    <div class="progress mb-2" style="height: 5px;">
-                                        <div class="progress-bar bg-primary"
-                                            style="width: {{ min($projection['progress_percentage'], 100) }}%"></div>
-                                    </div>
+                                        <div class="progress mb-2" style="height: 6px;">
+                                            <div class="progress-bar bg-primary"
+                                                style="width: {{ min($projection['progress_percentage'], 100) }}%"></div>
+                                        </div>
 
-                                    <div class="d-flex justify-content-between text-muted small">
-                                        <span>Estimasi {{ $projection['estimated_years'] }} tahun</span>
-                                        <span class="fw-medium text-dark">Target
-                                            {{ $projection['projected_year'] }}</span>
+                                        <div class="d-flex justify-content-between align-items-center text-muted mt-2" style="font-size: 0.8rem;">
+                                            <span class="d-flex align-items-center gap-1">
+                                                <i data-feather="clock" width="12" height="12"></i>
+                                                {{ $projection['estimated_years'] }} tahun
+                                            </span>
+                                            <span class="fw-bold text-dark">Target {{ $projection['projected_year'] }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             @empty

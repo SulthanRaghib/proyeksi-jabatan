@@ -13,10 +13,9 @@
         ]"
         :hasAction="true">
         <x-slot:action>
-            <a href="{{ route('projections.index') }}" class="btn btn-outline-secondary">
-                <i data-feather="arrow-left" class="feather-icon me-1"></i>
+            <x-btn href="{{ route('projections.index') }}" variant="soft" icon="arrow-left" size="sm">
                 Kembali
-            </a>
+            </x-btn>
         </x-slot:action>
     </x-page-header>
 
@@ -25,20 +24,17 @@
         <div class="container-fluid">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div class="d-flex flex-wrap gap-2">
-                    <a href="{{ route('riwayat-paks.create', ['pegawai_id' => $pegawai->id]) }}" 
-                       class="btn btn-sm btn-primary">
-                        <i data-feather="plus" width="16" height="16" class="me-1"></i>
+                    <x-btn href="{{ route('riwayat-paks.create', ['pegawai_id' => $pegawai->id]) }}" variant="primary" icon="plus" size="sm">
                         Tambah Riwayat PAK
-                    </a>
-                    <a href="{{ route('pegawais.edit', $pegawai) }}" 
-                       class="btn btn-sm btn-outline-secondary">
-                        <i data-feather="edit-2" width="16" height="16" class="me-1"></i>
+                    </x-btn>
+                    
+                    <x-btn href="{{ route('pegawais.edit', $pegawai) }}" variant="soft" icon="edit-2" size="sm">
                         Edit Pegawai
-                    </a>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="window.print()">
-                        <i data-feather="printer" width="16" height="16" class="me-1"></i>
+                    </x-btn>
+                    
+                    <x-btn type="button" variant="soft" icon="printer" size="sm" onclick="window.print()">
                         Cetak
-                    </button>
+                    </x-btn>
                 </div>
                 <div class="d-flex align-items-center gap-2">
                     <span class="text-muted small">Terakhir diperbarui: {{ now()->format('d M Y, H:i') }}</span>

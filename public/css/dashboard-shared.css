@@ -845,3 +845,28 @@ html {
     border-radius: 4px;
     font-weight: 600;
 }
+
+/* --- Generic UI Components --- */
+.btn-modern {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+}
+
+.btn-modern:active {
+    transform: translateY(0);
+}
+
+.hover-soft:hover {
+    background-color: #e5e7eb !important; /* bs-secondary-subtle slightly darker */
+    color: #111827 !important; /* text-dark */
+}
+
+/* Specific soft variants for standard UI feeling */
+.btn-modern.btn-light.hover-soft:hover {
+    background-color: #d1d5db !important; 
+    border-color: #d1d5db !important;
+}

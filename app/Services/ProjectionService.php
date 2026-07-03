@@ -343,7 +343,10 @@ class ProjectionService
     private function getCurrentAk(Pegawai $pegawai): float
     {
         if ($pegawai->relationLoaded('riwayatPaks')) {
-            $latestPak = $pegawai->riwayatPaks->sortByDesc('tanggal_pak')->sortByDesc('id')->first();
+            $latestPak = $pegawai->riwayatPaks->sortBy([
+                ['tanggal_pak', 'desc'],
+                ['id', 'desc'],
+            ])->first();
         } else {
             $latestPak = $pegawai->riwayatPaks()
                 ->latestPak()

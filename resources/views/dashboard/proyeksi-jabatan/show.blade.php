@@ -363,7 +363,10 @@
                                 <tbody>
                                     @php
                                         $previousAk = null;
-                                        $latestId = $pegawai->riwayatPaks->sortByDesc('tanggal_pak')->sortByDesc('id')->first()?->id;
+                                        $latestId = $pegawai->riwayatPaks->sortBy([
+                                            ['tanggal_pak', 'desc'],
+                                            ['id', 'desc']
+                                        ])->first()?->id;
                                     @endphp
                                     @forelse ($pegawai->riwayatPaks as $pak)
                                         @php

@@ -202,6 +202,115 @@ class ProjectionService
     }
 
     /**
+     * Calculate projection scenarios for ALL predikats.
+     *
+     * Returns a structured array for the estimation timeline UI, showing
+     * how long it takes to reach target AK under each predikat scenario.
+     * Automatically detects the fastest and slowest scenario.
+     *
+     * @param Pegawai $pegawai The employee
+     * @param string $activePredikat The currently active/selected predikat
+     * @return array{scenarios: array, current_ak: float, target_ak: float, active_predikat: string}
+     */
+    public function calculateAllScenarios(Pegawai $pegawai, string $activePredikat = 'baik'): array
+    {
+        $pegawai->loadMissing('jabatan.konversiPredikat', 'riwayatPaks');
+
+        $jabatan = $pegawai->jabatan;
+        if (!$jabatan) {
+            return ['scenarios' => [], 'current_ak' => 0, 'target_ak' => 0, 'active_predikat' => $activePredikat];
+        }
+
+        $targetAk = (float) ($jabatan->target_ak_kenaikan_pangkat ?? 0);
+        $currentAk = $this->getCurrentAk($pegawai);
+        $deficitAk = max(0.0, $targetAk - $currentAk);
+        $currentYear = (int) now()->year;
+
+        // Color palette for each predikat (for the estimation bars)
+        $colors = [
+            'sangat_baik'     => '#059669', // emerald
+            'baik'            => '#4f46e5', // indigo
+            'butuh_perbaikan' => '#d97706', // amber
+            'kurang'          => '#dc2626', // red
+            'sangat_kurang'   => '#7c3aed', // violet
+        ];
+
+        $scenarios = [];
+        $minYears = PHP_INT_MAX;
+        $maxYears = 0;
+
+        foreach (KonversiPredikatKinerja::PREDIKAT_OPTIONS as $predikat) {
+            $annualAk = $jabatan->getKonversiByPredikat($predikat);
+            $label = KonversiPredikatKinerja::labelFor($predikat);
+
+            if ($annualAk <= 0) {
+                $scenarios[$predikat] = [
+                    'predikat'       => $predikat,
+                    'label'          => $label,
+                    'annual_ak'      => 0,
+                    'years_needed'   => null,
+                    'projected_year' => null,
+                    'is_active'      => $predikat === $activePredikat,
+                    'is_fastest'     => false,
+                    'is_slowest'     => false,
+                    'is_ready'       => $deficitAk <= 0,
+                    'color'          => $colors[$predikat] ?? '#6b7280',
+                    'badge_class'    => KonversiPredikatKinerja::PREDIKAT_BADGE_CLASSES[$predikat] ?? '',
+                ];
+                continue;
+            }
+
+            // If already at target, years needed is 0
+            if ($deficitAk <= 0) {
+                $yearsNeeded = 0;
+            } else {
+                $yearsNeeded = (int) ceil($deficitAk / $annualAk);
+            }
+
+            $projectedYear = $currentYear + $yearsNeeded;
+
+            if ($yearsNeeded < $minYears) {
+                $minYears = $yearsNeeded;
+            }
+            if ($yearsNeeded > $maxYears) {
+                $maxYears = $yearsNeeded;
+            }
+
+            $scenarios[$predikat] = [
+                'predikat'       => $predikat,
+                'label'          => $label,
+                'annual_ak'      => round($annualAk, 3),
+                'years_needed'   => $yearsNeeded,
+                'projected_year' => $projectedYear,
+                'is_active'      => $predikat === $activePredikat,
+                'is_fastest'     => false, // will be set below
+                'is_slowest'     => false,
+                'is_ready'       => $deficitAk <= 0,
+                'color'          => $colors[$predikat] ?? '#6b7280',
+                'badge_class'    => KonversiPredikatKinerja::PREDIKAT_BADGE_CLASSES[$predikat] ?? '',
+            ];
+        }
+
+        // Mark fastest and slowest
+        foreach ($scenarios as $key => &$scenario) {
+            if ($scenario['years_needed'] !== null) {
+                $scenario['is_fastest'] = ($scenario['years_needed'] === $minYears);
+                $scenario['is_slowest'] = ($scenario['years_needed'] === $maxYears && $maxYears !== $minYears);
+            }
+        }
+        unset($scenario);
+
+        return [
+            'scenarios'       => $scenarios,
+            'current_ak'      => $currentAk,
+            'target_ak'       => $targetAk,
+            'deficit_ak'      => $deficitAk,
+            'active_predikat' => $activePredikat,
+            'max_years'       => $maxYears > 0 ? $maxYears : 1,
+        ];
+    }
+
+    /**
      * Return an empty projection array (no jabatan assigned).
      */
     private function emptyProjection(): array

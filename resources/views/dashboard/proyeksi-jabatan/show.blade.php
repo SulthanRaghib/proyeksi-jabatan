@@ -226,64 +226,97 @@
             </div>
         @endif
 
-        {{-- Card 4: Projection Comparison per Predikat --}}
-        @if (!empty($projectionComparison))
+        {{-- Card 4: Estimation Timeline UI --}}
+        @if (!empty($estimationScenarios) && !empty($estimationScenarios['scenarios']))
             <div class="row">
                 <div class="col-12 mb-4">
                     <div class="card shadow-sm border-0">
                         <div class="card-body">
-                            <h4 class="card-title mb-1">Simulasi Proyeksi per Predikat Kinerja</h4>
-                            <p class="text-muted small mb-4">Perbandingan estimasi kenaikan pangkat berdasarkan skenario
-                                predikat kinerja yang berbeda.</p>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <h4 class="card-title mb-0">Timeline Estimasi Kenaikan Pangkat</h4>
+                                <span class="badge bg-light text-dark border px-3 py-2">
+                                    Target AK: {{ number_format($estimationScenarios['target_ak'], 0, ',', '.') }}
+                                </span>
+                            </div>
+                            <p class="text-muted small mb-4">
+                                Berapa lama waktu yang dibutuhkan dari kondisi AK saat ini ({{ number_format($estimationScenarios['current_ak'], 2, ',', '.') }}) 
+                                untuk mencapai target berdasarkan konsistensi predikat kinerja setiap tahunnya.
+                            </p>
 
                             <div class="row g-3">
-                                @foreach ($projectionComparison as $predikat => $proj)
-                                    @php
-                                        $isActive = $predikat === 'baik';
-                                        $badgeClass =
-                                            $predikatBadgeClasses[$predikat] ?? 'bg-secondary-subtle text-secondary';
-                                    @endphp
+                                @foreach ($estimationScenarios['scenarios'] as $predikat => $scenario)
                                     <div class="col-12 col-md-6 col-xl">
-                                        <div
-                                            class="projection-comparison-card p-3 h-100 {{ $isActive ? 'active' : '' }}">
-                                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                                <span
-                                                    class="badge border {{ $badgeClass }} px-2 py-1">{{ $predikatLabels[$predikat] }}</span>
-                                                @if ($isActive)
-                                                    <span class="badge bg-primary" style="font-size: 0.65rem;">Default</span>
+                                        <div class="estimation-card p-3 {{ $scenario['is_active'] ? 'active' : '' }} h-100 d-flex flex-column">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <div>
+                                                    <span class="badge border {{ $scenario['badge_class'] }} px-2 py-1 mb-1">{{ $scenario['label'] }}</span>
+                                                    @if ($scenario['is_fastest'])
+                                                        <span class="timeline-badge bg-success-subtle text-success ms-1">Tercepat</span>
+                                                    @endif
+                                                    @if ($scenario['is_slowest'])
+                                                        <span class="timeline-badge bg-danger-subtle text-danger ms-1">Terlama</span>
+                                                    @endif
+                                                </div>
+                                                @if ($scenario['is_active'])
+                                                    <span class="badge bg-primary rounded-pill"><i data-feather="check" width="12" height="12"></i> Aktif</span>
                                                 @endif
                                             </div>
 
-                                            <div class="mb-2">
-                                                <div class="small text-muted">AK/Tahun</div>
-                                                <div class="fw-bold fs-5 text-dark">
-                                                    {{ number_format($proj['annual_ak'], 3, ',', '.') }}
+                                            <div class="mb-auto mt-2">
+                                                @if ($scenario['years_needed'] === null)
+                                                    <div class="text-danger small fw-bold">
+                                                        <i data-feather="alert-circle" width="14" height="14" class="me-1"></i>
+                                                        Tidak Dapat Diproyeksikan
+                                                    </div>
+                                                    <div class="text-muted small mt-1">Nilai AK tahunan 0.</div>
+                                                @elseif ($scenario['is_ready'])
+                                                    <div class="text-success small fw-bold">
+                                                        <i data-feather="check-circle" width="14" height="14" class="me-1"></i>
+                                                        Target Telah Tercapai
+                                                    </div>
+                                                    <div class="text-muted small mt-1">Siap untuk diusulkan.</div>
+                                                @else
+                                                    <div class="text-dark small">
+                                                        Target tercapai tahun <span class="timeline-year-highlight text-primary">{{ $scenario['projected_year'] }}</span>
+                                                    </div>
+                                                    <div class="text-muted small mt-1">
+                                                        Dibutuhkan <span class="fw-bold">{{ $scenario['years_needed'] }} tahun</span> lagi.
+                                                    </div>
+                                                @endif
+                                            </div>
+
+                                            @if ($scenario['years_needed'] !== null && !$scenario['is_ready'])
+                                                @php
+                                                    // Calculate width percentage relative to the max years in all scenarios
+                                                    // We give a min width of 15% so it's visible, and max 100%
+                                                    $widthPercent = min(100, max(15, ($scenario['years_needed'] / $estimationScenarios['max_years']) * 100));
+                                                @endphp
+                                                <div class="scenario-bar-container mt-3">
+                                                    <div class="scenario-bar {{ $scenario['is_active'] ? 'active-scenario' : '' }}" 
+                                                         style="width: {{ $widthPercent }}%; background-color: {{ $scenario['color'] }};"
+                                                         title="{{ $scenario['years_needed'] }} tahun">
+                                                    </div>
                                                 </div>
-                                            </div>
-
-                                            <div class="mb-2">
-                                                <div class="small text-muted">Estimasi Tahun</div>
-                                                <div class="fw-bold text-dark">
-                                                    @if (isset($proj['estimated_years']))
-                                                        {{ $proj['estimated_years'] }} tahun
-                                                    @else
-                                                        <span class="text-danger">—</span>
-                                                    @endif
+                                                <div class="d-flex justify-content-between mt-1">
+                                                    <span class="timeline-year-label">Sekarang</span>
+                                                    <span class="timeline-year-label">{{ $scenario['projected_year'] }}</span>
                                                 </div>
-                                            </div>
-
-                                            <div>
-                                                <div class="small text-muted">Target Tahun</div>
-                                                <div class="fw-bold text-primary">{{ $proj['projected_year'] }}</div>
-                                            </div>
-
-                                            @if ($proj['is_ready_mathematically'])
-                                                <div class="mt-2">
-                                                    <span class="badge bg-success-subtle text-success border border-success-subtle w-100 py-1">
-                                                        Siap AK
-                                                    </span>
+                                            @elseif ($scenario['is_ready'])
+                                                <div class="scenario-bar-container mt-3">
+                                                    <div class="scenario-bar active-scenario" style="width: 100%; background-color: #10b981;"></div>
+                                                </div>
+                                                <div class="d-flex justify-content-between mt-1">
+                                                    <span class="timeline-year-label">Sekarang</span>
+                                                    <span class="timeline-year-label">Tercapai</span>
                                                 </div>
                                             @endif
+                                            
+                                            <div class="mt-3 pt-2 border-top">
+                                                <div class="d-flex justify-content-between align-items-center">
+                                                    <span class="small text-muted">AK Tahunan:</span>
+                                                    <span class="fw-bold fs-6">{{ number_format($scenario['annual_ak'], 3, ',', '.') }}</span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 @endforeach

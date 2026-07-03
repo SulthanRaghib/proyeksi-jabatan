@@ -111,6 +111,9 @@ class ProjectionController extends Controller
             $projectionComparison[$predikat] = $projectionService->calculateProjection($pegawai, $predikat);
         }
 
+        // Calculate estimation scenarios for the timeline UI
+        $estimationScenarios = $projectionService->calculateAllScenarios($pegawai, $latestPredikat);
+
         $chartYears = $pegawai->riwayatPaks->map(function ($pak) {
             return \Carbon\Carbon::parse($pak->tanggal_pak)->format('Y');
         })->toArray();
@@ -122,6 +125,7 @@ class ProjectionController extends Controller
             'projection' => $projection,
             'konversiSummary' => $konversiSummary,
             'projectionComparison' => $projectionComparison,
+            'estimationScenarios' => $estimationScenarios,
             'chartYears' => $chartYears,
             'chartAk' => $chartAk,
             'predikatLabels' => KonversiPredikatKinerja::PREDIKAT_LABELS,

@@ -211,6 +211,10 @@
                                                 <div>{{ $pegawai->jabatan->nama_jabatan }}</div>
                                                 <div class="text-muted small">{{ $pegawai->golongan->nama_golongan }} •
                                                     {{ $pegawai->unitKerja->nama_unit }}</div>
+                                                
+                                                <div class="mt-1 badge bg-light text-dark border border-secondary-subtle">
+                                                    Proyeksi: {{ $projection['current_target_name'] }} <i data-feather="arrow-right" width="10" height="10"></i> {{ $projection['next_target_name'] }}
+                                                </div>
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-between small mb-1">

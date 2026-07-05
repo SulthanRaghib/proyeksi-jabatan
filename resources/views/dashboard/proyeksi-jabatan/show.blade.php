@@ -118,10 +118,10 @@
                             <h4 class="card-title mb-0">Ringkasan Proyeksi</h4>
                             <div class="d-flex align-items-center">
                                 <span class="me-2 small text-muted">Surplus AK:</span>
-                                <div class="btn-group" role="group">
-                                    <a href="?surplus_behavior=hangus" class="btn btn-sm {{ $surplusBehavior === 'hangus' ? 'btn-danger' : 'btn-outline-secondary' }}">Hangus</a>
-                                    <a href="?surplus_behavior=akumulasi" class="btn btn-sm {{ $surplusBehavior === 'akumulasi' ? 'btn-success' : 'btn-outline-secondary' }}">Akumulasi</a>
-                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#surplusModal">
+                                    <i data-feather="settings" width="14" height="14"></i>
+                                    {{ ucfirst($surplusBehavior) }}
+                                </button>
                             </div>
                         </div>
 
@@ -353,12 +353,28 @@
                                             ['tanggal_pak', 'desc'],
                                             ['id', 'desc']
                                         ])->first()?->id;
+
+                                        // Calculate differences chronologically first
+                                        $processedPaks = collect();
+                                        foreach ($pegawai->riwayatPaks as $pak) {
+                                            $akTotal = (float) $pak->ak_total;
+                                            $difference = $previousAk !== null ? $akTotal - $previousAk : null;
+                                            
+                                            // Store difference temporarily on the object
+                                            $pak->calculated_difference = $difference;
+                                            $processedPaks->push($pak);
+                                            
+                                            $previousAk = $akTotal;
+                                        }
+                                        
+                                        // Reverse for rendering newest first
+                                        $processedPaks = $processedPaks->reverse();
                                     @endphp
-                                    @forelse ($pegawai->riwayatPaks as $pak)
+                                    @forelse ($processedPaks as $pak)
                                         @php
                                             $akTotal = (float) $pak->ak_total;
                                             $akTambahan = (float) $pak->ak_tambahan;
-                                            $difference = $previousAk !== null ? $akTotal - $previousAk : null;
+                                            $difference = $pak->calculated_difference;
                                             $isLatest = $pak->id === $latestId;
                                         @endphp
                                         <tr class="{{ $isLatest ? 'table-primary' : '' }}">
@@ -408,17 +424,12 @@
                                             <td>
                                                 <div class="d-flex justify-content-center gap-2 no-print">
                                                     <x-action-button type="edit" :href="route('riwayat-paks.edit', $pak)" />
-                                                    <form action="{{ route('riwayat-paks.destroy', $pak) }}" method="POST"
-                                                        class="d-inline"
-                                                        onsubmit="return confirm('Yakin ingin menghapus riwayat PAK ini?')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <x-action-button type="delete" />
-                                                    </form>
+                                                    <x-action-button type="delete_modal" 
+                                                        action="{{ route('riwayat-paks.destroy', $pak) }}" 
+                                                        message="Yakin ingin menghapus riwayat PAK ini?" />
                                                 </div>
                                             </td>
                                         </tr>
-                                        @php $previousAk = $akTotal; @endphp
                                     @empty
                                         <tr>
                                             <td colspan="8" class="text-center py-5">
@@ -442,6 +453,61 @@
 
         @include('dashboard.proyeksi-jabatan.partials.kinerja-tahunan-section')
 
+    </div>
+
+    <!-- Modal Konfigurasi Surplus -->
+    <div class="modal fade" id="surplusModal" tabindex="-1" aria-labelledby="surplusModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="surplusModalLabel">
+                        <i data-feather="settings" class="me-2 text-primary" width="20" height="20"></i> Pengaturan Surplus AK
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-4 px-4">
+                    <p class="text-muted mb-4 small text-center">Silakan pilih metode yang digunakan untuk menangani kelebihan Angka Kredit setelah target kenaikan tercapai.</p>
+                    
+                    <div class="d-grid gap-3">
+                        <a href="?surplus_behavior=hangus" class="text-decoration-none d-block">
+                            <div class="card transition-base border-2 shadow-sm {{ $surplusBehavior === 'hangus' ? 'border-danger bg-danger-subtle' : 'border-secondary-subtle bg-white' }}" style="border-radius: 0.75rem; cursor: pointer;" onmouseover="this.classList.add('shadow-md');" onmouseout="this.classList.remove('shadow-md');">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <div class="bg-white rounded d-flex align-items-center justify-content-center me-3 shadow-sm border border-light" style="width: 40px; height: 40px; flex-shrink: 0;">
+                                            <i data-feather="trash-2" class="{{ $surplusBehavior === 'hangus' ? 'text-danger' : 'text-secondary' }}" width="20" height="20"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1 fw-bold {{ $surplusBehavior === 'hangus' ? 'text-danger' : 'text-dark' }}">Dihanguskan (Default)</h6>
+                                            <p class="mb-0 small {{ $surplusBehavior === 'hangus' ? 'text-danger-emphasis' : 'text-muted' }} lh-sm">
+                                                Kelebihan AK dibuang, tidak dibawa ke jenjang/pangkat selanjutnya sesuai aturan konvensional.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                        
+                        <a href="?surplus_behavior=akumulasi" class="text-decoration-none d-block">
+                            <div class="card transition-base border-2 shadow-sm {{ $surplusBehavior === 'akumulasi' ? 'border-success bg-success-subtle' : 'border-secondary-subtle bg-white' }}" style="border-radius: 0.75rem; cursor: pointer;" onmouseover="this.classList.add('shadow-md');" onmouseout="this.classList.remove('shadow-md');">
+                                <div class="card-body p-3">
+                                    <div class="d-flex align-items-center mb-1">
+                                        <div class="bg-white rounded d-flex align-items-center justify-content-center me-3 shadow-sm border border-light" style="width: 40px; height: 40px; flex-shrink: 0;">
+                                            <i data-feather="plus-circle" class="{{ $surplusBehavior === 'akumulasi' ? 'text-success' : 'text-secondary' }}" width="20" height="20"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="mb-1 fw-bold {{ $surplusBehavior === 'akumulasi' ? 'text-success' : 'text-dark' }}">Diakumulasikan</h6>
+                                            <p class="mb-0 small {{ $surplusBehavior === 'akumulasi' ? 'text-success-emphasis' : 'text-muted' }} lh-sm">
+                                                Kelebihan AK disimpan sebagai saldo tabungan awal untuk target jenjang/pangkat selanjutnya.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 @endsection
 

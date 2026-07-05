@@ -114,6 +114,19 @@ class ProjectionService
 
         $isFullyReady = $isReadyMathematically && !$isHeldBySpeedbump && !$isHeldByUkom;
 
+        // Resolve target names
+        $currentTargetName = '-';
+        $nextTargetName = '-';
+        if ($targetType === 'pangkat' && $pegawai->golongan) {
+            $currentTargetName = $pegawai->golongan->nama_golongan;
+            $nextGolongan = \App\Models\Golongan::where('id', '>', $pegawai->golongan_id)->orderBy('id')->first();
+            $nextTargetName = $nextGolongan ? $nextGolongan->nama_golongan : 'Maksimal';
+        } elseif ($targetType === 'jenjang' && $jabatan) {
+            $currentTargetName = $jabatan->jenjang;
+            $nextJabatan = \App\Models\Jabatan::where('kategori', $jabatan->kategori)->where('id', '>', $jabatan->id)->orderBy('id')->first();
+            $nextTargetName = $nextJabatan ? $nextJabatan->jenjang : 'Maksimal';
+        }
+
         return [
             'current_ak' => round($currentAk, 3),
             'target_ak' => round($targetAk, 3),
@@ -132,6 +145,8 @@ class ProjectionService
             'progress_percentage' => round($progressPercentage, 2),
             'tmt_used' => $tmt ? $tmt->format('d/m/Y') : '-',
             'years_served' => $yearsServed,
+            'current_target_name' => $currentTargetName,
+            'next_target_name' => $nextTargetName,
         ];
     }
 
@@ -166,6 +181,8 @@ class ProjectionService
             'progress_percentage' => $progress,
             'tmt_used' => '-',
             'years_served' => 0,
+            'current_target_name' => '-',
+            'next_target_name' => '-',
         ];
     }
 

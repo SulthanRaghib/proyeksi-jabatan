@@ -116,13 +116,9 @@
                                     <td>
                                         <div class="d-flex justify-content-end gap-2">
                                             <x-action-button type="edit" href="{{ route('riwayat-paks.edit', $riwayatPak) }}" />
-                                            <form action="{{ route('riwayat-paks.destroy', $riwayatPak) }}" method="POST"
-                                                class="d-inline"
-                                                onsubmit="return confirm('Yakin ingin menghapus riwayat PAK ini?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <x-action-button type="delete" />
-                                            </form>
+                                            <x-action-button type="delete_modal" 
+                                                action="{{ route('riwayat-paks.destroy', $riwayatPak) }}" 
+                                                message="Yakin ingin menghapus riwayat PAK ini?" />
                                         </div>
                                     </td>
                                 </tr>

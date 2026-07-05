@@ -76,13 +76,9 @@
                                     <td>
                                         <div class="d-flex justify-content-end gap-2">
                                             <x-action-button type="edit" :href="route('golongans.edit', $golongan)" />
-                                            <form action="{{ route('golongans.destroy', $golongan) }}" method="POST"
-                                                class="d-inline"
-                                                onsubmit="return confirm('Yakin ingin menghapus golongan ini?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <x-action-button type="delete" />
-                                            </form>
+                                            <x-action-button type="delete_modal" 
+                                                action="{{ route('golongans.destroy', $golongan) }}" 
+                                                message="Yakin ingin menghapus golongan {{ $golongan->nama_golongan }}?" />
                                         </div>
                                     </td>
                                 </tr>

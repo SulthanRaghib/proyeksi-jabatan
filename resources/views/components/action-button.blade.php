@@ -11,6 +11,8 @@
     'href' => '#',
     'title' => '',
     'size' => 'sm',
+    'action' => '',
+    'message' => 'Apakah Anda yakin ingin melanjutkan aksi ini?',
 ])
 
 @php
@@ -23,6 +25,11 @@
             'title' => 'Edit',
         ],
         'delete' => [
+            'class' => 'action-btn--delete',
+            'icon' => 'trash-2',
+            'title' => 'Hapus',
+        ],
+        'delete_modal' => [
             'class' => 'action-btn--delete',
             'icon' => 'trash-2',
             'title' => 'Hapus',
@@ -44,6 +51,15 @@
 
 @if($type === 'delete')
     <button type="submit" {{ $attributes->merge(['class' => 'action-btn ' . $config['class'] . ' ' . $sizeClass]) }} title="{{ $finalTitle }}">
+        <i data-feather="{{ $config['icon'] }}" width="14" height="14"></i>
+    </button>
+@elseif($type === 'delete_modal')
+    <button type="button" {{ $attributes->merge(['class' => 'action-btn ' . $config['class'] . ' ' . $sizeClass]) }} 
+        title="{{ $finalTitle }}"
+        data-bs-toggle="modal" 
+        data-bs-target="#globalConfirmModal"
+        data-bs-action="{{ $action }}"
+        data-bs-message="{{ $message }}">
         <i data-feather="{{ $config['icon'] }}" width="14" height="14"></i>
     </button>
 @else

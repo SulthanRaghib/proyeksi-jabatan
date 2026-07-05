@@ -86,13 +86,9 @@
                                     <td>
                                         <div class="d-flex justify-content-end gap-2">
                                             <x-action-button type="edit" :href="route('pegawais.edit', $pegawai)" />
-                                            <form action="{{ route('pegawais.destroy', $pegawai) }}" method="POST"
-                                                class="d-inline"
-                                                onsubmit="return confirm('Yakin ingin menghapus pegawai ini?')">
-                                                @csrf
-                                                @method('DELETE')
-                                                <x-action-button type="delete" />
-                                            </form>
+                                            <x-action-button type="delete_modal" 
+                                                action="{{ route('pegawais.destroy', $pegawai) }}" 
+                                                message="Yakin ingin menghapus pegawai {{ $pegawai->nama_lengkap }}?" />
                                         </div>
                                     </td>
                                 </tr>

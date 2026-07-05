@@ -395,13 +395,9 @@
                                             </div>
                                             <div class="d-flex justify-content-center gap-2 mt-2">
                                                 <x-action-button type="edit" :href="route('konversi-predikats.edit', $konversi)" />
-                                                <form action="{{ route('konversi-predikats.destroy', $konversi) }}"
-                                                    method="POST" class="d-inline"
-                                                    onsubmit="return confirm('Hapus konversi ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <x-action-button type="delete" />
-                                                </form>
+                                                <x-action-button type="delete_modal" 
+                                                    action="{{ route('konversi-predikats.destroy', $konversi) }}" 
+                                                    message="Hapus konversi ini?" />
                                             </div>
                                         @else
                                             <div class="konversi-card empty">

@@ -56,9 +56,12 @@
         <div class="icon-wrapper">
             <i data-feather="check-circle" width="24" height="24"></i>
         </div>
-        <div>
-            <h5 class="mb-1 text-dark fw-bold">Siap untuk Kenaikan {{ $type }}!</h5>
-            <div class="text-dark opacity-75" style="font-size: 0.9rem; line-height: 1.5;">
+        <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start">
+                <h5 class="mb-1 text-dark fw-bold">Siap untuk Kenaikan {{ $type }}!</h5>
+                <span class="badge bg-white text-dark border shadow-sm">Target: {{ $proj['current_target_name'] }} <i data-feather="arrow-right" class="mx-1" width="10" height="10"></i> {{ $proj['next_target_name'] }}</span>
+            </div>
+            <div class="text-dark opacity-75 mt-1" style="font-size: 0.9rem; line-height: 1.5;">
                 ✨ Target Angka Kredit telah tercapai, dan syarat masa jabatan telah terpenuhi.
             </div>
         </div>
@@ -68,9 +71,12 @@
         <div class="icon-wrapper bg-warning text-dark">
             <i data-feather="alert-triangle" width="24" height="24"></i>
         </div>
-        <div>
-            <h5 class="mb-1 text-dark fw-bold">Menunggu Uji Kompetensi</h5>
-            <div class="text-dark opacity-75" style="font-size: 0.9rem; line-height: 1.5;">
+        <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start">
+                <h5 class="mb-1 text-dark fw-bold">Menunggu Uji Kompetensi</h5>
+                <span class="badge bg-white text-dark border shadow-sm">Target: {{ $proj['current_target_name'] }} <i data-feather="arrow-right" class="mx-1" width="10" height="10"></i> {{ $proj['next_target_name'] }}</span>
+            </div>
+            <div class="text-dark opacity-75 mt-1" style="font-size: 0.9rem; line-height: 1.5;">
                 Target AK sudah tercapai, namun pegawai belum dinyatakan lulus Uji Kompetensi (Ukom) untuk kenaikan jenjang.
             </div>
         </div>
@@ -80,9 +86,12 @@
         <div class="icon-wrapper">
             <i data-feather="{{ $icon }}" width="24" height="24"></i>
         </div>
-        <div>
-            <h5 class="mb-1 text-dark fw-bold">Estimasi Kenaikan: Tahun {{ $boxYear }}</h5>
-            <div class="text-dark opacity-75" style="font-size: 0.9rem; line-height: 1.5;">
+        <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start">
+                <h5 class="mb-1 text-dark fw-bold">Estimasi Kenaikan: Tahun {{ $boxYear }}</h5>
+                <span class="badge bg-white text-dark border shadow-sm">Target: {{ $proj['current_target_name'] }} <i data-feather="arrow-right" class="mx-1" width="10" height="10"></i> {{ $proj['next_target_name'] }}</span>
+            </div>
+            <div class="text-dark opacity-75 mt-1" style="font-size: 0.9rem; line-height: 1.5;">
                 ✨ Dengan mempertahankan kinerja <strong class="fw-bold">{{ $proj['predikat_label'] }}</strong>, target diperkirakan akan tercapai sekitar <strong>{{ $boxYearsNeeded }} tahun</strong> dari sekarang.
                 @if($proj['is_held_by_speedbump'])
                 <br><span class="text-danger fw-medium">Catatan: Terkena aturan minimal masa jabatan ({{ $proj['years_served'] }} tahun dijalani dari syarat 2 tahun).</span>

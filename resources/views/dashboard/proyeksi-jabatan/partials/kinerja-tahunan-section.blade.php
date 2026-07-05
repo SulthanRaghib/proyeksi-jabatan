@@ -37,13 +37,9 @@
                                             <td class="text-end fw-medium text-success">+{{ number_format($kinerja->ak_didapat, 3, ',', '.') }}</td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-2 no-print">
-                                                    <form action="{{ route('kinerja-tahunans.destroy', $kinerja) }}" method="POST"
-                                                        class="d-inline"
-                                                        onsubmit="return confirm('Yakin ingin menghapus riwayat kinerja ini?')">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                        <x-action-button type="delete" />
-                                                    </form>
+                                                    <x-action-button type="delete_modal" 
+                                                        action="{{ route('kinerja-tahunans.destroy', $kinerja) }}" 
+                                                        message="Yakin ingin menghapus riwayat kinerja ini?" />
                                                 </div>
                                             </td>
                                         </tr>

@@ -49,13 +49,21 @@
             <div class="col-12">
                 <div class="d-flex flex-wrap align-items-center gap-2">
                     <h2 class="mb-0 me-2">{{ $pegawai->nama_lengkap }}</h2>
-                    @if ($projection['is_held_by_speedbump'])
+                    @php
+                        $headerProj = $full_projection['pangkat'];
+                    @endphp
+                    @if ($headerProj['is_fully_ready'])
+                        <span class="badge bg-success-subtle text-dark border border-success-subtle fs-6 px-3 py-2">
+                            <i data-feather="check-circle" width="16" height="16" class="me-1"></i>
+                            Siap AK & Syarat
+                        </span>
+                    @elseif ($headerProj['is_held_by_speedbump'])
                         <span class="badge bg-warning-subtle text-dark border border-warning-subtle fs-6 px-3 py-2">
                             <i data-feather="clock" width="16" height="16" class="me-1"></i>
                             Tertahan Waktu
                         </span>
-                    @elseif ($projection['is_ready_mathematically'])
-                        <span class="badge bg-success-subtle text-dark border border-success-subtle fs-6 px-3 py-2">
+                    @elseif ($headerProj['is_ready_mathematically'])
+                        <span class="badge bg-info-subtle text-dark border border-info-subtle fs-6 px-3 py-2">
                             <i data-feather="check-circle" width="16" height="16" class="me-1"></i>
                             Siap AK
                         </span>
@@ -106,63 +114,36 @@
             <div class="col-md-7 col-lg-8 mb-4">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-body">
-                        <h4 class="card-title mb-4">Ringkasan Proyeksi</h4>
-
-                        <div class="row text-center mb-4">
-                            <div class="col-3 border-end">
-                                <h2 class="mb-0 text-dark">{{ number_format($projection['current_ak'], 2, ',', '.') }}</h2>
-                                <span class="text-muted small">AK Saat Ini</span>
-                            </div>
-                            <div class="col-3 border-end">
-                                <h2 class="mb-0 text-dark">{{ number_format($projection['target_ak'], 0, ',', '.') }}</h2>
-                                <span class="text-muted small">Target AK</span>
-                            </div>
-                            <div class="col-3 border-end">
-                                <h2 class="mb-0 {{ $projection['deficit_ak'] <= 0 ? 'text-success' : 'text-danger' }}">
-                                    {{ number_format($projection['deficit_ak'], 2, ',', '.') }}
-                                </h2>
-                                <span class="text-muted small">Kebutuhan AK</span>
-                            </div>
-                            <div class="col-3">
-                                <h2 class="mb-0 text-primary">
-                                    {{ number_format($projection['annual_ak'], 3, ',', '.') }}
-                                </h2>
-                                <span class="text-muted small">AK/Tahun ({{ $projection['predikat_label'] }})</span>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <div class="d-flex justify-content-between mb-1">
-                                <span class="text-muted">Progres Pencapaian</span>
-                                <span
-                                    class="fw-medium">{{ number_format($projection['progress_percentage'], 1, ',', '.') }}%</span>
-                            </div>
-                            <div class="progress" style="height: 10px;">
-                                <div class="progress-bar {{ $projection['is_held_by_speedbump'] ? 'bg-warning' : ($projection['is_ready_mathematically'] ? 'bg-success' : 'bg-primary') }}"
-                                    role="progressbar" style="width: {{ min($projection['progress_percentage'], 100) }}%"
-                                    aria-valuenow="{{ min($projection['progress_percentage'], 100) }}" aria-valuemin="0"
-                                    aria-valuemax="100"></div>
-                            </div>
-                        </div>
-
-                        @php
-                            $activeScenario = $estimationScenarios['scenarios'][$estimationScenarios['active_predikat']] ?? null;
-                            $boxYear = $activeScenario ? $activeScenario['projected_year'] : $projection['projected_year'];
-                            $boxYearsNeeded = $activeScenario ? $activeScenario['years_needed'] : $projection['estimated_years'];
-                            
-                            $isFast = $boxYearsNeeded <= 3;
-                            $alertClass = $isFast ? 'success' : 'primary';
-                            $icon = $isFast ? 'zap' : 'calendar';
-                        @endphp
-                        <div class="estimation-alert-box {{ $alertClass }} mb-2">
-                            <div class="icon-wrapper">
-                                <i data-feather="{{ $icon }}" width="24" height="24"></i>
-                            </div>
-                            <div>
-                                <h5 class="mb-1 text-dark fw-bold">Estimasi Kenaikan: Tahun {{ $boxYear }}</h5>
-                                <div class="text-dark opacity-75" style="font-size: 0.9rem; line-height: 1.5;">
-                                    ✨ Dengan mempertahankan kinerja <strong class="fw-bold">{{ $projection['predikat_label'] }}</strong>, target pencapaian Anda diperkirakan akan tercapai sekitar <strong>{{ $boxYearsNeeded }} tahun</strong> dari sekarang.
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="card-title mb-0">Ringkasan Proyeksi</h4>
+                            <div class="d-flex align-items-center">
+                                <span class="me-2 small text-muted">Surplus AK:</span>
+                                <div class="btn-group" role="group">
+                                    <a href="?surplus_behavior=hangus" class="btn btn-sm {{ $surplusBehavior === 'hangus' ? 'btn-danger' : 'btn-outline-secondary' }}">Hangus</a>
+                                    <a href="?surplus_behavior=akumulasi" class="btn btn-sm {{ $surplusBehavior === 'akumulasi' ? 'btn-success' : 'btn-outline-secondary' }}">Akumulasi</a>
                                 </div>
+                            </div>
+                        </div>
+
+                        <!-- Tabs for Pangkat and Jenjang -->
+                        <ul class="nav nav-tabs mb-4" id="projectionTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active fw-medium" id="pangkat-tab" data-bs-toggle="tab" data-bs-target="#pangkat-tab-pane" type="button" role="tab">Kenaikan Pangkat</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link fw-medium" id="jenjang-tab" data-bs-toggle="tab" data-bs-target="#jenjang-tab-pane" type="button" role="tab">Kenaikan Jenjang</button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="projectionTabsContent">
+                            <!-- Tab Pangkat -->
+                            <div class="tab-pane fade show active" id="pangkat-tab-pane" role="tabpanel" tabindex="0">
+                                @include('dashboard.proyeksi-jabatan.partials.projection-card', ['proj' => $full_projection['pangkat'], 'type' => 'Pangkat'])
+                            </div>
+                            
+                            <!-- Tab Jenjang -->
+                            <div class="tab-pane fade" id="jenjang-tab-pane" role="tabpanel" tabindex="0">
+                                @include('dashboard.proyeksi-jabatan.partials.projection-card', ['proj' => $full_projection['jenjang'], 'type' => 'Jenjang'])
                             </div>
                         </div>
                     </div>
@@ -204,7 +185,7 @@
                                     </thead>
                                     <tbody>
                                         @foreach ($konversiSummary as $key => $data)
-                                            <tr class="{{ $key === $projection['predikat'] ? 'active-predikat' : '' }}">
+                                            <tr class="{{ $key === $full_projection['pangkat']['predikat'] ? 'active-predikat' : '' }}">
                                                 <td>
                                                     <span
                                                         class="badge border {{ $data['badge_class'] }} px-2 py-1">{{ $data['label'] }}</span>
@@ -214,7 +195,7 @@
                                                     {{ number_format($data['nilai_ak'], 3, ',', '.') }}</td>
                                                 <td>{{ number_format($data['nilai_ak'] / 6, 3, ',', '.') }}</td>
                                                 <td>
-                                                    @if ($key === $projection['predikat'])
+                                                    @if ($key === $full_projection['pangkat']['predikat'])
                                                         <span class="badge bg-primary">Aktif</span>
                                                     @else
                                                         <span class="text-muted">—</span>
@@ -458,6 +439,9 @@
                 </div>
             </div>
         </div>
+
+        @include('dashboard.proyeksi-jabatan.partials.kinerja-tahunan-section')
+
     </div>
 @endsection
 

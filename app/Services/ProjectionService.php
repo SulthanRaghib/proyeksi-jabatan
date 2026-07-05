@@ -8,183 +8,169 @@ use App\Models\KonversiPredikatKinerja;
 use App\Models\Pegawai;
 use Carbon\Carbon;
 
-/**
- * ProjectionService: Career Projection Calculator
- *
- * Calculates civil servant career progression based on Permen PANRB 1/2023 regulations.
- * Determines promotion eligibility by considering both mathematical (AK accumulation) and
- * regulatory (minimum service time) requirements.
- *
- * KEY CHANGE (v2): Now uses database-driven konversi predikat kinerja values instead of
- * hardcoded multipliers. Each jabatan × predikat combination has a specific AK value
- * stored in the konversi_predikat_kinerjas table.
- *
- * @package App\Services
- */
 class ProjectionService
 {
-    /**
-     * The minimum years of service required in current rank before promotion eligibility.
-     * This is the "regulatory speed bump" that prevents purely mathematical early promotions.
-     */
-    private const MINIMUM_YEARS_IN_RANK = 4;
+    private const MINIMUM_YEARS_IN_RANK = 2; // For both Pangkat and Jenjang
 
     /**
-     * Calculate career projection for a civil servant.
-     *
-     * This method determines when an employee is projected to be eligible for promotion
-     * based on their current Angka Kredit (AK/credit score) and the dual requirements
-     * established in Permen PANRB 1/2023:
-     *
-     * 1. MATHEMATICAL REQUIREMENT: Accumulate sufficient AK based on annual AK obtained
-     *    from predikat kinerja conversion table (database-driven).
-     * 2. REGULATORY REQUIREMENT: Serve a minimum of 4 years in the current rank.
-     *
-     * CALCULATION FLOW:
-     * - Retrieves target AK and annual AK from konversi predikat kinerja table
-     * - Fetches current AK from latest performance evaluation record
-     * - Computes annual AK accumulation rate from konversi table (not hardcoded multiplier)
-     * - Calculates mathematical years needed to close AK gap
-     * - Determines how long employee has served in current rank
-     * - Applies regulatory 4-year minimum requirement
-     * - Returns projection data indicating both status and timeline
-     *
-     * @param Pegawai $pegawai The employee to calculate projection for
-     * @param string $predikat The performance predicate key (e.g. 'baik', 'sangat_baik')
-     * @param string $targetType Whether calculating for 'pangkat' or 'jenjang' promotion
-     * @param int $periodsPerYear Number of BKN periodisasi per year (default 6)
-     * @return array Structured projection data
+     * Calculates the full projection for an employee, returning both 'pangkat' and 'jenjang'.
      */
     public function calculateProjection(
         Pegawai $pegawai,
         string $predikat = 'baik',
-        string $targetType = 'pangkat',
-        int $periodsPerYear = 6
+        string $surplusBehavior = 'hangus'
     ): array {
-        // Pre-load relationships to avoid N+1 queries if not already loaded
-        $pegawai->loadMissing('jabatan.konversiPredikat', 'riwayatPaks');
+        $pegawai->loadMissing(['jabatan.konversiPredikat', 'riwayatPaks', 'kinerjaTahunans']);
 
-        // ============================================================================
-        // STEP 1: RETRIEVE BASELINE DATA
-        // ============================================================================
+        return [
+            'pangkat' => $this->calculateTarget($pegawai, $predikat, 'pangkat', $surplusBehavior),
+            'jenjang' => $this->calculateTarget($pegawai, $predikat, 'jenjang', $surplusBehavior),
+            'surplus_behavior' => $surplusBehavior,
+        ];
+    }
 
+    private function calculateTarget(
+        Pegawai $pegawai,
+        string $assumedPredikat,
+        string $targetType,
+        string $surplusBehavior
+    ): array {
         $jabatan = $pegawai->jabatan;
 
         if (!$jabatan) {
             return $this->emptyProjection();
         }
 
-        // Choose target AK based on requested target type: 'pangkat' or 'jenjang'
         $targetAk = (float) (($targetType === 'jenjang'
             ? $jabatan->target_ak_kenaikan_jenjang
             : $jabatan->target_ak_kenaikan_pangkat) ?? 0);
 
-        // ============================================================================
-        // STEP 2: GET ANNUAL AK FROM KONVERSI TABLE (DATABASE-DRIVEN)
-        // ============================================================================
+        // 1. Get Base AK from latest PAK
+        $latestPak = $this->getLatestPak($pegawai);
+        $baseAk = $latestPak ? (float) $latestPak->ak_total : 0.0;
+        $pakDate = $latestPak ? Carbon::parse($latestPak->tanggal_pak) : null;
+        $pakYear = $pakDate ? (int) $pakDate->year : ((int) now()->year - 1);
 
-        $annualAk = $jabatan->getKonversiByPredikat($predikat);
-
-        // Also get the "Baik" (100%) baseline for comparison display
-        $annualAkBaik = $jabatan->getKonversiByPredikat('baik');
-
-        // ============================================================================
-        // STEP 3: GET CURRENT AK FROM LATEST EVALUATION
-        // ============================================================================
-
-        $currentAk = $this->getCurrentAk($pegawai);
-
-        // ============================================================================
-        // STEP 4: CALCULATE AK DEFICIT
-        // ============================================================================
-
-        $deficitAk = max(0.0, $targetAk - $currentAk);
-
-        // ============================================================================
-        // STEP 5: CALCULATE PERIOD-BASED ADDITION
-        // ============================================================================
-
-        // Convert annual AK to per-period addition
-        $periodAddition = $annualAk / max(1, $periodsPerYear);
-
-        // Progress percentage (calculate early so it's available for error returns)
-        $progressPercentage = $targetAk > 0
-            ? min(100.0, ($currentAk / $targetAk) * 100.0)
-            : 100.0;
-
-        // If periodAddition is zero or negative then calculation cannot proceed accurately
-        if ($periodAddition <= 0.0) {
-            return [
-                'current_ak' => $currentAk,
-                'target_ak' => $targetAk,
-                'deficit_ak' => $deficitAk,
-                'annual_ak' => $annualAk,
-                'annual_ak_baik' => $annualAkBaik,
-                'predikat' => $predikat,
-                'predikat_label' => KonversiPredikatKinerja::labelFor($predikat),
-                'estimated_periods' => null,
-                'estimated_years' => null,
-                'projected_year' => (int) now()->year,
-                'is_ready_mathematically' => $deficitAk <= 0,
-                'is_held_by_speedbump' => false,
-                'progress_percentage' => round($progressPercentage, 2),
-                'error' => 'invalid_coefficient',
-            ];
+        // 2. Add AK from Kinerja Tahunan that happened AFTER the latest PAK
+        $historicalAk = 0.0;
+        $lastKinerjaYear = $pakYear;
+        
+        if ($pegawai->relationLoaded('kinerjaTahunans')) {
+            $kinerjas = $pegawai->kinerjaTahunans->where('tahun', '>', $pakYear)->sortBy('tahun');
+            foreach ($kinerjas as $kinerja) {
+                $historicalAk += (float) $kinerja->ak_didapat;
+                $lastKinerjaYear = $kinerja->tahun;
+            }
         }
 
-        // ============================================================================
-        // STEP 6: CALCULATE MATHEMATICAL PERIODS NEEDED
-        // ============================================================================
+        $currentAk = $baseAk + $historicalAk;
+        
+        $surplusAk = 0.0;
+        $deficitAk = $targetAk - $currentAk;
 
-        $mathematicalPeriodsNeeded = (int) ceil($deficitAk / $periodAddition);
+        if ($deficitAk < 0) {
+            $surplusAk = abs($deficitAk);
+            $deficitAk = 0.0;
+            if ($surplusBehavior === 'hangus') {
+                $surplusAk = 0.0; // Surplus is forfeited
+            }
+        }
 
-        // ============================================================================
-        // STEP 7: CALCULATE YEARS SERVED IN CURRENT RANK
-        // ============================================================================
+        $annualAk = $jabatan->getKonversiByPredikat($assumedPredikat);
+        $annualAkBaik = $jabatan->getKonversiByPredikat('baik');
 
-        $yearsServed = $this->calculateYearsServed($pegawai);
+        $progressPercentage = $targetAk > 0 ? min(100.0, ($currentAk / $targetAk) * 100.0) : 100.0;
 
-        // Convert years served to periods served
-        $periodsServed = (int) floor($yearsServed * $periodsPerYear);
+        if ($annualAk <= 0.0) {
+            return $this->emptyProjection($currentAk, $targetAk, $deficitAk, $progressPercentage);
+        }
 
-        // Remaining minimum periods to satisfy regulatory 4-year requirement
-        $remainingMinimumPeriods = max(0, (self::MINIMUM_YEARS_IN_RANK * $periodsPerYear) - $periodsServed);
+        // Years needed mathematically
+        $mathematicalYearsNeeded = (int) ceil($deficitAk / $annualAk);
 
-        // Determine actual periods needed (max of mathematical vs regulatory)
-        $actualPeriodsNeeded = max($mathematicalPeriodsNeeded, $remainingMinimumPeriods);
+        // Regulatory constraints
+        // Pangkat: min 2 years from tmt_golongan
+        // Jenjang: min 2 years from tmt_jabatan
+        $tmt = $targetType === 'pangkat' ? $pegawai->tmt_golongan : $pegawai->tmt_jabatan;
+        $yearsServed = $tmt ? (int) Carbon::parse($tmt)->diffInYears(now()) : 0;
+        $remainingMinimumYears = max(0, self::MINIMUM_YEARS_IN_RANK - $yearsServed);
 
-        // Status flags
+        $actualYearsNeeded = max($mathematicalYearsNeeded, $remainingMinimumYears);
+
+        // The projected year starts from the last evaluated year, or current year
+        $startYearForProjection = max((int) now()->year, $lastKinerjaYear);
+        $projectedYear = $startYearForProjection + $actualYearsNeeded;
+
         $isReadyMathematically = $deficitAk <= 0;
-        $isHeldBySpeedbump = $isReadyMathematically && $remainingMinimumPeriods > 0;
+        $isHeldBySpeedbump = $isReadyMathematically && $remainingMinimumYears > 0;
+        $isHeldByUkom = false;
 
-        // Projected year (approx) — convert periods to years and add to current year
-        $projectedYear = (int) now()->year + (int) ceil($actualPeriodsNeeded / max(1, $periodsPerYear));
+        // Jenjang requires Ukom
+        if ($targetType === 'jenjang' && $isReadyMathematically && !$isHeldBySpeedbump) {
+            if (!$pegawai->status_ukom) {
+                $isHeldByUkom = true;
+            }
+        }
 
+        $isFullyReady = $isReadyMathematically && !$isHeldBySpeedbump && !$isHeldByUkom;
+
+        return [
+            'current_ak' => round($currentAk, 3),
+            'target_ak' => round($targetAk, 3),
+            'deficit_ak' => round($deficitAk, 3),
+            'surplus_ak' => round($surplusAk, 3),
+            'annual_ak' => round($annualAk, 3),
+            'annual_ak_baik' => round($annualAkBaik, 3),
+            'predikat' => $assumedPredikat,
+            'predikat_label' => KonversiPredikatKinerja::labelFor($assumedPredikat),
+            'estimated_years' => $actualYearsNeeded,
+            'projected_year' => $projectedYear,
+            'is_ready_mathematically' => $isReadyMathematically,
+            'is_held_by_speedbump' => $isHeldBySpeedbump,
+            'is_held_by_ukom' => $isHeldByUkom,
+            'is_fully_ready' => $isFullyReady,
+            'progress_percentage' => round($progressPercentage, 2),
+            'tmt_used' => $tmt ? $tmt->format('d/m/Y') : '-',
+            'years_served' => $yearsServed,
+        ];
+    }
+
+    private function getLatestPak(Pegawai $pegawai)
+    {
+        if ($pegawai->relationLoaded('riwayatPaks')) {
+            return $pegawai->riwayatPaks->sortBy([
+                ['tanggal_pak', 'desc'],
+                ['id', 'desc'],
+            ])->first();
+        }
+        return $pegawai->riwayatPaks()->latestPak()->first();
+    }
+
+    private function emptyProjection($currentAk = 0.0, $targetAk = 0.0, $deficitAk = 0.0, $progress = 0.0): array
+    {
         return [
             'current_ak' => $currentAk,
             'target_ak' => $targetAk,
             'deficit_ak' => $deficitAk,
-            'annual_ak' => $annualAk,
-            'annual_ak_baik' => $annualAkBaik,
-            'predikat' => $predikat,
-            'predikat_label' => KonversiPredikatKinerja::labelFor($predikat),
-            'estimated_periods' => $actualPeriodsNeeded,
-            'estimated_years' => round($actualPeriodsNeeded / max(1, $periodsPerYear), 2),
-            'projected_year' => $projectedYear,
-            'is_ready_mathematically' => $isReadyMathematically,
-            'is_held_by_speedbump' => $isHeldBySpeedbump,
-            'progress_percentage' => round($progressPercentage, 2),
+            'surplus_ak' => 0.0,
+            'annual_ak' => 0.0,
+            'annual_ak_baik' => 0.0,
+            'predikat' => 'baik',
+            'predikat_label' => 'Baik',
+            'estimated_years' => 0,
+            'projected_year' => (int) now()->year,
+            'is_ready_mathematically' => false,
+            'is_held_by_speedbump' => false,
+            'is_held_by_ukom' => false,
+            'is_fully_ready' => false,
+            'progress_percentage' => $progress,
+            'tmt_used' => '-',
+            'years_served' => 0,
         ];
     }
 
-    /**
-     * Get the conversion table summary for a jabatan across all predikats.
-     *
-     * Returns an array of konversi data for display in UI tables.
-     *
-     * @param int $jabatanId
-     * @return array<string, array{predikat: string, label: string, persentase: float, nilai_ak: float}>
-     */
+    // Include the remaining methods from original: getKonversiSummary, calculateAllScenarios
+    
     public function getKonversiSummary(int $jabatanId): array
     {
         $konversis = KonversiPredikatKinerja::query()
@@ -201,38 +187,24 @@ class ProjectionService
         ])->keyBy('predikat')->toArray();
     }
 
-    /**
-     * Calculate projection scenarios for ALL predikats.
-     *
-     * Returns a structured array for the estimation timeline UI, showing
-     * how long it takes to reach target AK under each predikat scenario.
-     * Automatically detects the fastest and slowest scenario.
-     *
-     * @param Pegawai $pegawai The employee
-     * @param string $activePredikat The currently active/selected predikat
-     * @return array{scenarios: array, current_ak: float, target_ak: float, active_predikat: string}
-     */
-    public function calculateAllScenarios(Pegawai $pegawai, string $activePredikat = 'baik'): array
+    public function calculateAllScenarios(Pegawai $pegawai, string $activePredikat = 'baik', string $targetType = 'pangkat', string $surplusBehavior = 'hangus'): array
     {
-        $pegawai->loadMissing('jabatan.konversiPredikat', 'riwayatPaks');
-
+        $pegawai->loadMissing(['jabatan.konversiPredikat', 'riwayatPaks', 'kinerjaTahunans']);
+        
         $jabatan = $pegawai->jabatan;
         if (!$jabatan) {
             return ['scenarios' => [], 'current_ak' => 0, 'target_ak' => 0, 'active_predikat' => $activePredikat];
         }
 
-        $targetAk = (float) ($jabatan->target_ak_kenaikan_pangkat ?? 0);
-        $currentAk = $this->getCurrentAk($pegawai);
-        $deficitAk = max(0.0, $targetAk - $currentAk);
-        $currentYear = (int) now()->year;
+        // Use calculateTarget for the active one to get baseline data
+        $baseTarget = $this->calculateTarget($pegawai, $activePredikat, $targetType, $surplusBehavior);
 
-        // Color palette for each predikat (for the estimation bars)
         $colors = [
-            'sangat_baik'     => '#059669', // emerald
-            'baik'            => '#4f46e5', // indigo
-            'butuh_perbaikan' => '#d97706', // amber
-            'kurang'          => '#dc2626', // red
-            'sangat_kurang'   => '#7c3aed', // violet
+            'sangat_baik'     => '#059669',
+            'baik'            => '#4f46e5',
+            'butuh_perbaikan' => '#d97706',
+            'kurang'          => '#dc2626',
+            'sangat_kurang'   => '#7c3aed',
         ];
 
         $scenarios = [];
@@ -240,58 +212,35 @@ class ProjectionService
         $maxYears = 0;
 
         foreach (KonversiPredikatKinerja::PREDIKAT_OPTIONS as $predikat) {
-            $annualAk = $jabatan->getKonversiByPredikat($predikat);
+            $scenarioTarget = $this->calculateTarget($pegawai, $predikat, $targetType, $surplusBehavior);
+            $annualAk = $scenarioTarget['annual_ak'];
+            $yearsNeeded = $scenarioTarget['estimated_years'];
+            $projectedYear = $scenarioTarget['projected_year'];
             $label = KonversiPredikatKinerja::labelFor($predikat);
-
+            
             if ($annualAk <= 0) {
-                $scenarios[$predikat] = [
-                    'predikat'       => $predikat,
-                    'label'          => $label,
-                    'annual_ak'      => 0,
-                    'years_needed'   => null,
-                    'projected_year' => null,
-                    'is_active'      => $predikat === $activePredikat,
-                    'is_fastest'     => false,
-                    'is_slowest'     => false,
-                    'is_ready'       => $deficitAk <= 0,
-                    'color'          => $colors[$predikat] ?? '#6b7280',
-                    'badge_class'    => KonversiPredikatKinerja::PREDIKAT_BADGE_CLASSES[$predikat] ?? '',
-                ];
-                continue;
-            }
-
-            // If already at target, years needed is 0
-            if ($deficitAk <= 0) {
-                $yearsNeeded = 0;
+                $yearsNeeded = null;
+                $projectedYear = null;
             } else {
-                $yearsNeeded = (int) ceil($deficitAk / $annualAk);
-            }
-
-            $projectedYear = $currentYear + $yearsNeeded;
-
-            if ($yearsNeeded < $minYears) {
-                $minYears = $yearsNeeded;
-            }
-            if ($yearsNeeded > $maxYears) {
-                $maxYears = $yearsNeeded;
+                if ($yearsNeeded < $minYears) $minYears = $yearsNeeded;
+                if ($yearsNeeded > $maxYears) $maxYears = $yearsNeeded;
             }
 
             $scenarios[$predikat] = [
                 'predikat'       => $predikat,
                 'label'          => $label,
-                'annual_ak'      => round($annualAk, 3),
+                'annual_ak'      => $annualAk,
                 'years_needed'   => $yearsNeeded,
                 'projected_year' => $projectedYear,
                 'is_active'      => $predikat === $activePredikat,
-                'is_fastest'     => false, // will be set below
+                'is_fastest'     => false,
                 'is_slowest'     => false,
-                'is_ready'       => $deficitAk <= 0,
+                'is_ready'       => $scenarioTarget['is_fully_ready'],
                 'color'          => $colors[$predikat] ?? '#6b7280',
                 'badge_class'    => KonversiPredikatKinerja::PREDIKAT_BADGE_CLASSES[$predikat] ?? '',
             ];
         }
 
-        // Mark fastest and slowest
         foreach ($scenarios as $key => &$scenario) {
             if ($scenario['years_needed'] !== null) {
                 $scenario['is_fastest'] = ($scenario['years_needed'] === $minYears);
@@ -302,84 +251,12 @@ class ProjectionService
 
         return [
             'scenarios'       => $scenarios,
-            'current_ak'      => $currentAk,
-            'target_ak'       => $targetAk,
-            'deficit_ak'      => $deficitAk,
+            'current_ak'      => $baseTarget['current_ak'],
+            'target_ak'       => $baseTarget['target_ak'],
+            'deficit_ak'      => $baseTarget['deficit_ak'],
             'active_predikat' => $activePredikat,
             'max_years'       => $maxYears > 0 ? $maxYears : 1,
+            'target_type'     => $targetType,
         ];
-    }
-
-    /**
-     * Return an empty projection array (no jabatan assigned).
-     */
-    private function emptyProjection(): array
-    {
-        return [
-            'current_ak' => 0.0,
-            'target_ak' => 0.0,
-            'deficit_ak' => 0.0,
-            'annual_ak' => 0.0,
-            'annual_ak_baik' => 0.0,
-            'predikat' => 'baik',
-            'predikat_label' => 'Baik',
-            'estimated_years' => 0,
-            'projected_year' => (int) now()->year,
-            'is_ready_mathematically' => false,
-            'is_held_by_speedbump' => false,
-            'progress_percentage' => 0.0,
-        ];
-    }
-
-    /**
-     * Get the latest Angka Kredit (AK) for an employee.
-     *
-     * Retrieves the most recent performance evaluation (RiwayatPak) record
-     * auto-detected by tanggal_pak DESC, id DESC. No manual flag needed.
-     *
-     * @param Pegawai $pegawai The employee
-     * @return float Current accumulated AK, minimum 0
-     */
-    private function getCurrentAk(Pegawai $pegawai): float
-    {
-        if ($pegawai->relationLoaded('riwayatPaks')) {
-            $latestPak = $pegawai->riwayatPaks->sortBy([
-                ['tanggal_pak', 'desc'],
-                ['id', 'desc'],
-            ])->first();
-        } else {
-            $latestPak = $pegawai->riwayatPaks()
-                ->latestPak()
-                ->first();
-        }
-
-        return $latestPak ? (float) $latestPak->ak_total : 0.0;
-    }
-
-    /**
-     * Calculate years served in current rank (golongan).
-     *
-     * Computes the time difference between the employee's assignment date to the
-     * current rank (tmt_golongan) and today. This value determines how much longer
-     * the employee must wait to satisfy the 4-year minimum service requirement.
-     *
-     * EDGE CASES:
-     * - If tmt_golongan is null: returns 0 (employee has no start date in rank)
-     * - If tmt_golongan is in the future: returns 0 (not yet assigned)
-     *
-     * @param Pegawai $pegawai The employee
-     * @return int Years served in current rank, minimum 0
-     */
-    private function calculateYearsServed(Pegawai $pegawai): int
-    {
-        $tmt = $pegawai->tmt_golongan ?? $pegawai->tmt_jabatan;
-
-        if (!$tmt) {
-            return 0;
-        }
-
-        $yearsServed = (int) Carbon::parse($tmt)->diffInYears(now());
-
-        return max(0, $yearsServed);
     }
 }

@@ -16,6 +16,7 @@ class ProjectionController extends Controller
         $status = (string) $request->input('status', 'all');
         $performance = (string) $request->input('performance', 'baik');
         $targetType = (string) $request->input('target', 'pangkat');
+        $surplusBehavior = (string) $request->input('surplus_behavior', 'hangus');
 
         // Validate predikat against allowed values
         if (!in_array($performance, KonversiPredikatKinerja::PREDIKAT_OPTIONS)) {
@@ -23,7 +24,7 @@ class ProjectionController extends Controller
         }
 
         $pegawais = Pegawai::query()
-            ->with(['jabatan.konversiPredikat', 'golongan', 'unitKerja', 'riwayatPaks'])
+            ->with(['jabatan.konversiPredikat', 'golongan', 'unitKerja', 'riwayatPaks', 'kinerjaTahunans'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($innerQuery) use ($search) {
                     $innerQuery->where('nama_lengkap', 'like', '%' . $search . '%')
@@ -32,12 +33,16 @@ class ProjectionController extends Controller
             })
             ->orderBy('nama_lengkap')
             ->get()
-            ->map(function (Pegawai $pegawai) use ($projectionService, $performance, $targetType) {
-                $projection = $projectionService->calculateProjection($pegawai, $performance, $targetType, 6);
+            ->map(function (Pegawai $pegawai) use ($projectionService, $performance, $targetType, $surplusBehavior) {
+                $fullProjection = $projectionService->calculateProjection($pegawai, $performance, $surplusBehavior);
+                
+                // For index table filtering/stats, we use the specific target type
+                $activeProjection = $fullProjection[$targetType];
 
                 return [
                     'pegawai' => $pegawai,
-                    'projection' => $projection,
+                    'full_projection' => $fullProjection,
+                    'projection' => $activeProjection,
                 ];
             });
 
@@ -79,7 +84,7 @@ class ProjectionController extends Controller
         ]);
     }
 
-    public function show(Pegawai $pegawai, ProjectionService $projectionService)
+    public function show(Request $request, Pegawai $pegawai, ProjectionService $projectionService)
     {
         $pegawai->load([
             'jabatan.konversiPredikat',
@@ -87,18 +92,25 @@ class ProjectionController extends Controller
             'unitKerja',
             'riwayatPaks' => function ($query) {
                 $query->orderBy('tanggal_pak', 'asc');
+            },
+            'kinerjaTahunans' => function ($query) {
+                $query->orderBy('tahun', 'asc');
             }
         ]);
 
+        $surplusBehavior = (string) $request->input('surplus_behavior', 'hangus');
+
         // Determine default performance predicate for simulation
-        // Use the latest historical predicate if available, otherwise default to 'baik'
-        $latestPredikat = $pegawai->riwayatPaks->last()?->predikat_kinerja ?? 'baik';
-        // Validate against options just in case
+        $latestPredikat = $pegawai->kinerjaTahunans->last()?->predikat
+            ?? $pegawai->riwayatPaks->last()?->predikat_kinerja 
+            ?? 'baik';
+            
         if (!in_array($latestPredikat, KonversiPredikatKinerja::PREDIKAT_OPTIONS)) {
             $latestPredikat = 'baik';
         }
 
-        $projection = $projectionService->calculateProjection($pegawai, $latestPredikat);
+        $fullProjection = $projectionService->calculateProjection($pegawai, $latestPredikat, $surplusBehavior);
+        // The view will receive the full projection object to render both boxes
 
         // Get konversi summary for this pegawai's jabatan
         $konversiSummary = $pegawai->jabatan
@@ -108,11 +120,11 @@ class ProjectionController extends Controller
         // Calculate all projections (one per predikat) for comparison table
         $projectionComparison = [];
         foreach (KonversiPredikatKinerja::PREDIKAT_OPTIONS as $predikat) {
-            $projectionComparison[$predikat] = $projectionService->calculateProjection($pegawai, $predikat);
+            $projectionComparison[$predikat] = $projectionService->calculateProjection($pegawai, $predikat, $surplusBehavior);
         }
 
-        // Calculate estimation scenarios for the timeline UI
-        $estimationScenarios = $projectionService->calculateAllScenarios($pegawai, $latestPredikat);
+        // Calculate estimation scenarios for the timeline UI (default to pangkat for timeline, can be toggled via JS if needed)
+        $estimationScenarios = $projectionService->calculateAllScenarios($pegawai, $latestPredikat, 'pangkat', $surplusBehavior);
 
         $chartYears = $pegawai->riwayatPaks->map(function ($pak) {
             return \Carbon\Carbon::parse($pak->tanggal_pak)->format('Y');
@@ -122,7 +134,8 @@ class ProjectionController extends Controller
 
         return view('dashboard.proyeksi-jabatan.show', [
             'pegawai' => $pegawai,
-            'projection' => $projection,
+            'full_projection' => $fullProjection,
+            'surplusBehavior' => $surplusBehavior,
             'konversiSummary' => $konversiSummary,
             'projectionComparison' => $projectionComparison,
             'estimationScenarios' => $estimationScenarios,

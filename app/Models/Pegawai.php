@@ -55,6 +55,11 @@ class Pegawai extends Model
         return $this->hasMany(RiwayatPak::class);
     }
 
+    public function kinerjaTahunans(): HasMany
+    {
+        return $this->hasMany(KinerjaTahunan::class);
+    }
+
     /**
      * Get the latest (most recent) RiwayatPak record.
      * Auto-detected by tanggal_pak DESC, id DESC — no manual flag needed.

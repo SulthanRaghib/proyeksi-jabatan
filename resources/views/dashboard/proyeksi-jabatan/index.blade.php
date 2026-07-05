@@ -149,17 +149,23 @@
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-3">
+                                        <select name="target" class="form-select custom-input">
+                                            <option value="pangkat" @selected(request('target', 'pangkat') === 'pangkat')>Proyeksi: Kenaikan Pangkat</option>
+                                            <option value="jenjang" @selected(request('target') === 'jenjang')>Proyeksi: Kenaikan Jenjang</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-12 col-md-2">
                                         <select name="status" class="form-select custom-input">
                                             <option value="all" @selected($status === 'all')>Semua Status</option>
                                             <option value="ready" @selected($status === 'ready')>Siap AK</option>
-                                            <option value="waiting" @selected($status === 'waiting')>Tertahan Waktu</option>
+                                            <option value="waiting" @selected($status === 'waiting')>Tertahan</option>
                                         </select>
                                     </div>
-                                    <div class="col-12 col-md-3">
+                                    <div class="col-12 col-md-2">
                                         <select name="performance" class="form-select custom-input">
                                             @foreach ($predikatLabels as $key => $label)
                                                 <option value="{{ $key }}" @selected($performance === $key)>
-                                                    Kinerja: {{ $label }}
+                                                    {{ $label }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -220,13 +226,13 @@
                                                 </div>
                                             </td>
                                             <td>
-                                                @if (isset($projection['estimated_periods']))
+                                                @if (isset($projection['estimated_years']))
                                                     <div class="d-flex align-items-center">
                                                         <div class="bg-primary-subtle text-primary rounded px-2 py-1 me-2 fw-bold text-center" style="min-width: 48px; font-size: 0.85rem; white-space: nowrap;">
                                                             {{ $projection['projected_year'] }}
                                                         </div>
                                                         <div class="text-muted small" style="white-space: nowrap;">
-                                                            {{ $projection['estimated_periods'] }} Periode
+                                                            {{ $projection['estimated_years'] }} Tahun
                                                         </div>
                                                     </div>
                                                 @else
@@ -234,13 +240,21 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @if ($held)
+                                                @if ($projection['is_fully_ready'])
+                                                    <span
+                                                        class="badge bg-success-subtle text-dark border border-success-subtle px-2 py-1">Siap
+                                                        AK & Syarat</span>
+                                                @elseif (isset($projection['is_held_by_ukom']) && $projection['is_held_by_ukom'])
+                                                    <span
+                                                        class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1">Menunggu
+                                                        Ukom</span>
+                                                @elseif ($held)
                                                     <span
                                                         class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1">Tertahan
                                                         Waktu</span>
                                                 @elseif ($ready)
                                                     <span
-                                                        class="badge bg-success-subtle text-dark border border-success-subtle px-2 py-1">Siap
+                                                        class="badge bg-info-subtle text-dark border border-info-subtle px-2 py-1">Siap
                                                         AK</span>
                                                 @else
                                                     <span

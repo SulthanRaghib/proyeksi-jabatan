@@ -8,6 +8,7 @@ use App\Http\Controllers\KonversiPredikatKinerjaController;
 use App\Http\Controllers\PegawaiController;
 use App\Http\Controllers\ProjectionController;
 use App\Http\Controllers\RiwayatPakController;
+use App\Http\Controllers\KinerjaTahunanController;
 use App\Http\Controllers\UnitKerjaController;
 use Illuminate\Support\Facades\Route;
 
@@ -24,6 +25,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('jabatans', JabatanController::class)->except('show');
     Route::resource('pegawais', PegawaiController::class)->except('show');
     Route::resource('riwayat-paks', RiwayatPakController::class)->except('show');
+    Route::resource('kinerja-tahunans', KinerjaTahunanController::class)->except(['index', 'show']);
 
     // Konversi Predikat Kinerja management
     Route::resource('konversi-predikats', KonversiPredikatKinerjaController::class)->except('show');

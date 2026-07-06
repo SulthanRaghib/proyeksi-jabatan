@@ -38,5 +38,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/api/konversi-ak/{pegawai}/{predikat}', [RiwayatPakController::class, 'getKonversiAk'])
         ->name('api.konversi-ak');
 
+    // API: Generate Nomor PAK automatically
+    Route::get('/api/generate-no-pak', [RiwayatPakController::class, 'generateNoPak'])
+        ->name('api.generate-no-pak');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

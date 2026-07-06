@@ -327,11 +327,17 @@
 
     <div class="col-12 col-md-6">
         <label for="no_pak" class="form-label">Nomor PAK</label>
-        <input type="text" id="no_pak" name="no_pak" class="form-control @error('no_pak') is-invalid @enderror"
-            value="{{ old('no_pak', $currentRiwayatPak?->no_pak) }}" placeholder="Contoh: 90/KEP/4028/SK/PAK/2025">
-        @error('no_pak')
-            <div class="invalid-feedback">{{ $message }}</div>
-        @enderror
+        <div class="input-group has-validation">
+            <input type="text" id="no_pak" name="no_pak" class="form-control custom-input @error('no_pak') is-invalid @enderror"
+                value="{{ old('no_pak', $currentRiwayatPak?->no_pak) }}" placeholder="Contoh: 90/KEP/4028/SK/PAK/2025">
+            <button type="button" id="btn-generate-pak" class="btn btn-outline-primary d-flex align-items-center gap-1" title="Generate Nomor PAK Otomatis" style="border-radius: 0 0.5rem 0.5rem 0;">
+                <i data-feather="cpu" width="16" height="16"></i> <span class="d-none d-sm-inline">Generate</span>
+            </button>
+            @error('no_pak')
+                <div class="invalid-feedback">{{ $message }}</div>
+            @enderror
+        </div>
+        <div class="form-text text-muted small"><i data-feather="info" width="12" height="12" class="me-1"></i>Klik tombol Generate untuk membuat nomor PAK otomatis berdasarkan tahun ini.</div>
     </div>
 
     {{-- AK Status Panel — shown after pegawai selected --}}
@@ -924,6 +930,41 @@
             // Event listeners
             pegawaiSelect.addEventListener('change', updateAkStatus);
             predikatSelect.addEventListener('change', onPredikatChange);
+
+            // Event listener for generate No PAK button
+            const btnGeneratePak = document.getElementById('btn-generate-pak');
+            const inputNoPak = document.getElementById('no_pak');
+
+            if (btnGeneratePak && inputNoPak) {
+                btnGeneratePak.addEventListener('click', async function() {
+                    const originalIcon = this.innerHTML;
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+                    this.disabled = true;
+
+                    try {
+                        const response = await fetch('{{ route('api.generate-no-pak') }}');
+                        const data = await response.json();
+
+                        if (data.success) {
+                            inputNoPak.value = data.no_pak;
+                            inputNoPak.classList.remove('is-invalid');
+                            inputNoPak.classList.add('is-valid');
+                            
+                            // Optional: show a quick toast or UI feedback if you have a toast library
+                            // For now, the green border (is-valid) is a good feedback
+                        } else {
+                            alert('Gagal membuat nomor PAK. Silakan coba lagi.');
+                        }
+                    } catch (error) {
+                        console.error('Error generating No PAK:', error);
+                        alert('Terjadi kesalahan jaringan.');
+                    } finally {
+                        this.innerHTML = originalIcon;
+                        this.disabled = false;
+                        if (typeof feather !== 'undefined') feather.replace();
+                    }
+                });
+            }
 
             // Initialize on page load
             updateAkStatus();

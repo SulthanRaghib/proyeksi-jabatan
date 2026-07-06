@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateRiwayatPakRequest;
 use App\Models\KonversiPredikatKinerja;
 use App\Models\Pegawai;
 use App\Models\RiwayatPak;
+use App\Services\RiwayatPakService;
 use App\Support\DashboardUiData;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -76,19 +77,9 @@ class RiwayatPakController extends Controller
         ]);
     }
 
-    public function store(StoreRiwayatPakRequest $request): RedirectResponse
+    public function store(StoreRiwayatPakRequest $request, RiwayatPakService $service): RedirectResponse
     {
-        DB::transaction(function () use ($request): void {
-            $validated = $request->validated();
-
-            // Set a temporary total (will be immediately overwritten by recalculation)
-            $validated['ak_total'] = $validated['ak_tambahan'];
-
-            $riwayatPak = RiwayatPak::create($validated);
-            
-            // Recalculate all records sequentially to fix out-of-order inserts
-            $this->recalculateSubsequentRecords($riwayatPak);
-        });
+        $service->storeRiwayatPak($request->validated());
 
         return redirect()
             ->route('riwayat-paks.index')
@@ -104,73 +95,22 @@ class RiwayatPakController extends Controller
         ]);
     }
 
-    public function update(UpdateRiwayatPakRequest $request, RiwayatPak $riwayatPak): RedirectResponse
+    public function update(UpdateRiwayatPakRequest $request, RiwayatPak $riwayatPak, RiwayatPakService $service): RedirectResponse
     {
-        DB::transaction(function () use ($request, $riwayatPak): void {
-            $validated = $request->validated();
-
-            // Set a temporary total (will be immediately overwritten by recalculation)
-            $validated['ak_total'] = $validated['ak_tambahan'];
-
-            $riwayatPak->update($validated);
-
-            // Recalculate all records sequentially to ensure chronological correctness
-            $this->recalculateSubsequentRecords($riwayatPak);
-        });
+        $service->updateRiwayatPak($riwayatPak, $request->validated());
 
         return redirect()
             ->route('riwayat-paks.index')
             ->with('success', 'Riwayat PAK berhasil diperbarui.');
     }
 
-    public function destroy(RiwayatPak $riwayatPak): RedirectResponse
+    public function destroy(RiwayatPak $riwayatPak, RiwayatPakService $service): RedirectResponse
     {
-        DB::transaction(function () use ($riwayatPak): void {
-            $pegawaiId = $riwayatPak->pegawai_id;
-            $tanggalPak = $riwayatPak->tanggal_pak;
-            $recordId = $riwayatPak->id;
-
-            $riwayatPak->delete();
-
-            // Recalculate all records after the deleted one
-            $subsequentRecords = RiwayatPak::query()
-                ->where('pegawai_id', $pegawaiId)
-                ->orderBy('tanggal_pak')
-                ->orderBy('id')
-                ->get();
-
-            $runningTotal = 0;
-            foreach ($subsequentRecords as $record) {
-                $runningTotal += (float) $record->ak_tambahan;
-                if ((float) $record->ak_total !== $runningTotal) {
-                    $record->update(['ak_total' => $runningTotal]);
-                }
-            }
-        });
+        $service->deleteRiwayatPak($riwayatPak);
 
         return redirect()
             ->route('riwayat-paks.index')
             ->with('success', 'Riwayat PAK berhasil dihapus.');
-    }
-
-    /**
-     * Recalculate ak_total for all records after the given record (for edit scenarios).
-     */
-    private function recalculateSubsequentRecords(RiwayatPak $fromRecord): void
-    {
-        $allRecords = RiwayatPak::query()
-            ->where('pegawai_id', $fromRecord->pegawai_id)
-            ->orderBy('tanggal_pak')
-            ->orderBy('id')
-            ->get();
-
-        $runningTotal = 0;
-        foreach ($allRecords as $record) {
-            $runningTotal += (float) $record->ak_tambahan;
-            if (round((float) $record->ak_total, 3) !== round($runningTotal, 3)) {
-                $record->updateQuietly(['ak_total' => $runningTotal]);
-            }
-        }
     }
 
     /**
@@ -246,12 +186,12 @@ class RiwayatPakController extends Controller
     public function generateNoPak()
     {
         $year = date('Y');
-        
+
         // Find the latest PAK for the current year that matches the format
         $latestPak = RiwayatPak::where('no_pak', 'like', "%/KEP/4028/SK/PAK/$year")
             ->orderByRaw('CAST(SUBSTRING_INDEX(no_pak, "/", 1) AS UNSIGNED) DESC')
             ->first();
-        
+
         $nextNumber = 1;
         if ($latestPak && preg_match('/^(\d+)\/KEP\/4028\/SK\/PAK\/\d{4}$/', $latestPak->no_pak, $matches)) {
             $nextNumber = (int) $matches[1] + 1;
@@ -265,4 +205,3 @@ class RiwayatPakController extends Controller
         ]);
     }
 }
-

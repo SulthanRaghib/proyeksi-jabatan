@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreKonversiPredikatKinerjaRequest;
 use App\Http\Requests\UpdateKonversiPredikatKinerjaRequest;
+use App\Http\Requests\GenerateKonversiPredikatRequest;
+use App\Services\KonversiPredikatService;
 use App\Models\Jabatan;
 use App\Models\KonversiPredikatKinerja;
 use App\Support\DashboardUiData;
@@ -116,36 +118,12 @@ class KonversiPredikatKinerjaController extends Controller
             ->with('success', 'Konversi predikat kinerja berhasil dihapus.');
     }
 
-    /**
-     * Batch generate konversi for a specific jabatan (AJAX or form).
-     * Generates all 5 predikat entries based on koefisien_tahunan × persentase.
-     */
-    public function generate(Request $request): RedirectResponse
+    public function generate(GenerateKonversiPredikatRequest $request, KonversiPredikatService $service): RedirectResponse
     {
-        $request->validate(['jabatan_id' => 'required|exists:jabatans,id']);
-
-        $jabatan = Jabatan::findOrFail($request->input('jabatan_id'));
-        $koefisien = (float) $jabatan->koefisien_tahunan;
-        $created = 0;
-
-        foreach (KonversiPredikatKinerja::PREDIKAT_PERSENTASE as $predikat => $persentase) {
-            $nilaiAk = KonversiPredikatKinerja::calculateNilaiAk($koefisien, $persentase);
-
-            KonversiPredikatKinerja::updateOrCreate(
-                [
-                    'jabatan_id' => $jabatan->id,
-                    'predikat' => $predikat,
-                ],
-                [
-                    'persentase' => $persentase,
-                    'nilai_ak' => $nilaiAk,
-                ]
-            );
-            $created++;
-        }
+        $result = $service->generateKonversiForJabatan($request->validated('jabatan_id'));
 
         return redirect()
             ->route('konversi-predikats.index')
-            ->with('success', "Berhasil generate {$created} konversi untuk {$jabatan->nama_jabatan} ({$jabatan->jenjang}).");
+            ->with('success', "Berhasil generate {$result['created_count']} konversi untuk {$result['jabatan_nama']} ({$result['jabatan_jenjang']}).");
     }
 }

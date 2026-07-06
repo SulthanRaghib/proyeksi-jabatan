@@ -241,7 +241,13 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex flex-column align-items-start gap-2">
-                                                    @if ($projection['is_fully_ready'])
+                                                    @if ($pegawai->activeUsulan)
+                                                        @if($pegawai->activeUsulan->status === 'draft')
+                                                            <span class="badge bg-secondary text-white border border-secondary px-2 py-1 shadow-sm"><i data-feather="edit-3" width="12" height="12" class="me-1"></i> Draf Tertunda</span>
+                                                        @else
+                                                            <span class="badge bg-warning text-dark border border-warning px-2 py-1 shadow-sm"><i data-feather="loader" width="12" height="12" class="me-1"></i> Proses SK</span>
+                                                        @endif
+                                                    @elseif ($projection['is_fully_ready'])
                                                         <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 shadow-sm">Siap AK & Syarat</span>
                                                     @elseif (isset($projection['is_held_by_ukom']) && $projection['is_held_by_ukom'])
                                                         <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 shadow-sm">Menunggu Ukom</span>

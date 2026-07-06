@@ -116,13 +116,6 @@
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h4 class="card-title mb-0">Ringkasan Proyeksi</h4>
-                            <div class="d-flex align-items-center">
-                                <span class="me-2 small text-muted">Surplus AK:</span>
-                                <button type="button" class="btn btn-sm btn-outline-primary d-flex align-items-center gap-1" data-bs-toggle="modal" data-bs-target="#surplusModal">
-                                    <i data-feather="settings" width="14" height="14"></i>
-                                    {{ ucfirst($surplusBehavior) }}
-                                </button>
-                            </div>
                         </div>
 
                         <!-- Tabs for Pangkat and Jenjang -->
@@ -737,8 +730,29 @@
         function submitUsulan(actionType) {
             document.getElementById('modal_action_type').value = actionType;
             
-            // Trigger HTML5 validation first
             const form = document.getElementById('usulanForm');
+            
+            if (actionType === 'draft') {
+                // Remove required attribute from all file inputs so HTML5 validation passes for draft
+                form.querySelectorAll('input[type="file"]').forEach(input => {
+                    input.required = false;
+                });
+            } else {
+                // Re-apply required attributes for submit
+                form.querySelector('input[name="sk_pangkat"]').required = true;
+                form.querySelector('input[name="sk_jabatan"]').required = true;
+                form.querySelector('input[name="pak_konversi"]').required = true;
+                form.querySelector('input[name="skp"]').required = true;
+                
+                // For lintas jenjang, re-apply conditionally
+                const isLintasJenjang = document.getElementById('modal_is_lintas_jenjang').value == '1';
+                if (isLintasJenjang) {
+                    document.getElementById('input_ukom').required = true;
+                    document.getElementById('input_formasi').required = true;
+                }
+            }
+
+            // Trigger HTML5 validation first
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;

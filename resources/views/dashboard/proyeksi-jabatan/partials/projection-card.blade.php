@@ -103,10 +103,16 @@
 
 @if($proj['is_fully_ready'] || $proj['is_held_by_ukom'])
     <div class="mt-3 pt-3 border-top text-end">
-        @if($proj['is_locked_usulan'])
-            <button class="btn btn-secondary px-4" disabled>
-                <i data-feather="lock" width="16" height="16" class="me-1"></i> Usulan Sedang Diproses
-            </button>
+        @if($pegawai->activeUsulan)
+            @if($pegawai->activeUsulan->status === 'draft')
+                <a href="{{ route('usulan-pangkat.index', ['tab' => 'draft']) }}" class="btn btn-info text-white shadow-sm px-4">
+                    <i data-feather="edit-3" width="16" height="16" class="me-1"></i> Lanjutkan Draf Tertunda
+                </a>
+            @else
+                <button class="btn btn-secondary shadow-sm px-4" disabled>
+                    <i data-feather="loader" width="16" height="16" class="me-1"></i> SK Sedang Diproses
+                </button>
+            @endif
         @elseif($proj['is_sedang_hukuman'])
             <button class="btn btn-danger px-4" disabled>
                 <i data-feather="slash" width="16" height="16" class="me-1"></i> Terblokir Hukuman Disiplin

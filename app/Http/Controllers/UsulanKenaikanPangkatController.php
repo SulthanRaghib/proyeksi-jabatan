@@ -10,6 +10,8 @@ use App\Http\Requests\ApproveUsulanPangkatRequest;
 use App\Services\UsulanKenaikanPangkatService;
 use Exception;
 
+use App\Http\Requests\UpdateUsulanPangkatRequest;
+
 class UsulanKenaikanPangkatController extends Controller
 {
     protected $usulanService;
@@ -19,12 +21,19 @@ class UsulanKenaikanPangkatController extends Controller
         $this->usulanService = $usulanService;
     }
 
-    public function index()
+    public function index(\Illuminate\Http\Request $request)
     {
-        $usulans = UsulanKenaikanPangkat::with(['pegawai', 'golonganLama', 'golonganBaru'])
-            ->whereIn('status', ['sedang_diproses', 'selesai'])
-            ->orderBy('created_at', 'desc')
-            ->paginate(15);
+        $tab = $request->query('tab', 'sedang_diproses');
+        
+        $query = UsulanKenaikanPangkat::with(['pegawai', 'golonganLama', 'golonganBaru']);
+        
+        if ($tab !== 'semua') {
+            $query->where('status', $tab);
+        }
+        
+        $usulans = $query->orderBy('created_at', 'desc')
+            ->paginate(15)
+            ->appends(['tab' => $tab]);
 
         return view('dashboard.usulan-pangkat.index', [
             'usulans' => $usulans,
@@ -50,10 +59,10 @@ class UsulanKenaikanPangkatController extends Controller
         }
     }
 
-    public function submit(UsulanKenaikanPangkat $usulan)
+    public function update(UpdateUsulanPangkatRequest $request, UsulanKenaikanPangkat $usulan)
     {
         try {
-            $result = $this->usulanService->submitDraft($usulan);
+            $result = $this->usulanService->updateDraft($usulan, $request->allFiles());
             return back()->with('success', $result['message']);
         } catch (Exception $e) {
             return back()->with('error', $e->getMessage());

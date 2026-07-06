@@ -45,7 +45,8 @@ class ProjectionController extends Controller
             },
             'kinerjaTahunans' => function ($query) {
                 $query->orderBy('tahun', 'asc');
-            }
+            },
+            'activeUsulan'
         ]);
 
         $surplusBehavior = (string) $request->input('surplus_behavior', 'hangus');

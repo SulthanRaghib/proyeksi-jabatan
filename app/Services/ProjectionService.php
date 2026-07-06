@@ -278,4 +278,99 @@ class ProjectionService
             'target_type'     => $targetType,
         ];
     }
+
+    /**
+     * Gets filtered projections for the index page.
+     *
+     * @param string $search
+     * @param string $status
+     * @param string $performance
+     * @param string $targetType
+     * @param string $surplusBehavior
+     * @return array
+     */
+    public function getFilteredProjections(string $search, string $status, string $performance, string $targetType, string $surplusBehavior): array
+    {
+        if (!in_array($performance, KonversiPredikatKinerja::PREDIKAT_OPTIONS)) {
+            $performance = 'baik';
+        }
+
+        $pegawais = Pegawai::query()
+            ->with(['jabatan.konversiPredikat', 'golongan', 'unitKerja', 'riwayatPaks', 'kinerjaTahunans'])
+            ->when($search !== '', function ($query) use ($search) {
+                $query->where(function ($innerQuery) use ($search) {
+                    $innerQuery->where('nama_lengkap', 'like', '%' . $search . '%')
+                        ->orWhere('nip', 'like', '%' . $search . '%');
+                });
+            })
+            ->orderBy('nama_lengkap')
+            ->get()
+            ->map(function (Pegawai $pegawai) use ($performance, $targetType, $surplusBehavior) {
+                $fullProjection = $this->calculateProjection($pegawai, $performance, $surplusBehavior);
+                
+                return [
+                    'pegawai' => $pegawai,
+                    'full_projection' => $fullProjection,
+                    'projection' => $fullProjection[$targetType],
+                ];
+            });
+
+        $filteredPegawais = $pegawais->filter(function (array $item) use ($status) {
+            if ($status === 'ready') {
+                return $item['projection']['is_ready_mathematically'] && !$item['projection']['is_held_by_speedbump'];
+            }
+
+            if ($status === 'waiting') {
+                return $item['projection']['is_held_by_speedbump'];
+            }
+
+            return true;
+        })->values();
+
+        $stats = [
+            'total' => $filteredPegawais->count(),
+            'ready' => $filteredPegawais->where('projection.is_ready_mathematically', true)->where('projection.is_held_by_speedbump', false)->count(),
+            'speedbump' => $filteredPegawais->where('projection.is_held_by_speedbump', true)->count(),
+            'avg_progress' => round($filteredPegawais->avg(fn(array $item) => $item['projection']['progress_percentage']) ?? 0, 2),
+        ];
+
+        $highlights = $filteredPegawais
+            ->sortByDesc(fn(array $item) => $item['projection']['progress_percentage'])
+            ->take(3)
+            ->values();
+
+        return [
+            'projections' => $filteredPegawais,
+            'stats' => $stats,
+            'highlights' => $highlights,
+        ];
+    }
+
+    /**
+     * Prepares data for the show chart.
+     *
+     * @param Pegawai $pegawai
+     * @return array
+     */
+    public function getChartData(Pegawai $pegawai): array
+    {
+        $chartYears = $pegawai->riwayatPaks->map(function ($pak) {
+            return \Carbon\Carbon::parse($pak->tanggal_pak)->format('Y');
+        })->toArray();
+
+        $chartAk = $pegawai->riwayatPaks->pluck('ak_total')->toArray();
+        
+        $chartPredikat = $pegawai->riwayatPaks->map(function ($pak) {
+            return ucwords(str_replace('_', ' ', $pak->predikat_kinerja ?? '-'));
+        })->toArray();
+
+        $chartAkTambahan = $pegawai->riwayatPaks->pluck('ak_tambahan')->toArray();
+
+        return [
+            'years' => $chartYears,
+            'ak' => $chartAk,
+            'predikat' => $chartPredikat,
+            'ak_tambahan' => $chartAkTambahan,
+        ];
+    }
 }

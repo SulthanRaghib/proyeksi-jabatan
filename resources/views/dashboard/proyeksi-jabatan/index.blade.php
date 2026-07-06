@@ -211,10 +211,6 @@
                                                 <div>{{ $pegawai->jabatan->nama_jabatan }}</div>
                                                 <div class="text-muted small">{{ $pegawai->golongan->nama_golongan }} •
                                                     {{ $pegawai->unitKerja->nama_unit }}</div>
-                                                
-                                                <div class="mt-1 badge bg-light text-dark border border-secondary-subtle">
-                                                    Proyeksi: {{ $projection['current_target_name'] }} <i data-feather="arrow-right" width="10" height="10"></i> {{ $projection['next_target_name'] }}
-                                                </div>
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-between small mb-1">
@@ -244,27 +240,26 @@
                                                 @endif
                                             </td>
                                             <td>
-                                                @if ($projection['is_fully_ready'])
-                                                    <span
-                                                        class="badge bg-success-subtle text-dark border border-success-subtle px-2 py-1">Siap
-                                                        AK & Syarat</span>
-                                                @elseif (isset($projection['is_held_by_ukom']) && $projection['is_held_by_ukom'])
-                                                    <span
-                                                        class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1">Menunggu
-                                                        Ukom</span>
-                                                @elseif ($held)
-                                                    <span
-                                                        class="badge bg-warning-subtle text-dark border border-warning-subtle px-2 py-1">Tertahan
-                                                        Waktu</span>
-                                                @elseif ($ready)
-                                                    <span
-                                                        class="badge bg-info-subtle text-dark border border-info-subtle px-2 py-1">Siap
-                                                        AK</span>
-                                                @else
-                                                    <span
-                                                        class="badge bg-primary-subtle text-dark border border-primary-subtle px-2 py-1">Proses
-                                                        AK</span>
-                                                @endif
+                                                <div class="d-flex flex-column align-items-start gap-2">
+                                                    @if ($projection['is_fully_ready'])
+                                                        <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1 shadow-sm">Siap AK & Syarat</span>
+                                                    @elseif (isset($projection['is_held_by_ukom']) && $projection['is_held_by_ukom'])
+                                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 shadow-sm">Menunggu Ukom</span>
+                                                    @elseif ($held)
+                                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-2 py-1 shadow-sm">Tertahan Waktu</span>
+                                                    @elseif ($ready)
+                                                        <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle px-2 py-1 shadow-sm">Siap AK</span>
+                                                    @else
+                                                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-2 py-1 shadow-sm">Proses AK</span>
+                                                    @endif
+                                                    
+                                                    @if ($ready)
+                                                        <div class="badge bg-white text-dark border border-light shadow-sm text-start" style="white-space: normal; line-height: 1.4;">
+                                                            <span class="text-muted small d-block mb-1">Naik ke:</span>
+                                                            <span class="fw-bold text-primary">{{ $projection['next_target_name'] }}</span>
+                                                        </div>
+                                                    @endif
+                                                </div>
                                             </td>
                                             <td class="text-center">
                                                 <x-btn href="{{ route('projections.show', $pegawai) }}" variant="soft" size="sm" icon="eye">

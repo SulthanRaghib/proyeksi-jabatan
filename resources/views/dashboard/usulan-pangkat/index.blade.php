@@ -169,7 +169,12 @@
                                                     
                                                     <div class="mb-3 text-start">
                                                         <label class="form-label fw-medium">Nomor SK Baru <span class="text-danger">*</span></label>
-                                                        <input type="text" class="form-control" name="nomor_sk_baru" required placeholder="Contoh: 821.2/KEP/123/2026">
+                                                        <div class="input-group">
+                                                            <input type="text" class="form-control" name="nomor_sk_baru" id="nomor_sk_{{ $usulan->id }}" required placeholder="Contoh: Kpts-001/B.2/KP.01.01/07/2026">
+                                                            <button class="btn btn-outline-primary" type="button" onclick="generateNoSk('{{ $usulan->id }}')">
+                                                                <i data-feather="refresh-cw" width="14" height="14" class="me-1"></i> Generate
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                     <div class="mb-3 text-start">
                                                         <label class="form-label fw-medium">TMT Golongan Baru <span class="text-danger">*</span></label>
@@ -213,5 +218,32 @@
             feather.replace();
         }
     });
+
+    function generateNoSk(id) {
+        const input = document.getElementById('nomor_sk_' + id);
+        if (!input) return;
+        
+        input.value = 'Mencari...';
+        input.disabled = true;
+
+        fetch('{{ route('api.generate-no-sk') }}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = data.nomor_sk;
+                } else {
+                    input.value = '';
+                    alert('Gagal menghasilkan nomor SK.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                input.value = '';
+                alert('Terjadi kesalahan koneksi.');
+            })
+            .finally(() => {
+                input.disabled = false;
+            });
+    }
 </script>
 @endpush

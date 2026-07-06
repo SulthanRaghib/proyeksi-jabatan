@@ -78,4 +78,26 @@ class UsulanKenaikanPangkatController extends Controller
             return back()->with('error', $e->getMessage());
         }
     }
+
+    public function generateNoSk()
+    {
+        $year = date('Y');
+        $month = date('m');
+        
+        $latestUsulan = UsulanKenaikanPangkat::where('nomor_sk_baru', 'like', "Kpts-%/B.2/KP.01.01/$month/$year")
+            ->orderByRaw('CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(nomor_sk_baru, "/", 1), "-", -1) AS UNSIGNED) DESC')
+            ->first();
+            
+        $nextNumber = 1;
+        if ($latestUsulan && preg_match('/^Kpts-(\d+)\/B\.2\/KP\.01\.01\/\d{2}\/\d{4}$/', $latestUsulan->nomor_sk_baru, $matches)) {
+            $nextNumber = (int) $matches[1] + 1;
+        }
+
+        $generatedNo = sprintf("Kpts-%03d/B.2/KP.01.01/%s/%s", $nextNumber, $month, $year);
+
+        return response()->json([
+            'success' => true,
+            'nomor_sk' => $generatedNo,
+        ]);
+    }
 }

@@ -34,6 +34,12 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/proyeksi-jabatan', [ProjectionController::class, 'index'])->name('projections.index');
     Route::get('/proyeksi-jabatan/{pegawai}', [ProjectionController::class, 'show'])->name('projections.show');
 
+    // Usulan Kenaikan Pangkat routes
+    Route::get('/usulan-pangkat', [App\Http\Controllers\UsulanKenaikanPangkatController::class, 'index'])->name('usulan-pangkat.index');
+    Route::post('/usulan-pangkat/store', [App\Http\Controllers\UsulanKenaikanPangkatController::class, 'store'])->name('usulan-pangkat.store');
+    Route::post('/usulan-pangkat/{usulan}/submit', [App\Http\Controllers\UsulanKenaikanPangkatController::class, 'submit'])->name('usulan-pangkat.submit');
+    Route::post('/usulan-pangkat/{usulan}/approve', [App\Http\Controllers\UsulanKenaikanPangkatController::class, 'approve'])->name('usulan-pangkat.approve');
+
     // API: Fetch konversi AK for a pegawai + predikat (used by Riwayat PAK form AJAX)
     Route::get('/api/konversi-ak/{pegawai}/{predikat}', [RiwayatPakController::class, 'getKonversiAk'])
         ->name('api.konversi-ak');

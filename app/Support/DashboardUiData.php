@@ -60,6 +60,12 @@ class DashboardUiData
                         'url' => route('projections.index'),
                         'route' => 'projections.*',
                     ],
+                    [
+                        'label' => 'Usulan Pangkat',
+                        'icon' => 'file-plus',
+                        'url' => route('usulan-pangkat.index'),
+                        'route' => 'usulan-pangkat.*',
+                    ],
                 ],
             ],
             [

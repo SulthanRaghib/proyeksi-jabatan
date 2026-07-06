@@ -155,7 +155,7 @@
 
                     <div class="row mb-4">
                         <div class="col-12 col-md-6">
-                            <div class="form-check">
+                            <div class="form-check mb-3">
                                 <input type="checkbox" id="status_ukom" name="status_ukom" value="1"
                                     class="form-check-input @error('status_ukom') is-invalid @enderror"
                                     @checked(old('status_ukom'))>
@@ -163,6 +163,20 @@
                                     Status UKOM (Sudah Lulus Tes Kompetensi)
                                 </label>
                                 @error('status_ukom')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="col-12 col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input type="checkbox" id="sedang_hukuman_disiplin" name="sedang_hukuman_disiplin" value="1"
+                                    class="form-check-input @error('sedang_hukuman_disiplin') is-invalid @enderror"
+                                    @checked(old('sedang_hukuman_disiplin'))>
+                                <label class="form-check-label text-danger fw-medium" for="sedang_hukuman_disiplin">
+                                    Sedang Menjalani Hukuman Disiplin (Blokir Usulan)
+                                </label>
+                                @error('sedang_hukuman_disiplin')
                                     <div class="invalid-feedback d-block">{{ $message }}</div>
                                 @enderror
                             </div>

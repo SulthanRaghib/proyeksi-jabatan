@@ -455,57 +455,105 @@
 
     </div>
 
-    <!-- Modal Konfigurasi Surplus -->
-    <div class="modal fade" id="surplusModal" tabindex="-1" aria-labelledby="surplusModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow">
-                <div class="modal-header border-bottom-0 pb-0">
-                    <h5 class="modal-title fw-bold" id="surplusModalLabel">
-                        <i data-feather="settings" class="me-2 text-primary" width="20" height="20"></i> Pengaturan Surplus AK
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body py-4 px-4">
-                    <p class="text-muted mb-4 small text-center">Silakan pilih metode yang digunakan untuk menangani kelebihan Angka Kredit setelah target kenaikan tercapai.</p>
-                    
-                    <div class="d-grid gap-3">
-                        <a href="?surplus_behavior=hangus" class="text-decoration-none d-block">
-                            <div class="card transition-base border-2 shadow-sm {{ $surplusBehavior === 'hangus' ? 'border-danger bg-danger-subtle' : 'border-secondary-subtle bg-white' }}" style="border-radius: 0.75rem; cursor: pointer;" onmouseover="this.classList.add('shadow-md');" onmouseout="this.classList.remove('shadow-md');">
-                                <div class="card-body p-3">
-                                    <div class="d-flex align-items-center mb-1">
-                                        <div class="bg-white rounded d-flex align-items-center justify-content-center me-3 shadow-sm border border-light" style="width: 40px; height: 40px; flex-shrink: 0;">
-                                            <i data-feather="trash-2" class="{{ $surplusBehavior === 'hangus' ? 'text-danger' : 'text-secondary' }}" width="20" height="20"></i>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-1 fw-bold {{ $surplusBehavior === 'hangus' ? 'text-danger' : 'text-dark' }}">Dihanguskan (Default)</h6>
-                                            <p class="mb-0 small {{ $surplusBehavior === 'hangus' ? 'text-danger-emphasis' : 'text-muted' }} lh-sm">
-                                                Kelebihan AK dibuang, tidak dibawa ke jenjang/pangkat selanjutnya sesuai aturan konvensional.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
-                        
-                        <a href="?surplus_behavior=akumulasi" class="text-decoration-none d-block">
-                            <div class="card transition-base border-2 shadow-sm {{ $surplusBehavior === 'akumulasi' ? 'border-success bg-success-subtle' : 'border-secondary-subtle bg-white' }}" style="border-radius: 0.75rem; cursor: pointer;" onmouseover="this.classList.add('shadow-md');" onmouseout="this.classList.remove('shadow-md');">
-                                <div class="card-body p-3">
-                                    <div class="d-flex align-items-center mb-1">
-                                        <div class="bg-white rounded d-flex align-items-center justify-content-center me-3 shadow-sm border border-light" style="width: 40px; height: 40px; flex-shrink: 0;">
-                                            <i data-feather="plus-circle" class="{{ $surplusBehavior === 'akumulasi' ? 'text-success' : 'text-secondary' }}" width="20" height="20"></i>
-                                        </div>
-                                        <div>
-                                            <h6 class="mb-1 fw-bold {{ $surplusBehavior === 'akumulasi' ? 'text-success' : 'text-dark' }}">Diakumulasikan</h6>
-                                            <p class="mb-0 small {{ $surplusBehavior === 'akumulasi' ? 'text-success-emphasis' : 'text-muted' }} lh-sm">
-                                                Kelebihan AK disimpan sebagai saldo tabungan awal untuk target jenjang/pangkat selanjutnya.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </a>
+    <!-- Modal Usulan Kenaikan Pangkat -->
+    <div class="modal fade" id="usulanModal" tabindex="-1" aria-labelledby="usulanModalLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content border-0 shadow-lg">
+                <form action="{{ route('usulan-pangkat.store') }}" method="POST" enctype="multipart/form-data" id="usulanForm">
+                    @csrf
+                    <input type="hidden" name="pegawai_id" value="{{ $pegawai->id }}">
+                    <input type="hidden" name="golongan_baru_id" id="modal_golongan_baru_id" value="">
+                    <input type="hidden" name="saldo_ak_awal" id="modal_saldo_ak_awal" value="">
+                    <input type="hidden" name="potongan_ak" id="modal_potongan_ak" value="">
+                    <input type="hidden" name="sisa_ak" id="modal_sisa_ak" value="">
+                    <input type="hidden" name="is_lintas_jenjang" id="modal_is_lintas_jenjang" value="0">
+                    <input type="hidden" name="action_type" id="modal_action_type" value="draft">
+
+                    <div class="modal-header border-bottom-0 pb-0 pt-4 px-4">
+                        <h4 class="modal-title fw-bold text-dark" id="usulanModalLabel">
+                            Formulir Usulan Kenaikan Pangkat
+                        </h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                </div>
+                    
+                    <div class="modal-body py-4 px-4">
+                        <!-- Bagian A: Ringkasan & Kalkulasi -->
+                        <div class="card bg-light border-0 mb-4 shadow-sm">
+                            <div class="card-body p-3">
+                                <h6 class="fw-bold mb-3 text-primary"><i data-feather="info" width="16" height="16" class="me-1"></i> Bagian A: Ringkasan Saldo Otomatis</h6>
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="text-muted small mb-1">Target Pangkat/Golongan</div>
+                                        <div class="fw-bold fs-5 text-dark"><span id="modal_text_current">-</span> <i data-feather="arrow-right" width="16" height="16" class="mx-1 text-muted"></i> <span id="modal_text_next" class="text-primary">-</span></div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="text-muted small mb-1">Status Saldo Sisa</div>
+                                        <div class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i data-feather="lock" width="12" height="12" class="me-1"></i> Diakumulasikan Otomatis</div>
+                                    </div>
+                                </div>
+                                
+                                <hr class="my-3 border-secondary-subtle">
+                                
+                                <div class="row text-center g-2">
+                                    <div class="col-4 border-end border-secondary-subtle">
+                                        <div class="text-muted small">Saldo AK Saat Ini</div>
+                                        <div class="fw-bold fs-5" id="modal_text_ak">-</div>
+                                    </div>
+                                    <div class="col-4 border-end border-secondary-subtle">
+                                        <div class="text-muted small">Potongan Syarat</div>
+                                        <div class="fw-bold fs-5 text-danger" id="modal_text_target_ak">-</div>
+                                    </div>
+                                    <div class="col-4">
+                                        <div class="text-muted small">Sisa Modal Baru</div>
+                                        <div class="fw-bold fs-5 text-success" id="modal_text_surplus">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bagian B: Upload Dokumen -->
+                        <h6 class="fw-bold mb-3 text-primary"><i data-feather="upload" width="16" height="16" class="me-1"></i> Bagian B: Unggah Dokumen Pendukung (PDF)</h6>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-medium">SK Pangkat Terakhir <span class="text-danger">*</span></label>
+                                <input class="form-control form-control-sm" type="file" name="sk_pangkat" accept="application/pdf" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-medium">SK Jabatan Fungsional <span class="text-danger">*</span></label>
+                                <input class="form-control form-control-sm" type="file" name="sk_jabatan" accept="application/pdf" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-medium">PAK Konversi Terakhir <span class="text-danger">*</span></label>
+                                <input class="form-control form-control-sm" type="file" name="pak_konversi" accept="application/pdf" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-medium">Evaluasi Kinerja (SKP) <span class="text-danger">*</span></label>
+                                <input class="form-control form-control-sm" type="file" name="skp" accept="application/pdf" required>
+                            </div>
+                        </div>
+
+                        <div id="lintasJenjangDocs" class="row g-3 mt-1" style="display: none;">
+                            <div class="col-12"><hr class="my-1 border-secondary-subtle border-dashed"></div>
+                            <div class="col-12"><span class="badge bg-warning-subtle text-warning-emphasis">Usulan Lintas Jenjang Terdeteksi</span></div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-medium">Sertifikat Lulus Ukom <span class="text-danger">*</span></label>
+                                <input class="form-control form-control-sm" type="file" name="ukom" id="input_ukom" accept="application/pdf">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-medium">Surat Formasi BAPETEN <span class="text-danger">*</span></label>
+                                <input class="form-control form-control-sm" type="file" name="formasi" id="input_formasi" accept="application/pdf">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer border-top-0 px-4 pb-4 bg-light rounded-bottom">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="button" class="btn btn-secondary px-4 shadow-sm" onclick="submitUsulan('draft')">Simpan sebagai Draf</button>
+                        <button type="button" class="btn btn-primary px-4 shadow-sm" onclick="submitUsulan('submit')">Kirim Usulan & Validasi</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -638,6 +686,65 @@
                     }
                 });
             });
+
+            // Usulan Modal Logic
+            const usulanModal = document.getElementById('usulanModal');
+            if (usulanModal) {
+                usulanModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    
+                    const type = button.getAttribute('data-type');
+                    const currentName = button.getAttribute('data-current');
+                    const nextName = button.getAttribute('data-next');
+                    const currentAk = parseFloat(button.getAttribute('data-ak'));
+                    const targetAk = parseFloat(button.getAttribute('data-target-ak'));
+                    const surplus = parseFloat(button.getAttribute('data-surplus'));
+                    const golonganBaruId = button.getAttribute('data-golongan-baru');
+                    
+                    const isLintasJenjang = (type === 'jenjang') ? 1 : 0;
+                    
+                    // Populating read-only UI
+                    document.getElementById('modal_text_current').textContent = currentName;
+                    document.getElementById('modal_text_next').textContent = nextName;
+                    document.getElementById('modal_text_ak').textContent = currentAk.toFixed(2);
+                    document.getElementById('modal_text_target_ak').textContent = '-' + targetAk.toFixed(2);
+                    document.getElementById('modal_text_surplus').textContent = '+' + surplus.toFixed(2);
+                    
+                    // Populating hidden inputs
+                    document.getElementById('modal_saldo_ak_awal').value = currentAk;
+                    document.getElementById('modal_potongan_ak').value = targetAk;
+                    document.getElementById('modal_sisa_ak').value = surplus;
+                    document.getElementById('modal_is_lintas_jenjang').value = isLintasJenjang;
+                    document.getElementById('modal_golongan_baru_id').value = golonganBaruId;
+                    
+                    const lintasJenjangDocs = document.getElementById('lintasJenjangDocs');
+                    const inputUkom = document.getElementById('input_ukom');
+                    const inputFormasi = document.getElementById('input_formasi');
+                    
+                    if (isLintasJenjang) {
+                        lintasJenjangDocs.style.display = 'flex';
+                        inputUkom.required = true;
+                        inputFormasi.required = true;
+                    } else {
+                        lintasJenjangDocs.style.display = 'none';
+                        inputUkom.required = false;
+                        inputFormasi.required = false;
+                    }
+                });
+            }
         });
+
+        function submitUsulan(actionType) {
+            document.getElementById('modal_action_type').value = actionType;
+            
+            // Trigger HTML5 validation first
+            const form = document.getElementById('usulanForm');
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+            
+            form.submit();
+        }
     </script>
 @endpush

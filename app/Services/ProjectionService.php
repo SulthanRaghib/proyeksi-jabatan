@@ -71,9 +71,6 @@ class ProjectionService
         if ($deficitAk < 0) {
             $surplusAk = abs($deficitAk);
             $deficitAk = 0.0;
-            if ($surplusBehavior === 'hangus') {
-                $surplusAk = 0.0; // Surplus is forfeited
-            }
         }
 
         $annualAk = $jabatan->getKonversiByPredikat($assumedPredikat);
@@ -117,10 +114,12 @@ class ProjectionService
         // Resolve target names
         $currentTargetName = '-';
         $nextTargetName = '-';
+        $nextGolonganId = null;
         if ($targetType === 'pangkat' && $pegawai->golongan) {
             $currentTargetName = $pegawai->golongan->nama_golongan;
             $nextGolongan = \App\Models\Golongan::where('id', '>', $pegawai->golongan_id)->orderBy('id')->first();
             $nextTargetName = $nextGolongan ? $nextGolongan->nama_golongan : 'Maksimal';
+            $nextGolonganId = $nextGolongan ? $nextGolongan->id : null;
         } elseif ($targetType === 'jenjang' && $jabatan) {
             $currentTargetName = $jabatan->jenjang;
             $nextJabatan = \App\Models\Jabatan::where('kategori', $jabatan->kategori)->where('id', '>', $jabatan->id)->orderBy('id')->first();
@@ -147,6 +146,9 @@ class ProjectionService
             'years_served' => $yearsServed,
             'current_target_name' => $currentTargetName,
             'next_target_name' => $nextTargetName,
+            'next_golongan_id' => $nextGolonganId,
+            'is_sedang_hukuman' => $pegawai->sedang_hukuman_disiplin,
+            'is_locked_usulan' => $pegawai->is_locked_usulan,
         ];
     }
 

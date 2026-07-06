@@ -22,12 +22,16 @@ class Pegawai extends Model
         'tmt_jabatan',
         'tmt_golongan',
         'status_ukom',
+        'sedang_hukuman_disiplin',
+        'is_locked_usulan',
     ];
 
     protected $casts = [
         'tmt_jabatan' => 'date',
         'tmt_golongan' => 'date',
         'status_ukom' => 'boolean',
+        'sedang_hukuman_disiplin' => 'boolean',
+        'is_locked_usulan' => 'boolean',
     ];
 
     public function user(): BelongsTo
@@ -67,5 +71,19 @@ class Pegawai extends Model
     public function latestRiwayatPak(): HasOne
     {
         return $this->hasOne(RiwayatPak::class)->latestPak();
+    }
+
+    /**
+     * Get the latest (most recent) RiwayatPak record.
+     * Auto-detected by tanggal_pak DESC, id DESC — no manual flag needed.
+     */
+    public function latestKinerjaTahunan(): HasOne
+    {
+        return $this->hasOne(KinerjaTahunan::class)->latestOfMany();
+    }
+
+    public function usulans(): HasMany
+    {
+        return $this->hasMany(UsulanKenaikanPangkat::class);
     }
 }

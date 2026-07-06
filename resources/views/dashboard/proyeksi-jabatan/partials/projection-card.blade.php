@@ -100,3 +100,29 @@
         </div>
     </div>
 @endif
+
+@if($proj['is_fully_ready'] || $proj['is_held_by_ukom'])
+    <div class="mt-3 pt-3 border-top text-end">
+        @if($proj['is_locked_usulan'])
+            <button class="btn btn-secondary px-4" disabled>
+                <i data-feather="lock" width="16" height="16" class="me-1"></i> Usulan Sedang Diproses
+            </button>
+        @elseif($proj['is_sedang_hukuman'])
+            <button class="btn btn-danger px-4" disabled>
+                <i data-feather="slash" width="16" height="16" class="me-1"></i> Terblokir Hukuman Disiplin
+            </button>
+        @else
+            <button class="btn btn-primary shadow px-4 py-2" data-bs-toggle="modal" data-bs-target="#usulanModal" 
+                data-type="{{ $type }}"
+                data-current="{{ $proj['current_target_name'] }}"
+                data-next="{{ $proj['next_target_name'] }}"
+                data-ak="{{ $proj['current_ak'] }}"
+                data-target-ak="{{ $proj['target_ak'] }}"
+                data-surplus="{{ $proj['surplus_ak'] }}"
+                data-golongan-baru="{{ $proj['next_golongan_id'] ?? '' }}">
+                <i data-feather="upload-cloud" width="18" height="18" class="me-1"></i>
+                Usulkan Kenaikan {{ ucfirst($type) }}
+            </button>
+        @endif
+    </div>
+@endif

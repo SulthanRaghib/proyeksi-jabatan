@@ -23,6 +23,7 @@ class UpdatePegawaiRequest extends FormRequest
             'jabatan_id' => $this->input('jabatan_id'),
             'golongan_id' => $this->input('golongan_id'),
             'status_ukom' => (bool) $this->input('status_ukom', false),
+            'sedang_hukuman_disiplin' => (bool) $this->input('sedang_hukuman_disiplin', false),
         ]);
     }
 
@@ -41,6 +42,7 @@ class UpdatePegawaiRequest extends FormRequest
             'tmt_jabatan' => ['required', 'date'],
             'tmt_golongan' => ['required', 'date'],
             'status_ukom' => ['boolean'],
+            'sedang_hukuman_disiplin' => ['boolean'],
         ];
     }
 

@@ -131,6 +131,12 @@ class ProjectionController extends Controller
         })->toArray();
 
         $chartAk = $pegawai->riwayatPaks->pluck('ak_total')->toArray();
+        
+        $chartPredikat = $pegawai->riwayatPaks->map(function ($pak) {
+            return ucwords(str_replace('_', ' ', $pak->predikat_kinerja ?? '-'));
+        })->toArray();
+
+        $chartAkTambahan = $pegawai->riwayatPaks->pluck('ak_tambahan')->toArray();
 
         return view('dashboard.proyeksi-jabatan.show', [
             'pegawai' => $pegawai,
@@ -141,6 +147,8 @@ class ProjectionController extends Controller
             'estimationScenarios' => $estimationScenarios,
             'chartYears' => $chartYears,
             'chartAk' => $chartAk,
+            'chartPredikat' => $chartPredikat,
+            'chartAkTambahan' => $chartAkTambahan,
             'predikatLabels' => KonversiPredikatKinerja::PREDIKAT_LABELS,
             'predikatBadgeClasses' => KonversiPredikatKinerja::PREDIKAT_BADGE_CLASSES,
             'menuGroups' => DashboardUiData::menuGroups(),

@@ -530,6 +530,8 @@
             if (typeof c3 !== 'undefined') {
                 var chartYears = {!! json_encode($chartYears) !!};
                 var chartAk = {!! json_encode($chartAk) !!};
+                var chartPredikat = {!! json_encode($chartPredikat) !!};
+                var chartAkTambahan = {!! json_encode($chartAkTambahan) !!};
 
                 // Only generate chart if there's data
                 if (chartYears.length > 0 && chartAk.length > 0) {
@@ -572,9 +574,35 @@
                             r: 4
                         },
                         tooltip: {
-                            format: {
-                                title: function (d) { return 'Tahun ' + chartYears[d]; },
-                                value: function (value) { return value.toFixed(3); }
+                            contents: function (d, defaultTitleFormat, defaultValueFormat, color) {
+                                var idx = d[0].index;
+                                var year = chartYears[idx];
+                                var totalAk = d[0].value.toFixed(3);
+                                var predikat = chartPredikat[idx];
+                                var akTambahan = parseFloat(chartAkTambahan[idx]).toFixed(3);
+                                
+                                return `
+                                    <div class="card border-0 shadow custom-chart-tooltip" style="min-width: 160px; font-family: inherit;">
+                                        <div class="card-header bg-light py-2 px-3 border-bottom border-secondary-subtle">
+                                            <span class="fw-bold small text-dark">Tahun ${year}</span>
+                                        </div>
+                                        <div class="card-body p-3">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="small text-muted me-3"><span style="display:inline-block;width:10px;height:10px;background-color:${color(d[0].id)};border-radius:50%;margin-right:6px;"></span>Total AK</span>
+                                                <span class="fw-bold text-dark">${totalAk}</span>
+                                            </div>
+                                            <hr class="my-2 border-secondary-subtle opacity-50">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <span class="small text-muted me-3">Predikat</span>
+                                                <span class="fw-medium text-dark small">${predikat}</span>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="small text-muted me-3">AK Konversi</span>
+                                                <span class="fw-bold text-primary small">+${akTambahan}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
                             }
                         }
                     });

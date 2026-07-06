@@ -82,6 +82,13 @@ class Pegawai extends Model
         return $this->hasOne(KinerjaTahunan::class)->latestOfMany();
     }
 
+    public function activeUsulan(): HasOne
+    {
+        return $this->hasOne(UsulanKenaikanPangkat::class)
+            ->whereIn('status', ['draft', 'sedang_diproses'])
+            ->latestOfMany();
+    }
+
     public function usulans(): HasMany
     {
         return $this->hasMany(UsulanKenaikanPangkat::class);

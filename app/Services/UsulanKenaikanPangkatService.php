@@ -26,8 +26,8 @@ class UsulanKenaikanPangkatService
             throw new Exception('Pegawai sedang menjalani hukuman disiplin dan tidak dapat diusulkan.');
         }
 
-        if ($pegawai->is_locked_usulan) {
-            throw new Exception('Pegawai sudah memiliki usulan yang sedang diproses.');
+        if ($pegawai->activeUsulan()->exists()) {
+            throw new Exception('Pegawai ini sudah memiliki draf tertunda atau usulan yang sedang diproses. Silakan selesaikan atau hapus usulan tersebut terlebih dahulu.');
         }
 
         DB::beginTransaction();
@@ -74,22 +74,50 @@ class UsulanKenaikanPangkatService
     }
 
     /**
-     * Mengirim draf usulan yang sudah ada.
+     * Melengkapi dokumen draf usulan dan mengirimkannya.
      *
      * @param UsulanKenaikanPangkat $usulan
+     * @param array $files
      * @return array
      * @throws Exception
      */
-    public function submitDraft(UsulanKenaikanPangkat $usulan): array
+    public function updateDraft(UsulanKenaikanPangkat $usulan, array $files): array
     {
         if ($usulan->status !== 'draft') {
             throw new Exception('Usulan ini bukan draf.');
         }
 
-        $usulan->update(['status' => 'sedang_diproses']);
-        $usulan->pegawai->update(['is_locked_usulan' => true]);
+        DB::beginTransaction();
+        try {
+            $pegawai = $usulan->pegawai;
+            $year = date('Y');
+            $uploadPath = "dokumen_usulan/{$pegawai->nip}/{$year}";
 
-        return ['success' => true, 'message' => 'Usulan berhasil dikirim untuk diproses.'];
+            foreach ($files as $jenis => $file) {
+                if ($file) {
+                    $path = $file->store($uploadPath, 'public');
+                    
+                    DokumenUsulan::updateOrCreate(
+                        [
+                            'usulan_kenaikan_pangkat_id' => $usulan->id,
+                            'jenis_dokumen' => $jenis,
+                        ],
+                        [
+                            'file_path' => $path,
+                        ]
+                    );
+                }
+            }
+
+            $usulan->update(['status' => 'sedang_diproses']);
+            $pegawai->update(['is_locked_usulan' => true]);
+
+            DB::commit();
+            return ['success' => true, 'message' => 'Dokumen berhasil dilengkapi dan Usulan dikirim untuk diproses.'];
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     /**

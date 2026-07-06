@@ -296,7 +296,7 @@ class ProjectionService
         }
 
         $pegawais = Pegawai::query()
-            ->with(['jabatan.konversiPredikat', 'golongan', 'unitKerja', 'riwayatPaks', 'kinerjaTahunans'])
+            ->with(['jabatan.konversiPredikat', 'golongan', 'unitKerja', 'riwayatPaks', 'kinerjaTahunans', 'activeUsulan'])
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($innerQuery) use ($search) {
                     $innerQuery->where('nama_lengkap', 'like', '%' . $search . '%')

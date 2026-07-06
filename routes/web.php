@@ -37,7 +37,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     // Usulan Kenaikan Pangkat routes
     Route::get('/usulan-pangkat', [App\Http\Controllers\UsulanKenaikanPangkatController::class, 'index'])->name('usulan-pangkat.index');
     Route::post('/usulan-pangkat/store', [App\Http\Controllers\UsulanKenaikanPangkatController::class, 'store'])->name('usulan-pangkat.store');
-    Route::post('/usulan-pangkat/{usulan}/submit', [App\Http\Controllers\UsulanKenaikanPangkatController::class, 'submit'])->name('usulan-pangkat.submit');
+    Route::post('/usulan-pangkat/{usulan}/update', [App\Http\Controllers\UsulanKenaikanPangkatController::class, 'update'])->name('usulan-pangkat.update');
     Route::post('/usulan-pangkat/{usulan}/approve', [App\Http\Controllers\UsulanKenaikanPangkatController::class, 'approve'])->name('usulan-pangkat.approve');
 
     // API: Fetch konversi AK for a pegawai + predikat (used by Riwayat PAK form AJAX)

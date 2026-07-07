@@ -30,6 +30,10 @@ class MasterDataSeeder extends Seeder
         ];
 
         $golongans = [
+            ['nama_golongan' => 'II/a', 'pangkat' => 'Pengatur Muda'],
+            ['nama_golongan' => 'II/b', 'pangkat' => 'Pengatur Muda Tingkat I'],
+            ['nama_golongan' => 'II/c', 'pangkat' => 'Pengatur'],
+            ['nama_golongan' => 'II/d', 'pangkat' => 'Pengatur Tingkat I'],
             ['nama_golongan' => 'III/a', 'pangkat' => 'Penata Muda'],
             ['nama_golongan' => 'III/b', 'pangkat' => 'Penata Muda Tingkat I'],
             ['nama_golongan' => 'III/c', 'pangkat' => 'Penata'],

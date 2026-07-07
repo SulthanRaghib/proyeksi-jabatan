@@ -200,3 +200,52 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const golonganSelect = document.getElementById('golongan_id');
+        const jabatanSelect = document.getElementById('jabatan_id');
+        
+        function updateJenjang() {
+            if (!golonganSelect.value) return;
+            
+            const selectedOption = golonganSelect.options[golonganSelect.selectedIndex];
+            const text = selectedOption.text;
+            let expectedJenjang = '';
+            
+            if (text.includes('III/a') || text.includes('III/b')) {
+                expectedJenjang = 'Pertama';
+            } else if (text.includes('III/c') || text.includes('III/d')) {
+                expectedJenjang = 'Muda';
+            } else if (text.includes('IV/a') || text.includes('IV/b') || text.includes('IV/c')) {
+                expectedJenjang = 'Madya';
+            } else if (text.includes('IV/d') || text.includes('IV/e')) {
+                expectedJenjang = 'Utama';
+            } else if (text.includes('II/a')) {
+                expectedJenjang = 'Pemula';
+            } else if (text.includes('II/b') || text.includes('II/c') || text.includes('II/d')) {
+                expectedJenjang = 'Terampil';
+            }
+            
+            if (expectedJenjang) {
+                // Find matching option in jabatan
+                let found = false;
+                for (let i = 0; i < jabatanSelect.options.length; i++) {
+                    const opt = jabatanSelect.options[i];
+                    if (opt.text.includes('(' + expectedJenjang + ')')) {
+                        jabatanSelect.value = opt.value;
+                        found = true;
+                        break; // If found one, we just select it
+                    }
+                }
+            }
+        }
+        
+        golonganSelect.addEventListener('change', updateJenjang);
+        
+        // Run once on load
+        updateJenjang();
+    });
+</script>
+@endpush

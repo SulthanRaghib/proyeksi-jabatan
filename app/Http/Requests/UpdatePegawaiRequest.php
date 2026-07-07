@@ -35,15 +35,23 @@ class UpdatePegawaiRequest extends FormRequest
         return [
             'user_id' => ['nullable', 'exists:users,id'],
             'unit_kerja_id' => ['required', 'exists:unit_kerjas,id'],
-            'jabatan_id' => ['required', 'exists:jabatans,id'],
+            'jabatan_id' => [
+                'required', 
+                'exists:jabatans,id',
+                new \App\Rules\RelasiGolonganJenjang($this->input('golongan_id'))
+            ],
             'golongan_id' => ['required', 'exists:golongans,id'],
             'nip' => ['required', 'string', 'max:255', "unique:pegawais,nip,{$pegawai?->id}"],
             'nama_lengkap' => ['required', 'string', 'max:255'],
             'tmt_jabatan' => ['required', 'date'],
             'tmt_golongan' => ['required', 'date'],
             'status_ukom' => ['boolean'],
-            'sedang_hukuman_disiplin' => ['boolean'],
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        // Custom validation is now handled by the RelasiGolonganJenjang Rule
     }
 
     public function messages(): array

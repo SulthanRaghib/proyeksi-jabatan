@@ -36,7 +36,7 @@ class UsulanKenaikanPangkatService
                 'pegawai_id' => $pegawai->id,
                 'golongan_lama_id' => $pegawai->golongan_id,
                 'golongan_baru_id' => $data['golongan_baru_id'],
-                'status' => $data['action_type'] === 'submit' ? 'sedang_diproses' : 'draft',
+                'status' => $data['action_type'] === 'submit' ? ($data['is_lintas_jenjang'] ? 'PROSES_KENAIKAN_JENJANG' : 'PROSES_KP_REGULER') : 'draft',
                 'saldo_ak_awal' => $data['saldo_ak_awal'],
                 'potongan_ak' => $data['potongan_ak'],
                 'sisa_ak' => $data['sisa_ak'],
@@ -109,7 +109,8 @@ class UsulanKenaikanPangkatService
                 }
             }
 
-            $usulan->update(['status' => 'sedang_diproses']);
+            $statusSubmit = $usulan->is_lintas_jenjang ? 'PROSES_KENAIKAN_JENJANG' : 'PROSES_KP_REGULER';
+            $usulan->update(['status' => $statusSubmit]);
             $pegawai->update(['is_locked_usulan' => true]);
 
             DB::commit();
@@ -130,7 +131,7 @@ class UsulanKenaikanPangkatService
      */
     public function approveUsulan(UsulanKenaikanPangkat $usulan, array $data): array
     {
-        if ($usulan->status !== 'sedang_diproses') {
+        if (!in_array($usulan->status, ['sedang_diproses', 'PROSES_KP_REGULER', 'PROSES_KENAIKAN_JENJANG'])) {
             throw new Exception('Status usulan tidak valid untuk disetujui.');
         }
 
@@ -151,19 +152,8 @@ class UsulanKenaikanPangkatService
                 'is_locked_usulan' => false,
             ]);
 
-            // Generate Riwayat PAK Transaction for the deduction
-            RiwayatPak::create([
-                'pegawai_id' => $pegawai->id,
-                'no_pak' => 'POTONGAN-SK-' . $data['nomor_sk_baru'],
-                'tanggal_pak' => $data['tmt_golongan_baru'],
-                'periode_awal' => $data['tmt_golongan_baru'],
-                'periode_akhir' => $data['tmt_golongan_baru'],
-                'ak_dasar' => $usulan->saldo_ak_awal,
-                'ak_pengalaman' => 0,
-                'ak_tambahan' => -$usulan->potongan_ak,
-                'ak_total' => $usulan->sisa_ak,
-                'keterangan' => 'Pemotongan AK otomatis Kenaikan Pangkat ke ' . $usulan->golonganBaru->nama_golongan,
-            ]);
+            // Tidak ada lagi pemotongan AK (transaksi minus) di tabel riwayat_paks
+            // Saldo total_ak dipertahankan tetap utuh sesuai SPEK LOGIKA 1.2
 
             DB::commit();
             return ['success' => true, 'message' => 'Persetujuan Kenaikan Pangkat berhasil dieksekusi. Data AK dan Golongan telah diperbarui.'];

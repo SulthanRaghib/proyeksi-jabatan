@@ -45,25 +45,35 @@ class ProjectionService
             ? $jabatan->target_ak_kenaikan_jenjang
             : $jabatan->target_ak_kenaikan_pangkat) ?? 0);
 
-        // 1. Get Base AK from latest PAK
-        $latestPak = $this->getLatestPak($pegawai);
-        $baseAk = $latestPak ? (float) $latestPak->ak_total : 0.0;
-        $pakDate = $latestPak ? Carbon::parse($latestPak->tanggal_pak) : null;
-        $pakYear = $pakDate ? (int) $pakDate->year : ((int) now()->year - 1);
-
-        // 2. Add AK from Kinerja Tahunan that happened AFTER the latest PAK
-        $historicalAk = 0.0;
-        $lastKinerjaYear = $pakYear;
+        // SPEK LOGIKA 1.2: Opsi A - Menghitung AK secara dinamis sejak TMT terakhir
+        $tmt = $targetType === 'pangkat' ? $pegawai->tmt_golongan : $pegawai->tmt_jabatan;
+        $tmtDate = $tmt ? Carbon::parse($tmt) : null;
         
-        if ($pegawai->relationLoaded('kinerjaTahunans')) {
-            $kinerjas = $pegawai->kinerjaTahunans->where('tahun', '>', $pakYear)->sortBy('tahun');
-            foreach ($kinerjas as $kinerja) {
-                $historicalAk += (float) $kinerja->ak_didapat;
-                $lastKinerjaYear = $kinerja->tahun;
+        $currentAk = 0.0;
+        $lastKinerjaYear = $tmtDate ? (int) $tmtDate->year : ((int) now()->year - 1);
+
+        // 1. Add AK from PAKs that happened AFTER the TMT
+        if ($pegawai->relationLoaded('riwayatPaks') && $tmtDate) {
+            $paks = $pegawai->riwayatPaks->filter(function($pak) use ($tmtDate) {
+                return Carbon::parse($pak->tanggal_pak)->gt($tmtDate);
+            });
+            foreach ($paks as $pak) {
+                $currentAk += (float) $pak->ak_tambahan;
+                $pakYear = Carbon::parse($pak->tanggal_pak)->year;
+                if ($pakYear > $lastKinerjaYear) {
+                    $lastKinerjaYear = $pakYear;
+                }
             }
         }
 
-        $currentAk = $baseAk + $historicalAk;
+        // 2. Add AK from Kinerja Tahunan that happened AFTER the last calculated year
+        if ($pegawai->relationLoaded('kinerjaTahunans')) {
+            $kinerjas = $pegawai->kinerjaTahunans->where('tahun', '>', $lastKinerjaYear)->sortBy('tahun');
+            foreach ($kinerjas as $kinerja) {
+                $currentAk += (float) $kinerja->ak_didapat;
+                $lastKinerjaYear = $kinerja->tahun;
+            }
+        }
         
         $surplusAk = 0.0;
         $deficitAk = $targetAk - $currentAk;
@@ -115,11 +125,19 @@ class ProjectionService
         $currentTargetName = '-';
         $nextTargetName = '-';
         $nextGolonganId = null;
+        $isPangkatPuncak = false;
+        
         if ($targetType === 'pangkat' && $pegawai->golongan) {
             $currentTargetName = $pegawai->golongan->nama_golongan;
             $nextGolongan = \App\Models\Golongan::where('id', '>', $pegawai->golongan_id)->orderBy('id')->first();
             $nextTargetName = $nextGolongan ? $nextGolongan->nama_golongan : 'Maksimal';
             $nextGolonganId = $nextGolongan ? $nextGolongan->id : null;
+            
+            // Cek Pangkat Puncak berdasarkan Pangkat/Golongan
+            $pangkatPuncakList = ['III/b', 'III/d', 'IV/c', 'IV/e', 'II/d'];
+            if (in_array($pegawai->golongan->pangkat, $pangkatPuncakList)) {
+                $isPangkatPuncak = true;
+            }
         } elseif ($targetType === 'jenjang' && $jabatan) {
             $currentTargetName = $jabatan->jenjang;
             $nextJabatan = \App\Models\Jabatan::where('kategori', $jabatan->kategori)->where('id', '>', $jabatan->id)->orderBy('id')->first();
@@ -147,6 +165,7 @@ class ProjectionService
             'current_target_name' => $currentTargetName,
             'next_target_name' => $nextTargetName,
             'next_golongan_id' => $nextGolonganId,
+            'is_pangkat_puncak' => $isPangkatPuncak,
             'is_sedang_hukuman' => $pegawai->sedang_hukuman_disiplin,
             'is_locked_usulan' => $pegawai->is_locked_usulan,
         ];

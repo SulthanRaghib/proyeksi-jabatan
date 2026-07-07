@@ -693,6 +693,15 @@
                     const targetAk = parseFloat(button.getAttribute('data-target-ak'));
                     const surplus = parseFloat(button.getAttribute('data-surplus'));
                     const golonganBaruId = button.getAttribute('data-golongan-baru');
+                    const isPangkatPuncak = button.getAttribute('data-is-pangkat-puncak') === '1';
+                    
+                    // Update Modal Title based on isPangkatPuncak
+                    const modalTitle = usulanModal.querySelector('.modal-title');
+                    if (isPangkatPuncak) {
+                        modalTitle.textContent = "Usulan Kenaikan Jenjang Jabatan & Kenaikan Pangkat";
+                    } else {
+                        modalTitle.textContent = "Lengkapi Dokumen Usulan Kenaikan " + (type === 'jenjang' ? 'Jenjang' : 'Pangkat');
+                    }
                     
                     const isLintasJenjang = (type === 'jenjang') ? 1 : 0;
                     
@@ -707,14 +716,17 @@
                     document.getElementById('modal_saldo_ak_awal').value = currentAk;
                     document.getElementById('modal_potongan_ak').value = targetAk;
                     document.getElementById('modal_sisa_ak').value = surplus;
-                    document.getElementById('modal_is_lintas_jenjang').value = isLintasJenjang;
+                    document.getElementById('modal_is_lintas_jenjang').value = isPangkatPuncak ? 1 : isLintasJenjang;
                     document.getElementById('modal_golongan_baru_id').value = golonganBaruId;
+                    
+                    // Simpan flag pangkat puncak untuk validasi
+                    document.getElementById('modal_action_type').setAttribute('data-is-pangkat-puncak', isPangkatPuncak ? '1' : '0');
                     
                     const lintasJenjangDocs = document.getElementById('lintasJenjangDocs');
                     const inputUkom = document.getElementById('input_ukom');
                     const inputFormasi = document.getElementById('input_formasi');
                     
-                    if (isLintasJenjang) {
+                    if (isPangkatPuncak || isLintasJenjang) {
                         lintasJenjangDocs.style.display = 'flex';
                         inputUkom.required = true;
                         inputFormasi.required = true;
@@ -728,9 +740,11 @@
         });
 
         function submitUsulan(actionType) {
-            document.getElementById('modal_action_type').value = actionType;
-            
             const form = document.getElementById('usulanForm');
+            const actionTypeInput = document.getElementById('modal_action_type');
+            actionTypeInput.value = actionType;
+            
+            const isPangkatPuncak = actionTypeInput.getAttribute('data-is-pangkat-puncak') === '1';
             
             if (actionType === 'draft') {
                 // Remove required attribute from all file inputs so HTML5 validation passes for draft
@@ -738,13 +752,54 @@
                     input.required = false;
                 });
             } else {
+                // Custom Validation for Pangkat Puncak
+                if (isPangkatPuncak) {
+                    const inputUkom = document.getElementById('input_ukom');
+                    const inputFormasi = document.getElementById('input_formasi');
+                    
+                    if (!inputUkom.files.length || !inputFormasi.files.length) {
+                        event.preventDefault();
+                        
+                        // Show Error Toast
+                        if (typeof bootstrap !== 'undefined') {
+                            const toastHTML = `
+                            <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1090">
+                                <div class="toast align-items-center text-bg-danger border-0" role="alert" aria-live="assertive" aria-atomic="true" id="validationToast">
+                                    <div class="d-flex">
+                                        <div class="toast-body">
+                                            <i data-feather="alert-circle" width="16" height="16" class="me-1"></i>
+                                            Gagal Validasi: Pegawai berada di pangkat puncak. Dokumen Sertifikat Ukom dan Surat Ketersediaan Formasi wajib diunggah untuk melanjutkan proses perpindahan jenjang jabatannya.
+                                        </div>
+                                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                                    </div>
+                                </div>
+                            </div>
+                            `;
+                            document.body.insertAdjacentHTML('beforeend', toastHTML);
+                            if (typeof feather !== 'undefined') feather.replace();
+                            const toastElement = document.getElementById('validationToast');
+                            const toast = new bootstrap.Toast(toastElement, {delay: 6000});
+                            toast.show();
+                            
+                            // Cleanup toast after it hides
+                            toastElement.addEventListener('hidden.bs.toast', function () {
+                                toastElement.parentElement.remove();
+                            });
+                        } else {
+                            alert("Gagal Validasi: Pegawai berada di pangkat puncak. Dokumen Sertifikat Ukom dan Surat Ketersediaan Formasi wajib diunggah untuk melanjutkan proses perpindahan jenjang jabatannya.");
+                        }
+                        
+                        return; // Stop submission
+                    }
+                }
+                
                 // Re-apply required attributes for submit
                 form.querySelector('input[name="sk_pangkat"]').required = true;
                 form.querySelector('input[name="sk_jabatan"]').required = true;
                 form.querySelector('input[name="pak_konversi"]').required = true;
                 form.querySelector('input[name="skp"]').required = true;
                 
-                // For lintas jenjang, re-apply conditionally
+                // For lintas jenjang/puncak, re-apply conditionally
                 const isLintasJenjang = document.getElementById('modal_is_lintas_jenjang').value == '1';
                 if (isLintasJenjang) {
                     document.getElementById('input_ukom').required = true;

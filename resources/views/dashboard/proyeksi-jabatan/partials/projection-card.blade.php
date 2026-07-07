@@ -125,7 +125,8 @@
                 data-ak="{{ $proj['current_ak'] }}"
                 data-target-ak="{{ $proj['target_ak'] }}"
                 data-surplus="{{ $proj['surplus_ak'] }}"
-                data-golongan-baru="{{ $proj['next_golongan_id'] ?? '' }}">
+                data-golongan-baru="{{ $proj['next_golongan_id'] ?? '' }}"
+                data-is-pangkat-puncak="{{ $proj['is_pangkat_puncak'] ? '1' : '0' }}">
                 <i data-feather="upload-cloud" width="18" height="18" class="me-1"></i>
                 Usulkan Kenaikan {{ ucfirst($type) }}
             </button>

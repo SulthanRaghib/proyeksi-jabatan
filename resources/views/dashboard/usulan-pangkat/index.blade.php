@@ -61,14 +61,14 @@
                                     <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ $usulan->golonganBaru->nama_golongan ?? '-' }}</span>
                                 </td>
                                 <td class="text-center">
-                                    @if($usulan->status === 'sedang_diproses')
+                                    @if(in_array($usulan->status, ['sedang_diproses', 'PROSES_KP_REGULER', 'PROSES_KENAIKAN_JENJANG']))
                                         <span class="badge bg-warning text-dark"><i data-feather="loader" width="12" height="12" class="me-1"></i> Sedang Diproses</span>
                                     @elseif($usulan->status === 'selesai')
                                         <span class="badge bg-success"><i data-feather="check-circle" width="12" height="12" class="me-1"></i> Selesai</span>
                                     @elseif($usulan->status === 'draft')
                                         <span class="badge bg-secondary"><i data-feather="edit-3" width="12" height="12" class="me-1"></i> Draf</span>
                                     @else
-                                        <span class="badge bg-secondary">{{ ucfirst($usulan->status) }}</span>
+                                        <span class="badge bg-secondary">{{ ucfirst(str_replace('_', ' ', $usulan->status)) }}</span>
                                     @endif
                                 </td>
                                 <td class="text-end fw-bold text-success">
@@ -80,7 +80,7 @@
                                             <button class="btn btn-sm btn-info text-white shadow-sm" data-bs-toggle="modal" data-bs-target="#uploadModal{{ $usulan->id }}">
                                                 <i data-feather="upload-cloud" width="14" height="14" class="me-1"></i> Lengkapi Dokumen
                                             </button>
-                                        @elseif($usulan->status === 'sedang_diproses')
+                                        @elseif(in_array($usulan->status, ['sedang_diproses', 'PROSES_KP_REGULER', 'PROSES_KENAIKAN_JENJANG']))
                                             <button class="btn btn-sm btn-primary shadow-sm" data-bs-toggle="modal" data-bs-target="#approveModal{{ $usulan->id }}">
                                                 <i data-feather="check-square" width="14" height="14" class="me-1"></i> Proses SK
                                             </button>

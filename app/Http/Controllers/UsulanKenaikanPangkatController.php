@@ -28,7 +28,11 @@ class UsulanKenaikanPangkatController extends Controller
         $query = UsulanKenaikanPangkat::with(['pegawai', 'golonganLama', 'golonganBaru']);
         
         if ($tab !== 'semua') {
-            $query->where('status', $tab);
+            if ($tab === 'sedang_diproses') {
+                $query->whereIn('status', ['sedang_diproses', 'PROSES_KP_REGULER', 'PROSES_KENAIKAN_JENJANG']);
+            } else {
+                $query->where('status', $tab);
+            }
         }
         
         $usulans = $query->orderBy('created_at', 'desc')

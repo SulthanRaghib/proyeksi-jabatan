@@ -69,12 +69,15 @@ class RiwayatPakController extends Controller
         ]);
     }
 
-    public function create(): View
+    public function create(Request $request)
     {
-        return view('dashboard.riwayat-pak.create', [
-            'pegawais' => $this->pegawaiWithFullContext(),
-            ...$this->baseViewData(),
-        ]);
+        $pegawaiId = $request->input('pegawai_id');
+        $pegawais = $this->pegawaiWithFullContext();
+
+        return view('dashboard.riwayat-pak.create', array_merge($this->baseViewData(), [
+            'pegawais' => $pegawais,
+            'selectedPegawaiId' => $pegawaiId,
+        ]));
     }
 
     public function store(StoreRiwayatPakRequest $request, RiwayatPakService $service): RedirectResponse
@@ -87,13 +90,14 @@ class RiwayatPakController extends Controller
             ->with('success', 'Riwayat PAK berhasil ditambahkan.');
     }
 
-    public function edit(RiwayatPak $riwayatPak): View
+    public function edit(RiwayatPak $riwayatPak)
     {
-        return view('dashboard.riwayat-pak.edit', [
+        $pegawais = $this->pegawaiWithFullContext();
+
+        return view('dashboard.riwayat-pak.edit', array_merge($this->baseViewData(), [
+            'pegawais' => $pegawais,
             'riwayatPak' => $riwayatPak,
-            'pegawais' => $this->pegawaiWithFullContext(),
-            ...$this->baseViewData(),
-        ]);
+        ]));
     }
 
     public function update(UpdateRiwayatPakRequest $request, RiwayatPak $riwayatPak, RiwayatPakService $service): RedirectResponse
@@ -109,6 +113,11 @@ class RiwayatPakController extends Controller
     public function destroy(RiwayatPak $riwayatPak, RiwayatPakService $service): RedirectResponse
     {
         $service->deleteRiwayatPak($riwayatPak);
+
+        if (request()->has('redirect_to')) {
+            return redirect(request()->input('redirect_to'))
+                ->with('success', 'Riwayat PAK berhasil dihapus.');
+        }
 
         return redirect()
             ->route('riwayat-paks.index')
@@ -192,6 +201,40 @@ class RiwayatPakController extends Controller
         return response()->json([
             'success' => true,
             'no_pak' => $generatedNo
+        ]);
+    }
+
+    /**
+     * API: Fetch unclaimed Kinerja Tahunan for a Pegawai
+     */
+    public function getUnclaimedKinerjas(Request $request, Pegawai $pegawai)
+    {
+        $currentPakId = $request->query('current_pak_id');
+
+        $kinerjas = \App\Models\KinerjaTahunan::query()
+            ->where('pegawai_id', $pegawai->id)
+            ->where(function ($query) use ($currentPakId) {
+                $query->whereNull('pak_id');
+                if ($currentPakId) {
+                    $query->orWhere('pak_id', $currentPakId);
+                }
+            })
+            ->orderByDesc('tahun')
+            ->get()
+            ->map(function ($kinerja) {
+                return [
+                    'id' => $kinerja->id,
+                    'tahun' => $kinerja->tahun,
+                    'predikat' => $kinerja->predikat,
+                    'predikat_label' => ucfirst($kinerja->predikat),
+                    'ak_didapat' => number_format((float)$kinerja->ak_didapat, 3, ',', '.'),
+                    'raw_ak' => $kinerja->ak_didapat,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'data' => $kinerjas
         ]);
     }
 }

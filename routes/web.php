@@ -44,6 +44,10 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/api/konversi-ak/{pegawai}/{predikat}', [RiwayatPakController::class, 'getKonversiAk'])
         ->name('api.konversi-ak');
 
+    // API: Fetch unclaimed Kinerja Tahunan for Smart Sync SKP
+    Route::get('/api/pegawais/{pegawai}/unclaimed-kinerjas', [RiwayatPakController::class, 'getUnclaimedKinerjas'])
+        ->name('api.pegawai.unclaimed-kinerjas');
+
     // API: Generate Nomor PAK & SK automatically
     Route::get('/api/generate-no-pak', [RiwayatPakController::class, 'generateNoPak'])
         ->name('api.generate-no-pak');

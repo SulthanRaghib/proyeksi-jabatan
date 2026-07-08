@@ -472,7 +472,31 @@
         </div>
     </div>
 
-    <div class="col-12 col-md-6">
+    {{-- Kinerja Tahunan Sync (CSR / AJAX) --}}
+    <div id="skpSyncContainer" class="col-12 mb-4" style="display: none;" data-old-value="{{ old('kinerja_tahunan_id', $currentRiwayatPak?->kinerjas->first()?->id) }}">
+        <div class="alert alert-primary border-primary border-opacity-25 d-flex align-items-sm-center flex-column flex-lg-row gap-3 py-3 px-4 mb-0 rounded-4 shadow-sm" role="alert">
+            
+            <div class="d-flex align-items-center gap-3 flex-grow-1">
+                <div class="bg-primary text-white p-2 rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px; box-shadow: 0 2px 6px rgba(13, 110, 253, 0.2);">
+                    <i data-feather="link" width="18" height="18"></i>
+                </div>
+                <div>
+                    <h6 class="mb-1 fw-bold text-primary" style="letter-spacing: -0.2px;">Smart Sync SKP</h6>
+                    <p class="mb-0 text-primary opacity-75" style="font-size: 0.85rem; line-height: 1.3;">Pilih Riwayat Kinerja untuk mengisi form secara otomatis.</p>
+                </div>
+            </div>
+            
+            <div class="flex-shrink-0" style="width: 100%; max-width: 450px;">
+                <select id="kinerja_tahunan_id" name="kinerja_tahunan_id" class="form-select border-primary border-opacity-50 shadow-sm fw-medium text-primary bg-white" style="cursor: pointer;">
+                    <option value="">— Buat Kinerja Baru (Input Manual) —</option>
+                    <!-- Options will be populated via AJAX -->
+                </select>
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="col-12 col-md-4">
         <label for="tanggal_pak" class="form-label">Tanggal PAK</label>
         <input type="date" id="tanggal_pak" name="tanggal_pak"
             class="form-control @error('tanggal_pak') is-invalid @enderror"
@@ -480,6 +504,36 @@
         @error('tanggal_pak')
             <div class="invalid-feedback">{{ $message }}</div>
         @enderror
+    </div>
+    
+    <div class="col-12 col-md-4">
+        <label for="periode_awal" class="form-label">Periode Awal <span class="text-muted fw-normal">(Opsional)</span></label>
+        <input type="date" id="periode_awal" name="periode_awal"
+            class="form-control @error('periode_awal') is-invalid @enderror"
+            value="{{ old('periode_awal', $currentRiwayatPak?->periode_awal?->format('Y-m-d')) }}">
+        @error('periode_awal')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <div class="col-12 col-md-4">
+        <label for="periode_akhir" class="form-label">Periode Akhir <span class="text-muted fw-normal">(Opsional)</span></label>
+        <input type="date" id="periode_akhir" name="periode_akhir"
+            class="form-control @error('periode_akhir') is-invalid @enderror"
+            value="{{ old('periode_akhir', $currentRiwayatPak?->periode_akhir?->format('Y-m-d')) }}">
+        @error('periode_akhir')
+            <div class="invalid-feedback">{{ $message }}</div>
+        @enderror
+    </div>
+
+    <div class="col-12 mt-2 mb-3">
+        <div class="alert alert-info border-info-subtle d-flex align-items-start gap-2 mb-0 py-2 px-3" style="background-color: #f0f9ff; color: #0369a1; border-radius: 0.5rem;">
+            <i data-feather="info" width="18" height="18" class="mt-1 flex-shrink-0" style="color: #0284c7;"></i>
+            <div class="small" style="line-height: 1.5;">
+                <strong style="color: #075985;">Tips Sinkronisasi Cerdas:</strong> 
+                Pastikan Anda mengisi <strong>Periode Akhir</strong> (misal: 31/12/2023) agar sistem dapat melacak dan mengaitkan data dengan Riwayat Kinerja Tahunan secara presisi. Jika dibiarkan kosong, sistem akan mencoba menebak tahun berdasarkan Tanggal PAK.
+            </div>
+        </div>
     </div>
 
     {{-- Predikat Kinerja — placed BEFORE AK Tambahan so it drives the auto-fill --}}
@@ -932,8 +986,121 @@
             }
 
             // Event listeners
-            pegawaiSelect.addEventListener('change', updateAkStatus);
+            pegawaiSelect.addEventListener('change', function() {
+                updateAkStatus();
+                fetchUnclaimedKinerjas();
+            });
             predikatSelect.addEventListener('change', onPredikatChange);
+
+            // Kinerja Tahunan Sync Logic
+            const skpSyncContainer = document.getElementById('skpSyncContainer');
+            const kinerjaSelect = document.getElementById('kinerja_tahunan_id');
+            const periodeAkhirInput = document.getElementById('periode_akhir');
+            const currentPakId = '{{ $currentRiwayatPak?->id ?? '' }}';
+            
+            async function fetchUnclaimedKinerjas() {
+                if (!kinerjaSelect || !skpSyncContainer) return;
+                
+                const pegawaiId = pegawaiSelect.value;
+                if (!pegawaiId) {
+                    skpSyncContainer.style.display = 'none';
+                    return;
+                }
+                
+                try {
+                    let url = `/api/pegawais/${pegawaiId}/unclaimed-kinerjas`;
+                    if (currentPakId) {
+                        url += `?current_pak_id=${currentPakId}`;
+                    }
+                    
+                    const response = await fetch(url);
+                    const result = await response.json();
+                    
+                    if (result.success && result.data.length > 0) {
+                        // Keep the default option
+                        kinerjaSelect.innerHTML = '<option value="">— Buat Kinerja Baru (Input Manual) —</option>';
+                        
+                        const oldValue = skpSyncContainer.getAttribute('data-old-value');
+                        
+                        result.data.forEach(kinerja => {
+                            const option = document.createElement('option');
+                            option.value = kinerja.id;
+                            option.setAttribute('data-predikat', kinerja.predikat);
+                            option.setAttribute('data-ak', kinerja.raw_ak);
+                            option.setAttribute('data-tahun', kinerja.tahun);
+                            option.textContent = `[Tahun ${kinerja.tahun}] Predikat: ${kinerja.predikat_label} (AK: ${kinerja.ak_didapat})`;
+                            
+                            if (oldValue && oldValue == kinerja.id) {
+                                option.selected = true;
+                            }
+                            
+                            kinerjaSelect.appendChild(option);
+                        });
+                        
+                        skpSyncContainer.style.display = 'block';
+                        
+                        // Trigger change to apply any old-value locks
+                        if (oldValue) {
+                            kinerjaSelect.dispatchEvent(new Event('change'));
+                        } else {
+                            // If it was previously locked but now no old value, release lock
+                            kinerjaSelect.value = "";
+                            kinerjaSelect.dispatchEvent(new Event('change'));
+                        }
+                    } else {
+                        skpSyncContainer.style.display = 'none';
+                        kinerjaSelect.innerHTML = '<option value="">— Buat Kinerja Baru (Input Manual) —</option>';
+                        // Release lock since it's hidden
+                        kinerjaSelect.value = "";
+                        kinerjaSelect.dispatchEvent(new Event('change'));
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch SKP data:', error);
+                    skpSyncContainer.style.display = 'none';
+                }
+            }
+            
+            if (kinerjaSelect) {
+                kinerjaSelect.addEventListener('change', function() {
+                    if (this.value) {
+                        const selectedOption = this.options[this.selectedIndex];
+                        const predikat = selectedOption.getAttribute('data-predikat');
+                        const tahun = selectedOption.getAttribute('data-tahun');
+                        
+                        // Auto-select predikat
+                        if (predikat) {
+                            predikatSelect.value = predikat;
+                            // Make it visually readonly (pointer-events-none + bg-light)
+                            predikatSelect.style.pointerEvents = 'none';
+                            predikatSelect.classList.add('bg-light');
+                            onPredikatChange(); // trigger AK calculation
+                        }
+                        
+                        // Auto-fill periode akhir to 31/12/[tahun]
+                        if (tahun && periodeAkhirInput) {
+                            periodeAkhirInput.value = `${tahun}-12-31`;
+                            periodeAkhirInput.style.pointerEvents = 'none';
+                            periodeAkhirInput.classList.add('bg-light');
+                        }
+                    } else {
+                        // Release lock (Input Manual)
+                        predikatSelect.style.pointerEvents = 'auto';
+                        predikatSelect.classList.remove('bg-light');
+                        
+                        if (periodeAkhirInput) {
+                            periodeAkhirInput.style.pointerEvents = 'auto';
+                            periodeAkhirInput.classList.remove('bg-light');
+                            periodeAkhirInput.value = '';
+                        }
+                    }
+                });
+                
+                // Trigger initial fetches on page load
+                if (pegawaiSelect.value) {
+                    // updateAkStatus is already triggered below, we just trigger fetch
+                    fetchUnclaimedKinerjas();
+                }
+            }
 
             // Event listener for generate No PAK button
             const btnGeneratePak = document.getElementById('btn-generate-pak');

@@ -428,9 +428,9 @@
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-2 no-print">
-                                                    <x-action-button type="edit" :href="route('riwayat-paks.edit', $pak)" />
+                                                    <x-action-button type="edit" :href="route('riwayat-paks.edit', ['riwayat_pak' => $pak, 'redirect_to' => url()->current()])" />
                                                     <x-action-button type="delete_modal" 
-                                                        action="{{ route('riwayat-paks.destroy', $pak) }}" 
+                                                        action="{{ route('riwayat-paks.destroy', ['riwayat_pak' => $pak, 'redirect_to' => url()->current()]) }}" 
                                                         message="Yakin ingin menghapus riwayat PAK ini?" />
                                                 </div>
                                             </td>

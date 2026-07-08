@@ -257,12 +257,16 @@
         @method($method)
     @endif
 
+    @if(request()->has('redirect_to'))
+        <input type="hidden" name="redirect_to" value="{{ request('redirect_to') }}">
+    @endif
+
     {{-- Pegawai Selection --}}
     <div class="col-12 col-md-6">
         <label for="pegawai_id" class="form-label">Pegawai</label>
         <select id="pegawai_id" name="pegawai_id" class="form-select @error('pegawai_id') is-invalid @enderror"
             {{ $currentRiwayatPak ? 'disabled' : '' }}>
-            <option value="" disabled {{ old('pegawai_id', $currentRiwayatPak?->pegawai_id) ? '' : 'selected' }}>
+            <option value="" disabled {{ old('pegawai_id', $currentRiwayatPak?->pegawai_id ?? request('pegawai_id')) ? '' : 'selected' }}>
                 Pilih pegawai
             </option>
             @foreach ($pegawais as $pegawai)
@@ -299,7 +303,7 @@
                         ];
                     })->values()->toArray();
                 @endphp
-                <option value="{{ $pegawai->id }}" @selected((string) old('pegawai_id', $currentRiwayatPak?->pegawai_id) === (string) $pegawai->id)
+                <option value="{{ $pegawai->id }}" @selected((string) old('pegawai_id', $currentRiwayatPak?->pegawai_id ?? request('pegawai_id')) === (string) $pegawai->id)
                     data-pegawai-name="{{ $pegawai->nama_lengkap }}"
                     data-current-ak="{{ $pegawaiCurrentAk }}"
                     data-target-ak="{{ $targetAk }}"

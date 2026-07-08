@@ -81,8 +81,9 @@ class RiwayatPakController extends Controller
     {
         $service->storeRiwayatPak($request->validated());
 
-        return redirect()
-            ->route('riwayat-paks.index')
+        $redirectUrl = $request->input('redirect_to', route('riwayat-paks.index'));
+
+        return redirect($redirectUrl)
             ->with('success', 'Riwayat PAK berhasil ditambahkan.');
     }
 
@@ -99,8 +100,9 @@ class RiwayatPakController extends Controller
     {
         $service->updateRiwayatPak($riwayatPak, $request->validated());
 
-        return redirect()
-            ->route('riwayat-paks.index')
+        $redirectUrl = $request->input('redirect_to', route('riwayat-paks.index'));
+
+        return redirect($redirectUrl)
             ->with('success', 'Riwayat PAK berhasil diperbarui.');
     }
 

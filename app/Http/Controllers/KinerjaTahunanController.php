@@ -24,7 +24,7 @@ class KinerjaTahunanController extends Controller
     public function create(Request $request)
     {
         $pegawaiId = $request->input('pegawai_id');
-        $pegawai = Pegawai::with('jabatan.konversiPredikat')->findOrFail($pegawaiId);
+        $pegawai = Pegawai::with(['jabatan.konversiPredikat', 'golongan', 'unitKerja'])->findOrFail($pegawaiId);
         
         return view('dashboard.kinerja-tahunans.create', [
             'pegawai' => $pegawai,

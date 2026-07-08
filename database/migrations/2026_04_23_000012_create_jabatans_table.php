@@ -10,7 +10,8 @@ return new class extends Migration {
         Schema::create('jabatans', function (Blueprint $table) {
             $table->id();
             $table->string('nama_jabatan');
-            $table->enum('jenjang', ['Pertama', 'Muda', 'Madya', 'Utama']);
+            $table->enum('kategori', ['keahlian', 'keterampilan'])->default('keahlian');
+            $table->enum('jenjang', ['Pertama', 'Muda', 'Madya', 'Utama', 'Pemula', 'Terampil', 'Mahir', 'Penyelia']);
             $table->decimal('koefisien_tahunan', 8, 2);
             $table->unsignedInteger('target_ak_kenaikan_pangkat');
             $table->unsignedInteger('target_ak_kenaikan_jenjang');

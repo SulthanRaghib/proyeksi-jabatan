@@ -15,12 +15,15 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->nullable()->constrained()->cascadeOnDelete();
             $table->foreignId('unit_kerja_id')->constrained()->cascadeOnDelete();
+            $table->boolean('sedang_hukuman_disiplin')->default(false);
+            $table->boolean('is_locked_usulan')->default(false);
             $table->foreignId('jabatan_id')->constrained()->cascadeOnDelete();
             $table->foreignId('golongan_id')->constrained()->cascadeOnDelete();
             $table->string('nip')->unique();
             $table->string('nama_lengkap');
             $table->date('tmt_jabatan');
             $table->date('tmt_golongan');
+            $table->boolean('is_lulus_ukom')->default(false);
             $table->boolean('status_ukom')->default(false);
             $table->timestamps();
         });

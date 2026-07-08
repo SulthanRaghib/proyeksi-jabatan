@@ -183,21 +183,9 @@ class RiwayatPakController extends Controller
             'source' => $konversi ? 'database' : 'calculated',
         ]);
     }
-    public function generateNoPak()
+    public function generateNoPak(RiwayatPakService $service)
     {
-        $year = date('Y');
-
-        // Find the latest PAK for the current year that matches the format
-        $latestPak = RiwayatPak::where('no_pak', 'like', "%/KEP/4028/SK/PAK/$year")
-            ->orderByRaw('CAST(SUBSTRING_INDEX(no_pak, "/", 1) AS UNSIGNED) DESC')
-            ->first();
-
-        $nextNumber = 1;
-        if ($latestPak && preg_match('/^(\d+)\/KEP\/4028\/SK\/PAK\/\d{4}$/', $latestPak->no_pak, $matches)) {
-            $nextNumber = (int) $matches[1] + 1;
-        }
-
-        $generatedNo = sprintf("%d/KEP/4028/SK/PAK/%s", $nextNumber, $year);
+        $generatedNo = $service->generateNoPak();
 
         return response()->json([
             'success' => true,

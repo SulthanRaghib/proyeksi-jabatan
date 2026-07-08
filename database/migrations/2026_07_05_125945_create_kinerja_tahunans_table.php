@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('kinerja_tahunans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pegawai_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('pak_id')->nullable()->constrained('riwayat_paks')->nullOnDelete();
             $table->integer('tahun');
             $table->string('predikat', 50);
             $table->decimal('koefisien_saat_itu', 8, 3)->nullable();

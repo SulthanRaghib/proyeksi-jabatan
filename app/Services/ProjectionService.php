@@ -50,20 +50,38 @@ class ProjectionService
         $tmtDate = $tmt ? Carbon::parse($tmt) : null;
         
         $currentAk = 0.0;
-        $lastKinerjaYear = $tmtDate ? (int) $tmtDate->year : ((int) now()->year - 1);
 
-        // 1. Add AK from PAKs that happened AFTER the TMT
+        // 1. Add AK from PAKs that happened ON or AFTER the TMT
         if ($pegawai->relationLoaded('riwayatPaks') && $tmtDate) {
             $paks = $pegawai->riwayatPaks->filter(function($pak) use ($tmtDate) {
-                return Carbon::parse($pak->tanggal_pak)->gt($tmtDate);
+                return Carbon::parse($pak->tanggal_pak)->gte($tmtDate);
             });
             foreach ($paks as $pak) {
-                $currentAk += (float) $pak->ak_tambahan;
-                $pakYear = Carbon::parse($pak->tanggal_pak)->year;
-                if ($pakYear > $lastKinerjaYear) {
-                    $lastKinerjaYear = $pakYear;
+                if ($pak->is_konversi_baru) {
+                    $currentAk += (float) $pak->ak_tambahan;
                 }
             }
+        }
+
+        // Logika Pengunci Teraman (Anti-Null Bug) untuk Tahun SKP
+        $lastPak = null;
+        if ($pegawai->relationLoaded('riwayatPaks') && $tmtDate) {
+            $lastPak = $pegawai->riwayatPaks
+                ->filter(function($pak) use ($tmtDate) {
+                    return Carbon::parse($pak->tanggal_pak)->gte($tmtDate);
+                })
+                ->sortByDesc('tanggal_pak')
+                ->first();
+        }
+
+        if ($lastPak) {
+            if (!is_null($lastPak->periode_akhir)) {
+                $lastKinerjaYear = Carbon::parse($lastPak->periode_akhir)->year;
+            } else {
+                $lastKinerjaYear = Carbon::parse($lastPak->tanggal_pak)->year;
+            }
+        } else {
+            $lastKinerjaYear = $tmtDate ? (int) $tmtDate->year : ((int) now()->year - 1);
         }
 
         // 2. Add AK from Kinerja Tahunan that happened AFTER the last calculated year

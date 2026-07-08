@@ -11,6 +11,7 @@ class KinerjaTahunan extends Model
 
     protected $fillable = [
         'pegawai_id',
+        'pak_id',
         'tahun',
         'predikat',
         'koefisien_saat_itu',
@@ -26,5 +27,10 @@ class KinerjaTahunan extends Model
     public function pegawai()
     {
         return $this->belongsTo(Pegawai::class);
+    }
+
+    public function pak()
+    {
+        return $this->belongsTo(RiwayatPak::class, 'pak_id');
     }
 }

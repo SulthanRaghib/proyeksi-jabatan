@@ -27,8 +27,8 @@ class Pegawai extends Model
     ];
 
     protected $casts = [
-        'tmt_jabatan' => 'date',
-        'tmt_golongan' => 'date',
+        'tmt_jabatan' => 'date:Y-m-d',
+        'tmt_golongan' => 'date:Y-m-d',
         'status_ukom' => 'boolean',
         'sedang_hukuman_disiplin' => 'boolean',
         'is_locked_usulan' => 'boolean',

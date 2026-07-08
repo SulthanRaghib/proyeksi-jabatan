@@ -23,7 +23,8 @@ class PegawaiSeeder extends Seeder
         \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $pegawaiRows = [
-            // 1. Andi Pratama (Progres Normal)
+            // 1. Andi Pratama (Pengawas Radiasi Madya, IV/a)
+            // TMT 2022. Target IV/b (150 AK).
             [
                 'user' => ['name' => 'Andi Pratama', 'email' => 'andi.pratama@bapeten.go.id'],
                 'nip' => '199002212012011003',
@@ -36,15 +37,18 @@ class PegawaiSeeder extends Seeder
                 'tmt_golongan' => '2022-04-01',
                 'status_ukom' => false,
                 'riwayat_pak' => [
-                    ['no_pak' => 'PAK-INT/2022/04/01', 'tanggal' => '2022-04-01', 'ak_total' => 400], 
+                    ['tanggal' => '2022-04-01', 'is_konversi_baru' => false, 'ak_tambahan' => 400, 'predikat' => null], // Integrasi
+                    ['tanggal' => '2023-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 37.5, 'predikat' => 'baik'], // PAK Konversi 2022
+                    ['tanggal' => '2024-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 37.5, 'predikat' => 'baik'], // PAK Konversi 2023
+                    ['tanggal' => '2025-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 37.5, 'predikat' => 'baik'], // PAK Konversi 2024
                 ],
                 'kinerja' => [
-                    ['tahun' => 2023, 'predikat' => 'baik', 'ak' => 37.5],
-                    ['tahun' => 2024, 'predikat' => 'baik', 'ak' => 37.5],
-                    ['tahun' => 2025, 'predikat' => 'baik', 'ak' => 37.5],
+                    // Kinerja 2025 yang belum jadi PAK
+                    ['tahun' => 2025, 'predikat' => 'baik', 'ak' => 37.5], 
                 ]
             ],
-            // 2. Budi Santoso (Baru Naik Pangkat - Progress 0%)
+            // 2. Budi Santoso (Muda, III/c - Baru Naik Pangkat)
+            // TMT 2026. Target III/d (100 AK).
             [
                 'user' => ['name' => 'Budi Santoso', 'email' => 'budi.santoso@bapeten.go.id'],
                 'nip' => '198801012010011001',
@@ -57,11 +61,12 @@ class PegawaiSeeder extends Seeder
                 'tmt_golongan' => '2026-04-01',
                 'status_ukom' => false,
                 'riwayat_pak' => [
-                    ['no_pak' => 'PAK-KP/2026/04/01', 'tanggal' => '2026-04-01', 'ak_total' => 200], 
+                    ['tanggal' => '2026-04-01', 'is_konversi_baru' => false, 'ak_tambahan' => 200, 'predikat' => null], // Integrasi saat naik pangkat
                 ],
                 'kinerja' => [] 
             ],
-            // 3. Dewi Puspita (Pangkat Puncak)
+            // 3. Dewi Puspita (Muda, III/d - Pangkat Puncak, Siap Naik Jenjang)
+            // TMT Jabatan 2020. TMT Golongan 2022. Target IV/a (100 AK).
             [
                 'user' => ['name' => 'Dewi Puspita', 'email' => 'dewi.puspita@bapeten.go.id'],
                 'nip' => '198912302011022006',
@@ -74,16 +79,16 @@ class PegawaiSeeder extends Seeder
                 'tmt_golongan' => '2022-04-01',
                 'status_ukom' => false, 
                 'riwayat_pak' => [
-                    ['no_pak' => 'PAK-KP/2022/04/01', 'tanggal' => '2022-04-01', 'ak_total' => 300], 
+                    ['tanggal' => '2022-04-01', 'is_konversi_baru' => false, 'ak_tambahan' => 300, 'predikat' => null], // Integrasi
+                    ['tanggal' => '2023-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 25, 'predikat' => 'baik'], // PAK Konversi 2022
+                    ['tanggal' => '2024-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 25, 'predikat' => 'baik'], // PAK Konversi 2023
+                    ['tanggal' => '2025-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 25, 'predikat' => 'baik'], // PAK Konversi 2024
+                    ['tanggal' => '2026-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 25, 'predikat' => 'baik'], // PAK Konversi 2025
                 ],
-                'kinerja' => [
-                    ['tahun' => 2023, 'predikat' => 'baik', 'ak' => 25],
-                    ['tahun' => 2024, 'predikat' => 'baik', 'ak' => 25],
-                    ['tahun' => 2025, 'predikat' => 'baik', 'ak' => 25],
-                    ['tahun' => 2026, 'predikat' => 'baik', 'ak' => 25],
-                ]
+                'kinerja' => []
             ],
-            // 4. Lina Kartika (Kinerja Sangat Baik / Akselerasi)
+            // 4. Lina Kartika (Pertama, III/a - Kinerja Sangat Baik)
+            // TMT 2024. Target III/b (50 AK).
             [
                 'user' => ['name' => 'Lina Kartika', 'email' => 'lina.kartika@bapeten.go.id'],
                 'nip' => '198911082013012010',
@@ -96,14 +101,15 @@ class PegawaiSeeder extends Seeder
                 'tmt_golongan' => '2024-04-01',
                 'status_ukom' => false,
                 'riwayat_pak' => [
-                    ['no_pak' => 'PAK-AWAL/2024/04/01', 'tanggal' => '2024-04-01', 'ak_total' => 100], 
+                    ['tanggal' => '2024-04-01', 'is_konversi_baru' => false, 'ak_tambahan' => 100, 'predikat' => null], // Integrasi awal
+                    ['tanggal' => '2025-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 18.75, 'predikat' => 'sangat_baik'], // PAK Konversi 2024 (Sangat Baik = 150% dari 12.5)
                 ],
                 'kinerja' => [
-                    ['tahun' => 2025, 'predikat' => 'sangat baik', 'ak' => 18.75], 
-                    ['tahun' => 2026, 'predikat' => 'sangat baik', 'ak' => 18.75], 
+                    ['tahun' => 2025, 'predikat' => 'sangat_baik', 'ak' => 18.75], // Kinerja 2025 (belum PAK)
                 ]
             ],
-            // 5. Maya Sari (IV/b Madya - History Ada)
+            // 5. Maya Sari (Madya, IV/b)
+            // TMT 2021, TMT Golongan 2024. Target IV/c (150 AK).
             [
                 'user' => ['name' => 'Maya Sari', 'email' => 'maya.sari@bapeten.go.id'],
                 'nip' => '198803112010042008',
@@ -116,11 +122,11 @@ class PegawaiSeeder extends Seeder
                 'tmt_golongan' => '2024-04-01', 
                 'status_ukom' => true,
                 'riwayat_pak' => [
-                    ['no_pak' => 'PAK-KP/2024/04/01', 'tanggal' => '2024-04-01', 'ak_total' => 550], 
+                    ['tanggal' => '2024-04-01', 'is_konversi_baru' => false, 'ak_tambahan' => 550, 'predikat' => null], // Integrasi
+                    ['tanggal' => '2025-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 37.5, 'predikat' => 'baik'], // PAK Konversi 2024
                 ],
                 'kinerja' => [
-                    ['tahun' => 2025, 'predikat' => 'baik', 'ak' => 37.5],
-                    ['tahun' => 2026, 'predikat' => 'baik', 'ak' => 37.5],
+                    ['tahun' => 2025, 'predikat' => 'baik', 'ak' => 37.5], // Kinerja 2025 (belum PAK)
                 ]
             ],
         ];
@@ -160,14 +166,31 @@ class PegawaiSeeder extends Seeder
             ]);
 
             // Seeding Riwayat PAK
+            $pakService = app(\App\Services\RiwayatPakService::class);
+            $currentTotal = 0;
             foreach ($row['riwayat_pak'] as $pak) {
-                \App\Models\RiwayatPak::create([
+                $tanggalPak = \Carbon\Carbon::parse($pak['tanggal']);
+                $currentTotal += $pak['ak_tambahan'];
+                $createdPak = \App\Models\RiwayatPak::create([
                     'pegawai_id' => $pegawai->id,
-                    'no_pak' => $pak['no_pak'],
+                    'no_pak' => $pakService->generateNoPak($tanggalPak->year),
                     'tanggal_pak' => $pak['tanggal'],
-                    'ak_tambahan' => $pak['ak_total'], // Modal awal, terekam tapi diabaikan di Proyeksi jika <= TMT Golongan
-                    'ak_total' => $pak['ak_total'],
+                    'periode_awal' => $tanggalPak->copy()->subYear()->startOfYear()->format('Y-m-d'),
+                    'periode_akhir' => $tanggalPak->copy()->subYear()->endOfYear()->format('Y-m-d'),
+                    'ak_tambahan' => $pak['ak_tambahan'],
+                    'ak_total' => $currentTotal,
+                    'is_konversi_baru' => $pak['is_konversi_baru'],
                 ]);
+                
+                if ($pak['predikat'] && $pak['is_konversi_baru']) {
+                    \App\Models\KinerjaTahunan::create([
+                        'pegawai_id' => $pegawai->id,
+                        'pak_id' => $createdPak->id,
+                        'tahun' => $tanggalPak->copy()->subYear()->year,
+                        'predikat' => $pak['predikat'],
+                        'ak_didapat' => $pak['ak_tambahan'],
+                    ]);
+                }
             }
 
             // Seeding Kinerja Tahunan

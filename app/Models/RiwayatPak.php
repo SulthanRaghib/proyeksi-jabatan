@@ -15,13 +15,18 @@ class RiwayatPak extends Model
         'pegawai_id',
         'no_pak',
         'tanggal_pak',
+        'periode_awal',
+        'periode_akhir',
         'ak_total',
         'ak_tambahan',
-        'predikat_kinerja',
+        'is_konversi_baru',
     ];
 
     protected $casts = [
-        'tanggal_pak' => 'date',
+        'tanggal_pak' => 'date:Y-m-d',
+        'periode_awal' => 'date:Y-m-d',
+        'periode_akhir' => 'date:Y-m-d',
+        'is_konversi_baru' => 'boolean',
         'ak_total' => 'decimal:3',
         'ak_tambahan' => 'decimal:3',
     ];
@@ -29,6 +34,16 @@ class RiwayatPak extends Model
     public function pegawai(): BelongsTo
     {
         return $this->belongsTo(Pegawai::class);
+    }
+
+    public function kinerjas()
+    {
+        return $this->hasMany(KinerjaTahunan::class, 'pak_id');
+    }
+
+    public function getPredikatKinerjaAttribute()
+    {
+        return $this->kinerjas->first()?->predikat;
     }
 
     /**

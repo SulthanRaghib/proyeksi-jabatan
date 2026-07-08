@@ -24,7 +24,7 @@
         <div class="container-fluid">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                 <div class="d-flex flex-wrap gap-2">
-                    <x-btn href="{{ route('riwayat-paks.create', ['pegawai_id' => $pegawai->id]) }}" variant="primary" icon="plus" size="sm">
+                    <x-btn href="{{ route('riwayat-paks.create', ['pegawai_id' => $pegawai->id, 'redirect_to' => url()->current()]) }}" variant="primary" icon="plus" size="sm">
                         Tambah Riwayat PAK
                     </x-btn>
                     
@@ -98,6 +98,7 @@
                                         : '')
                             ],
                             ['label' => 'TMT Jabatan', 'value' => \Carbon\Carbon::parse($pegawai->tmt_jabatan)->format('d F Y')],
+                            ['label' => 'TMT Golongan', 'value' => \Carbon\Carbon::parse($pegawai->tmt_golongan)->format('d F Y')],
                             [
                                 'label' => 'Koefisien AK Tahunan',
                                 'value' => '<span class="text-primary fs-5 fw-bold">' .
@@ -369,6 +370,8 @@
                                             $akTambahan = (float) $pak->ak_tambahan;
                                             $difference = $pak->calculated_difference;
                                             $isLatest = $pak->id === $latestId;
+                                            $isPreGolongan = \Carbon\Carbon::parse($pak->tanggal_pak)->lt(\Carbon\Carbon::parse($pegawai->tmt_golongan));
+                                            $isPreJabatan = \Carbon\Carbon::parse($pak->tanggal_pak)->lt(\Carbon\Carbon::parse($pegawai->tmt_jabatan));
                                         @endphp
                                         <tr class="{{ $isLatest ? 'table-primary' : '' }}">
                                             <td>{{ \Carbon\Carbon::parse($pak->tanggal_pak)->format('d/m/Y') }}</td>
@@ -408,11 +411,20 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                @if ($isLatest)
-                                                    <span class="badge bg-primary">Terbaru</span>
-                                                @else
-                                                    <span class="text-muted">-</span>
-                                                @endif
+                                                <div class="d-flex flex-column gap-1 align-items-center justify-content-center">
+                                                    @if ($isLatest)
+                                                        <span class="badge bg-primary">Terbaru</span>
+                                                    @endif
+                                                    @if ($isPreGolongan)
+                                                        <span class="badge" style="background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a;" title="Tidak dihitung untuk proyeksi Pangkat">Pre-Golongan</span>
+                                                    @endif
+                                                    @if ($isPreJabatan)
+                                                        <span class="badge" style="background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;" title="Tidak dihitung untuk proyeksi Jabatan">Pre-Jabatan</span>
+                                                    @endif
+                                                    @if (!$isLatest && !$isPreGolongan && !$isPreJabatan)
+                                                        <span class="text-muted">-</span>
+                                                    @endif
+                                                </div>
                                             </td>
                                             <td>
                                                 <div class="d-flex justify-content-center gap-2 no-print">
@@ -430,7 +442,7 @@
                                                     icon="file-text"
                                                     title="Belum ada riwayat PAK"
                                                     description="Mulai tambahkan riwayat PAK untuk melihat proyeksi yang akurat"
-                                                    :actionUrl="route('riwayat-paks.create', ['pegawai_id' => $pegawai->id])"
+                                                    :actionUrl="route('riwayat-paks.create', ['pegawai_id' => $pegawai->id, 'redirect_to' => url()->current()])"
                                                     actionText="Tambah Riwayat PAK"
                                                 />
                                             </td>

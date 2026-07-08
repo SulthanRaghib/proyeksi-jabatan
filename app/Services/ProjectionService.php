@@ -51,14 +51,17 @@ class ProjectionService
         
         $currentAk = 0.0;
 
+        $discardedAk = 0.0;
+
         // 1. Add AK from PAKs that happened ON or AFTER the TMT
         if ($pegawai->relationLoaded('riwayatPaks') && $tmtDate) {
-            $paks = $pegawai->riwayatPaks->filter(function($pak) use ($tmtDate) {
-                return Carbon::parse($pak->tanggal_pak)->gte($tmtDate);
-            });
-            foreach ($paks as $pak) {
+            foreach ($pegawai->riwayatPaks as $pak) {
                 if ($pak->is_konversi_baru) {
-                    $currentAk += (float) $pak->ak_tambahan;
+                    if (Carbon::parse($pak->tanggal_pak)->gte($tmtDate)) {
+                        $currentAk += (float) $pak->ak_tambahan;
+                    } else {
+                        $discardedAk += (float) $pak->ak_tambahan;
+                    }
                 }
             }
         }
@@ -186,6 +189,7 @@ class ProjectionService
             'is_pangkat_puncak' => $isPangkatPuncak,
             'is_sedang_hukuman' => $pegawai->sedang_hukuman_disiplin,
             'is_locked_usulan' => $pegawai->is_locked_usulan,
+            'discarded_ak' => round($discardedAk, 3),
         ];
     }
 

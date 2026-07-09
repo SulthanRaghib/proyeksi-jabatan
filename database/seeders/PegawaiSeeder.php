@@ -14,7 +14,7 @@ class PegawaiSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Bersihkan data lama agar fresh
+        // 1. Clean old records
         \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         \App\Models\RiwayatPak::truncate();
         \App\Models\KinerjaTahunan::truncate();
@@ -43,7 +43,6 @@ class PegawaiSeeder extends Seeder
                     ['tanggal' => '2025-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 37.5, 'predikat' => 'baik'], // PAK Konversi 2024
                 ],
                 'kinerja' => [
-                    // Kinerja 2025 yang belum jadi PAK
                     ['tahun' => 2025, 'predikat' => 'baik', 'ak' => 37.5], 
                 ]
             ],
@@ -129,6 +128,60 @@ class PegawaiSeeder extends Seeder
                     ['tahun' => 2025, 'predikat' => 'baik', 'ak' => 37.5], // Kinerja 2025 (belum PAK)
                 ]
             ],
+            // 6. Sulthan Raghib (Pertama, III/a - Real Case Penilaian Periodik Triwulanan BAPETEN)
+            // TMT Jabatan & Golongan: 2024-01-01. Target III/b (50 AK).
+            // Mendemonstrasikan bagaimana triwulanan mengejar target AK yang sedikit lagi.
+            [
+                'user' => ['name' => 'Sulthan Raghib', 'email' => 'sulthan.raghib@bapeten.go.id'],
+                'nip' => '199812152023011001',
+                'nama_lengkap' => 'Sulthan Raghib',
+                'unit_nama' => 'BOU',
+                'jabatan_nama' => 'Pengawas Radiasi',
+                'jabatan_jenjang' => 'Pertama',
+                'golongan_nama' => 'III/a',
+                'tmt_jabatan' => '2024-01-01',
+                'tmt_golongan' => '2024-01-01',
+                'status_ukom' => false,
+                'riwayat_pak' => [
+                    // 1. Integrasi awal
+                    [
+                        'tanggal' => '2024-01-01', 
+                        'is_konversi_baru' => false, 
+                        'ak_tambahan' => 23, 
+                        'predikat' => null,
+                        'periode_awal' => null,
+                        'periode_akhir' => null
+                    ], 
+                    // 2. PAK Konversi Tahunan 2024 (Baik = 12.5 AK)
+                    [
+                        'tanggal' => '2025-01-15', 
+                        'is_konversi_baru' => true, 
+                        'ak_tambahan' => 12.5, 
+                        'predikat' => 'baik',
+                        'periode_awal' => '2024-01-01',
+                        'periode_akhir' => '2024-12-31'
+                    ],
+                    // 3. PAK Konversi Tahunan 2025 (Baik = 12.5 AK) - Total AK = 48.0 (Kurang 2.0 AK lagi)
+                    [
+                        'tanggal' => '2026-01-15', 
+                        'is_konversi_baru' => true, 
+                        'ak_tambahan' => 12.5, 
+                        'predikat' => 'baik',
+                        'periode_awal' => '2025-01-01',
+                        'periode_akhir' => '2025-12-31'
+                    ],
+                    // 4. PAK Periodik Triwulan I 2026 (Jan - Mar 2026) -> (3/12) * 12.5 = 3.125 AK -> Total AK = 51.125 (Target tercapai!)
+                    [
+                        'tanggal' => '2026-04-10', 
+                        'is_konversi_baru' => true, 
+                        'ak_tambahan' => 3.125, 
+                        'predikat' => 'baik',
+                        'periode_awal' => '2026-01-01',
+                        'periode_akhir' => '2026-03-31'
+                    ],
+                ],
+                'kinerja' => []
+            ],
         ];
 
         foreach ($pegawaiRows as $row) {
@@ -171,22 +224,28 @@ class PegawaiSeeder extends Seeder
             foreach ($row['riwayat_pak'] as $pak) {
                 $tanggalPak = \Carbon\Carbon::parse($pak['tanggal']);
                 $currentTotal += $pak['ak_tambahan'];
+                
+                $periodeAwal = $pak['periode_awal'] ?? ($pak['is_konversi_baru'] ? $tanggalPak->copy()->subYear()->startOfYear()->format('Y-m-d') : null);
+                $periodeAkhir = $pak['periode_akhir'] ?? ($pak['is_konversi_baru'] ? $tanggalPak->copy()->subYear()->endOfYear()->format('Y-m-d') : null);
+
                 $createdPak = \App\Models\RiwayatPak::create([
                     'pegawai_id' => $pegawai->id,
                     'no_pak' => $pakService->generateNoPak($tanggalPak->year),
                     'tanggal_pak' => $pak['tanggal'],
-                    'periode_awal' => $tanggalPak->copy()->subYear()->startOfYear()->format('Y-m-d'),
-                    'periode_akhir' => $tanggalPak->copy()->subYear()->endOfYear()->format('Y-m-d'),
+                    'periode_awal' => $periodeAwal,
+                    'periode_akhir' => $periodeAkhir,
                     'ak_tambahan' => $pak['ak_tambahan'],
                     'ak_total' => $currentTotal,
                     'is_konversi_baru' => $pak['is_konversi_baru'],
                 ]);
                 
                 if ($pak['predikat'] && $pak['is_konversi_baru']) {
+                    $tahunKinerja = $periodeAkhir ? \Carbon\Carbon::parse($periodeAkhir)->year : $tanggalPak->copy()->subYear()->year;
+                    
                     \App\Models\KinerjaTahunan::create([
                         'pegawai_id' => $pegawai->id,
                         'pak_id' => $createdPak->id,
-                        'tahun' => $tanggalPak->copy()->subYear()->year,
+                        'tahun' => $tahunKinerja,
                         'predikat' => $pak['predikat'],
                         'ak_didapat' => $pak['ak_tambahan'],
                     ]);

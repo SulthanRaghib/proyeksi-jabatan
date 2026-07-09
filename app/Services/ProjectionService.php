@@ -56,12 +56,10 @@ class ProjectionService
         // 1. Add AK from PAKs that happened ON or AFTER the TMT
         if ($pegawai->relationLoaded('riwayatPaks') && $tmtDate) {
             foreach ($pegawai->riwayatPaks as $pak) {
-                if ($pak->is_konversi_baru) {
-                    if (Carbon::parse($pak->tanggal_pak)->gte($tmtDate)) {
-                        $currentAk += (float) $pak->ak_tambahan;
-                    } else {
-                        $discardedAk += (float) $pak->ak_tambahan;
-                    }
+                if (Carbon::parse($pak->tanggal_pak)->gte($tmtDate)) {
+                    $currentAk += (float) $pak->ak_tambahan;
+                } else {
+                    $discardedAk += (float) $pak->ak_tambahan;
                 }
             }
         }
@@ -113,22 +111,42 @@ class ProjectionService
             return $this->emptyProjection($currentAk, $targetAk, $deficitAk, $progressPercentage);
         }
 
-        // Years needed mathematically
-        $mathematicalYearsNeeded = (int) ceil($deficitAk / $annualAk);
+        // Months needed mathematically
+        $totalMonthsNeeded = 0;
+        if ($deficitAk > 0) {
+            $totalMonthsNeeded = (int) ceil(($deficitAk / $annualAk) * 12);
+        }
 
         // Regulatory constraints
         // Pangkat: min 2 years from tmt_golongan
         // Jenjang: min 2 years from tmt_jabatan
         $tmt = $targetType === 'pangkat' ? $pegawai->tmt_golongan : $pegawai->tmt_jabatan;
-        $yearsServed = $tmt ? (int) Carbon::parse($tmt)->diffInYears(now()) : 0;
+        
+        $monthsServed = 0;
+        $yearsServed = 0;
+        if ($tmt) {
+            $tmtDate = Carbon::parse($tmt);
+            $monthsServed = (int) $tmtDate->diffInMonths(now());
+            $yearsServed = (int) $tmtDate->diffInYears(now());
+        }
+        
+        $remainingMinimumMonths = max(0, (self::MINIMUM_YEARS_IN_RANK * 12) - $monthsServed);
         $remainingMinimumYears = max(0, self::MINIMUM_YEARS_IN_RANK - $yearsServed);
 
-        $actualYearsNeeded = max($mathematicalYearsNeeded, $remainingMinimumYears);
+        $actualMonthsNeeded = max($totalMonthsNeeded, $remainingMinimumMonths);
+        $actualYearsNeeded = (int) ceil($actualMonthsNeeded / 12);
 
-        // The projected year starts from the last evaluated year, or current year
-        $startYearForProjection = max((int) now()->year, $lastKinerjaYear);
-        $projectedYear = $startYearForProjection + $actualYearsNeeded;
+        // The projected date starts from the end of the last evaluated year
+        $startYearForProjection = max((int) now()->year - 1, $lastKinerjaYear);
+        $startDate = Carbon::create((int)$startYearForProjection, 12, 31);
+        
+        $projectedDate = $startDate->copy()->addMonths($actualMonthsNeeded);
+        $projectedYear = $projectedDate->year;
 
+        // Build target period label
+        $targetMonth = $projectedDate->month;
+        $targetYear = $projectedDate->year;
+        
         $isReadyMathematically = $deficitAk <= 0;
         $isHeldBySpeedbump = $isReadyMathematically && $remainingMinimumYears > 0;
         $isHeldByUkom = false;
@@ -141,6 +159,33 @@ class ProjectionService
         }
 
         $isFullyReady = $isReadyMathematically && !$isHeldBySpeedbump && !$isHeldByUkom;
+
+        if ($isFullyReady) {
+            $periodLabel = "Sudah Memenuhi";
+            $estimatedTimeText = "Sudah memenuhi syarat";
+        } else {
+            if ($targetMonth <= 3) {
+                $periodLabel = "Triwulan I (Maret {$targetYear})";
+            } elseif ($targetMonth <= 6) {
+                $periodLabel = "Triwulan II / Semester I (Juni {$targetYear})";
+            } elseif ($targetMonth <= 9) {
+                $periodLabel = "Triwulan III (September {$targetYear})";
+            } else {
+                $periodLabel = "Triwulan IV / Akhir Tahun (Desember {$targetYear})";
+            }
+            
+            $yNeeded = (int) ($actualMonthsNeeded / 12);
+            $mNeeded = $actualMonthsNeeded % 12;
+            
+            $timeStringParts = [];
+            if ($yNeeded > 0) {
+                $timeStringParts[] = "{$yNeeded} tahun";
+            }
+            if ($mNeeded > 0) {
+                $timeStringParts[] = "{$mNeeded} bulan";
+            }
+            $estimatedTimeText = count($timeStringParts) > 0 ? implode(" ", $timeStringParts) : "0 bulan";
+        }
 
         // Resolve target names
         $currentTargetName = '-';
@@ -176,6 +221,8 @@ class ProjectionService
             'predikat_label' => KonversiPredikatKinerja::labelFor($assumedPredikat),
             'estimated_years' => $actualYearsNeeded,
             'projected_year' => $projectedYear,
+            'projected_period_label' => $periodLabel,
+            'estimated_time_text' => $estimatedTimeText,
             'is_ready_mathematically' => $isReadyMathematically,
             'is_held_by_speedbump' => $isHeldBySpeedbump,
             'is_held_by_ukom' => $isHeldByUkom,
@@ -217,6 +264,8 @@ class ProjectionService
             'predikat_label' => 'Baik',
             'estimated_years' => 0,
             'projected_year' => (int) now()->year,
+            'projected_period_label' => 'Sudah Memenuhi',
+            'estimated_time_text' => 'Sudah memenuhi syarat',
             'is_ready_mathematically' => false,
             'is_held_by_speedbump' => false,
             'is_held_by_ukom' => false,
@@ -226,6 +275,11 @@ class ProjectionService
             'years_served' => 0,
             'current_target_name' => '-',
             'next_target_name' => '-',
+            'next_golongan_id' => null,
+            'is_pangkat_puncak' => false,
+            'is_sedang_hukuman' => false,
+            'is_locked_usulan' => false,
+            'discarded_ak' => 0.0,
         ];
     }
 
@@ -287,17 +341,19 @@ class ProjectionService
             }
 
             $scenarios[$predikat] = [
-                'predikat'       => $predikat,
-                'label'          => $label,
-                'annual_ak'      => $annualAk,
-                'years_needed'   => $yearsNeeded,
-                'projected_year' => $projectedYear,
-                'is_active'      => $predikat === $activePredikat,
-                'is_fastest'     => false,
-                'is_slowest'     => false,
-                'is_ready'       => $scenarioTarget['is_fully_ready'],
-                'color'          => $colors[$predikat] ?? '#6b7280',
-                'badge_class'    => KonversiPredikatKinerja::PREDIKAT_BADGE_CLASSES[$predikat] ?? '',
+                'predikat'               => $predikat,
+                'label'                  => $label,
+                'annual_ak'              => $annualAk,
+                'years_needed'           => $yearsNeeded,
+                'projected_year'         => $projectedYear,
+                'projected_period_label' => $scenarioTarget['projected_period_label'] ?? 'Sudah Memenuhi',
+                'estimated_time_text'    => $scenarioTarget['estimated_time_text'] ?? 'Sudah memenuhi syarat',
+                'is_active'              => $predikat === $activePredikat,
+                'is_fastest'             => false,
+                'is_slowest'             => false,
+                'is_ready'               => $scenarioTarget['is_fully_ready'],
+                'color'                  => $colors[$predikat] ?? '#6b7280',
+                'badge_class'            => KonversiPredikatKinerja::PREDIKAT_BADGE_CLASSES[$predikat] ?? '',
             ];
         }
 
@@ -396,7 +452,7 @@ class ProjectionService
     public function getChartData(Pegawai $pegawai): array
     {
         $chartYears = $pegawai->riwayatPaks->map(function ($pak) {
-            return \Carbon\Carbon::parse($pak->tanggal_pak)->format('Y');
+            return $pak->periode_penilaian_label;
         })->toArray();
 
         $chartAk = $pegawai->riwayatPaks->pluck('ak_total')->toArray();

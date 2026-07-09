@@ -238,15 +238,16 @@ class PegawaiSeeder extends Seeder
                     'ak_total' => $currentTotal,
                     'is_konversi_baru' => $pak['is_konversi_baru'],
                 ]);
-                
                 if ($pak['predikat'] && $pak['is_konversi_baru']) {
                     $tahunKinerja = $periodeAkhir ? \Carbon\Carbon::parse($periodeAkhir)->year : $tanggalPak->copy()->subYear()->year;
+                    $koefisien = $pegawai->jabatan->koefisien_tahunan ?? 0;
                     
                     \App\Models\KinerjaTahunan::create([
                         'pegawai_id' => $pegawai->id,
                         'pak_id' => $createdPak->id,
                         'tahun' => $tahunKinerja,
                         'predikat' => $pak['predikat'],
+                        'koefisien_saat_itu' => $koefisien,
                         'ak_didapat' => $pak['ak_tambahan'],
                     ]);
                 }
@@ -254,10 +255,13 @@ class PegawaiSeeder extends Seeder
 
             // Seeding Kinerja Tahunan
             foreach ($row['kinerja'] as $kinerja) {
+                $koefisien = $pegawai->jabatan->koefisien_tahunan ?? 0;
+                
                 \App\Models\KinerjaTahunan::create([
                     'pegawai_id' => $pegawai->id,
                     'tahun' => $kinerja['tahun'],
                     'predikat' => $kinerja['predikat'],
+                    'koefisien_saat_itu' => $koefisien,
                     'ak_didapat' => $kinerja['ak'],
                 ]);
             }

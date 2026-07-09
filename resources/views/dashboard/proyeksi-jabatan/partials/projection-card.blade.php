@@ -97,12 +97,12 @@
             <i data-feather="{{ $icon }}" width="24" height="24"></i>
         </div>
         <div class="flex-grow-1">
-            <div class="d-flex justify-content-between align-items-start">
-                <h5 class="mb-1 text-dark fw-bold">Estimasi Kenaikan: Tahun {{ $boxYear }}</h5>
+            <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                <h5 class="mb-1 text-dark fw-bold">Estimasi Kenaikan: {{ $proj['projected_period_label'] }}</h5>
                 <span class="badge bg-white text-dark border shadow-sm">Target: {{ $proj['current_target_name'] }} <i data-feather="arrow-right" class="mx-1" width="10" height="10"></i> {{ $proj['next_target_name'] }}</span>
             </div>
             <div class="text-dark opacity-75 mt-1" style="font-size: 0.9rem; line-height: 1.5;">
-                ✨ Dengan mempertahankan kinerja <strong class="fw-bold">{{ $proj['predikat_label'] }}</strong>, target diperkirakan akan tercapai sekitar <strong>{{ $boxYearsNeeded }} tahun</strong> dari sekarang.
+                ✨ Dengan mempertahankan kinerja <strong class="fw-bold">{{ $proj['predikat_label'] }}</strong>, target diperkirakan akan tercapai dalam <strong>{{ $proj['estimated_time_text'] }}</strong> dari sekarang.
                 @if($proj['is_held_by_speedbump'])
                 <br><span class="text-danger fw-medium">Catatan: Terkena aturan minimal masa jabatan ({{ $proj['years_served'] }} tahun dijalani dari syarat 2 tahun).</span>
                 @endif

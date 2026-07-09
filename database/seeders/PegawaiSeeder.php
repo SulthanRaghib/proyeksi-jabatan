@@ -23,8 +23,8 @@ class PegawaiSeeder extends Seeder
         \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $pegawaiRows = [
-            // 1. Andi Pratama (Pengawas Radiasi Madya, IV/a)
-            // TMT 2022. Target IV/b (150 AK).
+            // 1. Andi Pratama (Pengawas Radiasi Madya, IV/a) - Keahlian
+            // TMT 2022. Target IV/b (150 AK). Progress berjalan lambat tapi stabil.
             [
                 'user' => ['name' => 'Andi Pratama', 'email' => 'andi.pratama@bapeten.go.id'],
                 'nip' => '199002212012011003',
@@ -46,8 +46,8 @@ class PegawaiSeeder extends Seeder
                     ['tahun' => 2025, 'predikat' => 'baik', 'ak' => 37.5], 
                 ]
             ],
-            // 2. Budi Santoso (Muda, III/c - Baru Naik Pangkat)
-            // TMT 2026. Target III/d (100 AK).
+            // 2. Budi Santoso (Pengawas Radiasi Muda, III/c - Baru Naik Pangkat) - Keahlian
+            // TMT 2026. Target III/d (100 AK). Progress masih di awal.
             [
                 'user' => ['name' => 'Budi Santoso', 'email' => 'budi.santoso@bapeten.go.id'],
                 'nip' => '198801012010011001',
@@ -64,8 +64,9 @@ class PegawaiSeeder extends Seeder
                 ],
                 'kinerja' => [] 
             ],
-            // 3. Dewi Puspita (Muda, III/d - Pangkat Puncak, Siap Naik Jenjang)
-            // TMT Jabatan 2020. TMT Golongan 2022. Target IV/a (100 AK).
+            // 3. Dewi Puspita (Pengawas Radiasi Muda, III/d - Pangkat Puncak) - Keahlian
+            // TMT Jabatan 2020. TMT Golongan 2022. Target Kenaikan Jenjang (Muda -> Madya) = 100.
+            // Kasus: AK melampaui target (>100) tapi Ukom belum lulus / Formasi belum ada (Speedbump).
             [
                 'user' => ['name' => 'Dewi Puspita', 'email' => 'dewi.puspita@bapeten.go.id'],
                 'nip' => '198912302011022006',
@@ -86,8 +87,9 @@ class PegawaiSeeder extends Seeder
                 ],
                 'kinerja' => []
             ],
-            // 4. Lina Kartika (Pertama, III/a - Kinerja Sangat Baik)
-            // TMT 2024. Target III/b (50 AK).
+            // 4. Lina Kartika (Pengawas Radiasi Pertama, III/a - Akselerasi Sangat Baik) - Keahlian
+            // TMT 2024. Target III/b (50 AK). 
+            // Kasus: Kinerja Sangat Baik (150% = 18.75 AK/tahun) membuat progres naik pangkat sangat cepat.
             [
                 'user' => ['name' => 'Lina Kartika', 'email' => 'lina.kartika@bapeten.go.id'],
                 'nip' => '198911082013012010',
@@ -107,8 +109,9 @@ class PegawaiSeeder extends Seeder
                     ['tahun' => 2025, 'predikat' => 'sangat_baik', 'ak' => 18.75], // Kinerja 2025 (belum PAK)
                 ]
             ],
-            // 5. Maya Sari (Madya, IV/b)
+            // 5. Maya Sari (Pengawas Radiasi Madya, IV/b - Siap Naik Pangkat) - Keahlian
             // TMT 2021, TMT Golongan 2024. Target IV/c (150 AK).
+            // Kasus: Memenuhi syarat AK (>150) dan Ukom Lulus (Siap diusulkan).
             [
                 'user' => ['name' => 'Maya Sari', 'email' => 'maya.sari@bapeten.go.id'],
                 'nip' => '198803112010042008',
@@ -123,14 +126,15 @@ class PegawaiSeeder extends Seeder
                 'riwayat_pak' => [
                     ['tanggal' => '2024-04-01', 'is_konversi_baru' => false, 'ak_tambahan' => 550, 'predikat' => null], // Integrasi
                     ['tanggal' => '2025-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 37.5, 'predikat' => 'baik'], // PAK Konversi 2024
+                    ['tanggal' => '2026-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 37.5, 'predikat' => 'baik'], // PAK Konversi 2025
+                    ['tanggal' => '2027-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 37.5, 'predikat' => 'baik'], // PAK Konversi 2026
+                    ['tanggal' => '2028-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 37.5, 'predikat' => 'baik'], // PAK Konversi 2027
                 ],
-                'kinerja' => [
-                    ['tahun' => 2025, 'predikat' => 'baik', 'ak' => 37.5], // Kinerja 2025 (belum PAK)
-                ]
+                'kinerja' => []
             ],
-            // 6. Sulthan Raghib (Pertama, III/a - Real Case Penilaian Periodik Triwulanan BAPETEN)
+            // 6. Sulthan Raghib (Pengawas Radiasi Pertama, III/a - Real Case Penilaian Periodik Triwulanan BAPETEN) - Keahlian
             // TMT Jabatan & Golongan: 2024-01-01. Target III/b (50 AK).
-            // Mendemonstrasikan bagaimana triwulanan mengejar target AK yang sedikit lagi.
+            // Kasus: Menggunakan evaluasi Triwulanan I untuk melengkapi sisa 2.0 AK agar bisa diusulkan lebih awal.
             [
                 'user' => ['name' => 'Sulthan Raghib', 'email' => 'sulthan.raghib@bapeten.go.id'],
                 'nip' => '199812152023011001',
@@ -143,44 +147,105 @@ class PegawaiSeeder extends Seeder
                 'tmt_golongan' => '2024-01-01',
                 'status_ukom' => false,
                 'riwayat_pak' => [
-                    // 1. Integrasi awal
-                    [
-                        'tanggal' => '2024-01-01', 
-                        'is_konversi_baru' => false, 
-                        'ak_tambahan' => 23, 
-                        'predikat' => null,
-                        'periode_awal' => null,
-                        'periode_akhir' => null
-                    ], 
-                    // 2. PAK Konversi Tahunan 2024 (Baik = 12.5 AK)
-                    [
-                        'tanggal' => '2025-01-15', 
-                        'is_konversi_baru' => true, 
-                        'ak_tambahan' => 12.5, 
-                        'predikat' => 'baik',
-                        'periode_awal' => '2024-01-01',
-                        'periode_akhir' => '2024-12-31'
-                    ],
-                    // 3. PAK Konversi Tahunan 2025 (Baik = 12.5 AK) - Total AK = 48.0 (Kurang 2.0 AK lagi)
-                    [
-                        'tanggal' => '2026-01-15', 
-                        'is_konversi_baru' => true, 
-                        'ak_tambahan' => 12.5, 
-                        'predikat' => 'baik',
-                        'periode_awal' => '2025-01-01',
-                        'periode_akhir' => '2025-12-31'
-                    ],
-                    // 4. PAK Periodik Triwulan I 2026 (Jan - Mar 2026) -> (3/12) * 12.5 = 3.125 AK -> Total AK = 51.125 (Target tercapai!)
-                    [
-                        'tanggal' => '2026-04-10', 
-                        'is_konversi_baru' => true, 
-                        'ak_tambahan' => 3.125, 
-                        'predikat' => 'baik',
-                        'periode_awal' => '2026-01-01',
-                        'periode_akhir' => '2026-03-31'
-                    ],
+                    ['tanggal' => '2024-01-01', 'is_konversi_baru' => false, 'ak_tambahan' => 23, 'predikat' => null, 'periode_awal' => null, 'periode_akhir' => null], // Integrasi
+                    ['tanggal' => '2025-01-15', 'is_konversi_baru' => true, 'ak_tambahan' => 12.5, 'predikat' => 'baik', 'periode_awal' => '2024-01-01', 'periode_akhir' => '2024-12-31'],
+                    ['tanggal' => '2026-01-15', 'is_konversi_baru' => true, 'ak_tambahan' => 12.5, 'predikat' => 'baik', 'periode_awal' => '2025-01-01', 'periode_akhir' => '2025-12-31'],
+                    ['tanggal' => '2026-04-10', 'is_konversi_baru' => true, 'ak_tambahan' => 3.125, 'predikat' => 'baik', 'periode_awal' => '2026-01-01', 'periode_akhir' => '2026-03-31'],
                 ],
                 'kinerja' => []
+            ],
+            // 7. Rahmat Hidayat (Pengawas Radiasi Terampil, II/c) - Keterampilan
+            // TMT 2024. Target II/d (20 AK).
+            // Kasus: Jabatan Fungsional Keterampilan (Koefisien Kecil = 5.00 AK/tahun).
+            [
+                'user' => ['name' => 'Rahmat Hidayat', 'email' => 'rahmat.hidayat@bapeten.go.id'],
+                'nip' => '199505122018021002',
+                'nama_lengkap' => 'Rahmat Hidayat',
+                'unit_nama' => 'INSP',
+                'jabatan_nama' => 'Pengawas Radiasi',
+                'jabatan_jenjang' => 'Terampil',
+                'golongan_nama' => 'II/c',
+                'tmt_jabatan' => '2024-04-01',
+                'tmt_golongan' => '2024-04-01',
+                'status_ukom' => false,
+                'riwayat_pak' => [
+                    ['tanggal' => '2024-04-01', 'is_konversi_baru' => false, 'ak_tambahan' => 60, 'predikat' => null], // Integrasi
+                    ['tanggal' => '2025-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 5.0, 'predikat' => 'baik'], // PAK Konversi 2024 (Baik = 100% dari 5.0)
+                    ['tanggal' => '2026-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 5.0, 'predikat' => 'baik'], // PAK Konversi 2025
+                ],
+                'kinerja' => [
+                    ['tahun' => 2026, 'predikat' => 'baik', 'ak' => 5.0],
+                ]
+            ],
+            // 8. Siti Aminah (Pengawas Radiasi Mahir, III/b) - Keterampilan
+            // TMT 2023. Target III/c (50 AK).
+            // Kasus: Predikat Kinerja Fluktuatif (Sempat berpredikat "Butuh Perbaikan" = 75% AK / 9.375 AK).
+            [
+                'user' => ['name' => 'Siti Aminah', 'email' => 'siti.aminah@bapeten.go.id'],
+                'nip' => '199208152015032004',
+                'nama_lengkap' => 'Siti Aminah',
+                'unit_nama' => 'DIIBN',
+                'jabatan_nama' => 'Pengawas Radiasi',
+                'jabatan_jenjang' => 'Mahir',
+                'golongan_nama' => 'III/b',
+                'tmt_jabatan' => '2023-04-01',
+                'tmt_golongan' => '2023-04-01',
+                'status_ukom' => false,
+                'riwayat_pak' => [
+                    ['tanggal' => '2023-04-01', 'is_konversi_baru' => false, 'ak_tambahan' => 110, 'predikat' => null], // Integrasi
+                    ['tanggal' => '2024-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 12.5, 'predikat' => 'baik'], // PAK Konversi 2023 (100% = 12.5)
+                    ['tanggal' => '2025-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 9.375, 'predikat' => 'butuh_perbaikan'], // PAK Konversi 2024 (75% = 9.375)
+                    ['tanggal' => '2026-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 12.5, 'predikat' => 'baik'], // PAK Konversi 2025
+                ],
+                'kinerja' => [
+                    ['tahun' => 2026, 'predikat' => 'baik', 'ak' => 12.5],
+                ]
+            ],
+            // 9. Hendra Wijaya (Pengawas Radiasi Penyelia, III/c - Jenjang Tertinggi Keterampilan) - Keterampilan
+            // TMT 2022. Target pangkat berikutnya III/d (100 AK).
+            // Kasus: Mengumpulkan AK di jenjang keterampilan tertinggi dengan kinerja stabil "Baik".
+            [
+                'user' => ['name' => 'Hendra Wijaya', 'email' => 'hendra.wijaya@bapeten.go.id'],
+                'nip' => '198710252009021001',
+                'nama_lengkap' => 'Hendra Wijaya',
+                'unit_nama' => 'DPIBN',
+                'jabatan_nama' => 'Pengawas Radiasi',
+                'jabatan_jenjang' => 'Penyelia',
+                'golongan_nama' => 'III/c',
+                'tmt_jabatan' => '2022-04-01',
+                'tmt_golongan' => '2022-04-01',
+                'status_ukom' => false,
+                'riwayat_pak' => [
+                    ['tanggal' => '2022-04-01', 'is_konversi_baru' => false, 'ak_tambahan' => 220, 'predikat' => null], // Integrasi
+                    ['tanggal' => '2023-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 25.0, 'predikat' => 'baik'], // PAK Konversi 2022 (25.0)
+                    ['tanggal' => '2024-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 25.0, 'predikat' => 'baik'], // PAK Konversi 2023
+                    ['tanggal' => '2025-04-01', 'is_konversi_baru' => true, 'ak_tambahan' => 25.0, 'predikat' => 'baik'], // PAK Konversi 2024
+                ],
+                'kinerja' => [
+                    ['tahun' => 2025, 'predikat' => 'baik', 'ak' => 25.0],
+                ]
+            ],
+            // 10. Fitriani (Pengawas Radiasi Pertama, III/a - Pegawai Baru) - Keahlian
+            // TMT 2025. Target III/b (50 AK).
+            // Kasus: Pegawai baru yang belum memiliki dokumen PAK resmi (hanya baseline).
+            // Kinerja Tahunan mentah miliknya terinput di sistem, namun belum dikonversi (Smart Sync SKP akan mendeteksinya).
+            [
+                'user' => ['name' => 'Fitriani', 'email' => 'fitriani@bapeten.go.id'],
+                'nip' => '200004182024122002',
+                'nama_lengkap' => 'Fitriani',
+                'unit_nama' => 'P2STPIBN',
+                'jabatan_nama' => 'Pengawas Radiasi',
+                'jabatan_jenjang' => 'Pertama',
+                'golongan_nama' => 'III/a',
+                'tmt_jabatan' => '2025-01-01',
+                'tmt_golongan' => '2025-01-01',
+                'status_ukom' => false,
+                'riwayat_pak' => [
+                    ['tanggal' => '2025-01-01', 'is_konversi_baru' => false, 'ak_tambahan' => 0, 'predikat' => null, 'periode_awal' => null, 'periode_akhir' => null], // Integrasi Nol
+                ],
+                'kinerja' => [
+                    ['tahun' => 2025, 'predikat' => 'baik', 'ak' => 12.5], // Kinerja 2025 (Belum di-PAK-kan, terdeteksi oleh Smart Sync)
+                ]
             ],
         ];
 
@@ -238,6 +303,7 @@ class PegawaiSeeder extends Seeder
                     'ak_total' => $currentTotal,
                     'is_konversi_baru' => $pak['is_konversi_baru'],
                 ]);
+                
                 if ($pak['predikat'] && $pak['is_konversi_baru']) {
                     $tahunKinerja = $periodeAkhir ? \Carbon\Carbon::parse($periodeAkhir)->year : $tanggalPak->copy()->subYear()->year;
                     $koefisien = $pegawai->jabatan->koefisien_tahunan ?? 0;

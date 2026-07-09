@@ -257,10 +257,10 @@
                                                     <div class="text-muted small mt-1">Siap untuk diusulkan.</div>
                                                 @else
                                                     <div class="text-dark small">
-                                                        Target tercapai tahun <span class="timeline-year-highlight text-primary">{{ $scenario['projected_year'] }}</span>
+                                                        Target tercapai pada <span class="timeline-year-highlight text-primary">{{ $scenario['projected_period_label'] }}</span>
                                                     </div>
                                                     <div class="text-muted small mt-1">
-                                                        Dibutuhkan <span class="fw-bold">{{ $scenario['years_needed'] }} tahun</span> lagi.
+                                                        Dibutuhkan <span class="fw-bold">{{ $scenario['estimated_time_text'] }}</span> lagi.
                                                     </div>
                                                 @endif
                                             </div>
@@ -274,12 +274,12 @@
                                                 <div class="scenario-bar-container mt-3">
                                                     <div class="scenario-bar {{ $scenario['is_active'] ? 'active-scenario' : '' }}" 
                                                          style="width: {{ $widthPercent }}%; background-color: {{ $scenario['color'] }};"
-                                                         title="{{ $scenario['years_needed'] }} tahun">
+                                                         title="{{ $scenario['estimated_time_text'] }}">
                                                     </div>
                                                 </div>
                                                 <div class="d-flex justify-content-between mt-1">
                                                     <span class="timeline-year-label">Sekarang</span>
-                                                    <span class="timeline-year-label">{{ $scenario['projected_year'] }}</span>
+                                                    <span class="timeline-year-label">{{ $scenario['projected_period_label'] }}</span>
                                                 </div>
                                             @elseif ($scenario['is_ready'])
                                                 <div class="scenario-bar-container mt-3">
@@ -374,7 +374,7 @@
                                             $isPreJabatan = \Carbon\Carbon::parse($pak->tanggal_pak)->lt(\Carbon\Carbon::parse($pegawai->tmt_jabatan));
                                         @endphp
                                         <tr class="{{ $isLatest ? 'table-primary' : '' }}">
-                                            <td>{{ \Carbon\Carbon::parse($pak->tanggal_pak)->format('d/m/Y') }}</td>
+                                            <td>{{ $pak->periode_penilaian_label }}</td>
                                             <td>{{ $pak->no_pak ?? '-' }}</td>
                                             <td>
                                                 @if ($pak->predikat_kinerja)

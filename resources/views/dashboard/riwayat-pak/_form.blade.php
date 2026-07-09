@@ -296,7 +296,7 @@
                     $historyData = $history->take(5)->map(function ($pak) {
                         return [
                             'tanggal' => $pak->tanggal_pak->format('d/m/Y'),
-                            'tahun' => $pak->tanggal_pak->format('Y'),
+                            'tahun' => $pak->periode_penilaian_label,
                             'ak_total' => number_format((float) $pak->ak_total, 3, ',', '.'),
                             'ak_tambahan' => number_format((float) $pak->ak_tambahan, 3, ',', '.'),
                             'no_pak' => $pak->no_pak,
@@ -668,6 +668,8 @@
             const previewPanel = document.getElementById('previewPanel');
             const konversiIndicator = document.getElementById('konversiIndicator');
             const autoBadge = document.getElementById('autoBadge');
+            const periodeAwalInput = document.getElementById('periode_awal');
+            const periodeAkhirInput = document.getElementById('periode_akhir');
 
             // Display elements
             const displayCurrentAk = document.getElementById('displayCurrentAk');
@@ -810,8 +812,29 @@
                 // Round to 3 decimals
                 nilaiAk = Math.round(nilaiAk * 1000) / 1000;
 
+                // Calculate calendar months if both dates are filled
+                let months = 12;
+                let isPeriodic = false;
+                if (periodeAwalInput && periodeAkhirInput && periodeAwalInput.value && periodeAkhirInput.value) {
+                    const startDate = new Date(periodeAwalInput.value);
+                    const endDate = new Date(periodeAkhirInput.value);
+                    if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime()) && endDate >= startDate) {
+                        months = (endDate.getFullYear() - startDate.getFullYear()) * 12 + (endDate.getMonth() - startDate.getMonth()) + 1;
+                        if (months < 12 && months > 0) {
+                            isPeriodic = true;
+                        }
+                    }
+                }
+
+                let finalNilaiAk = nilaiAk;
+                if (isPeriodic) {
+                    finalNilaiAk = nilaiAk * (months / 12);
+                    // Round to 3 decimals again
+                    finalNilaiAk = Math.round(finalNilaiAk * 1000) / 1000;
+                }
+
                 // Auto-fill AK tambahan
-                akTambahanInput.value = nilaiAk.toFixed(3);
+                akTambahanInput.value = finalNilaiAk.toFixed(3);
                 isAutoFilled = true;
 
                 // Pulse animation on the input
@@ -825,7 +848,7 @@
                 // Show konversi indicator
                 konversiIndicator.style.display = 'block';
                 konversiIndicator.querySelector('.konversi-indicator').classList.add('active');
-                konversiValue.textContent = formatNumber(nilaiAk);
+                konversiValue.textContent = formatNumber(finalNilaiAk);
 
                 const persentaseMap = {
                     'sangat_baik': 150,
@@ -834,8 +857,13 @@
                     'kurang': 50,
                     'sangat_kurang': 25
                 };
-                konversiFormula.textContent = koefisien.toFixed(2) + ' × ' + (persentaseMap[predikat] ||
-                    100) + '% = ' + nilaiAk.toFixed(3);
+                
+                let formulaText = koefisien.toFixed(2) + ' × ' + (persentaseMap[predikat] || 100) + '%';
+                if (isPeriodic) {
+                    formulaText += ' × (' + months + '/12 Bulan)';
+                }
+                formulaText += ' = ' + finalNilaiAk.toFixed(3);
+                konversiFormula.textContent = formulaText;
 
                 if (source === 'database') {
                     konversiSource.textContent = 'Dari Tabel Konversi';
@@ -991,11 +1019,17 @@
                 fetchUnclaimedKinerjas();
             });
             predikatSelect.addEventListener('change', onPredikatChange);
+            
+            if (periodeAwalInput) {
+                periodeAwalInput.addEventListener('change', onPredikatChange);
+            }
+            if (periodeAkhirInput) {
+                periodeAkhirInput.addEventListener('change', onPredikatChange);
+            }
 
             // Kinerja Tahunan Sync Logic
             const skpSyncContainer = document.getElementById('skpSyncContainer');
             const kinerjaSelect = document.getElementById('kinerja_tahunan_id');
-            const periodeAkhirInput = document.getElementById('periode_akhir');
             const currentPakId = '{{ $currentRiwayatPak?->id ?? '' }}';
             
             async function fetchUnclaimedKinerjas() {

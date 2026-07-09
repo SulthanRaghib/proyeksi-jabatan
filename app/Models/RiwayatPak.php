@@ -80,4 +80,46 @@ class RiwayatPak extends Model
         return KonversiPredikatKinerja::PREDIKAT_BADGE_CLASSES[$this->predikat_kinerja]
             ?? 'bg-secondary-subtle text-secondary';
     }
+
+    /**
+     * Get the human-readable assessment period label.
+     */
+    public function getPeriodePenilaianLabelAttribute(): string
+    {
+        if ($this->periode_awal && $this->periode_akhir) {
+            $awal = \Carbon\Carbon::parse($this->periode_awal);
+            $akhir = \Carbon\Carbon::parse($this->periode_akhir);
+            
+            // Check if it's a full calendar year (Jan 1 to Dec 31)
+            if ($awal->month === 1 && $awal->day === 1 && $akhir->month === 12 && $akhir->day === 31) {
+                return (string) $akhir->year;
+            }
+            
+            // If it's a sub-year period, let's see how many months
+            $months = ($akhir->year - $awal->year) * 12 + ($akhir->month - $awal->month) + 1;
+            if ($months === 3) {
+                $triwulan = (int) ceil($akhir->month / 3);
+                return $akhir->year . " (Triwulan " . $this->romawi($triwulan) . ")";
+            } elseif ($months === 6) {
+                $semester = (int) ceil($akhir->month / 6);
+                return $akhir->year . " (Semester " . $this->romawi($semester) . ")";
+            }
+            
+            // Fallback: show date range
+            return $awal->format('d/m/Y') . ' - ' . $akhir->format('d/m/Y');
+        }
+        
+        // Fallback if no periods: use the year of tanggal_pak
+        if ($this->tanggal_pak) {
+            return (string) \Carbon\Carbon::parse($this->tanggal_pak)->year;
+        }
+        
+        return '-';
+    }
+    
+    private function romawi(int $num): string
+    {
+        $map = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV'];
+        return $map[$num] ?? (string)$num;
+    }
 }

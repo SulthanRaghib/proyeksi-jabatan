@@ -536,8 +536,27 @@
         </div>
     </div>
 
+    {{-- Switch is_konversi_baru --}}
+    <div class="col-12 col-md-6 mb-3">
+        <div class="form-check form-switch pt-2">
+            <input type="hidden" name="is_konversi_baru" value="0">
+            <input class="form-check-input" type="checkbox" id="is_konversi_baru" name="is_konversi_baru" value="1" 
+                @checked(old('is_konversi_baru', $currentRiwayatPak ? $currentRiwayatPak->is_konversi_baru : true))>
+            <label class="form-check-label fw-bold text-dark" for="is_konversi_baru">
+                PAK Konversi Baru (Permenpan-RB 1/2023)
+            </label>
+            <div class="form-text small text-muted">
+                Aktifkan jika dokumen PAK ini berdasarkan konversi Predikat Kinerja SKP. Matikan jika ini merupakan PAK konvensional lama / integrasi (saldo awal/baseline).
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-12 col-md-6 mb-3" id="predikatSpacer">
+        {{-- Spacer --}}
+    </div>
+
     {{-- Predikat Kinerja — placed BEFORE AK Tambahan so it drives the auto-fill --}}
-    <div class="col-12 col-md-6">
+    <div class="col-12 col-md-6" id="predikatKinerjaContainer">
         <label for="predikat_kinerja" class="form-label">
             Predikat Kinerja
         </label>
@@ -694,6 +713,11 @@
             const konversiValue = document.getElementById('konversiValue');
             const konversiFormula = document.getElementById('konversiFormula');
             const konversiSource = document.getElementById('konversiSource');
+
+            const isKonversiBaruCheckbox = document.getElementById('is_konversi_baru');
+            const predikatKinerjaContainer = document.getElementById('predikatKinerjaContainer');
+            const predikatSpacer = document.getElementById('predikatSpacer');
+            const akTambahanHint = document.getElementById('akTambahanHint');
 
             // Track whether AK was auto-filled (to show badge)
             let isAutoFilled = false;
@@ -1031,8 +1055,12 @@
             const skpSyncContainer = document.getElementById('skpSyncContainer');
             const kinerjaSelect = document.getElementById('kinerja_tahunan_id');
             const currentPakId = '{{ $currentRiwayatPak?->id ?? '' }}';
-            
             async function fetchUnclaimedKinerjas() {
+                const isKonversi = isKonversiBaruCheckbox ? isKonversiBaruCheckbox.checked : true;
+                if (!isKonversi) {
+                    skpSyncContainer.style.display = 'none';
+                    return;
+                }
                 if (!kinerjaSelect || !skpSyncContainer) return;
                 
                 const pegawaiId = pegawaiSelect.value;
@@ -1171,8 +1199,46 @@
                 });
             }
 
+            function toggleKonversiFields() {
+                const isKonversi = isKonversiBaruCheckbox ? isKonversiBaruCheckbox.checked : true;
+                
+                if (isKonversi) {
+                    if (predikatKinerjaContainer) predikatKinerjaContainer.style.display = 'block';
+                    if (predikatSpacer) predikatSpacer.style.display = 'block';
+                    if (akTambahanHint) akTambahanHint.innerHTML = 'Nilai akan terisi otomatis saat predikat dipilih. Anda tetap bisa mengubahnya secara manual.';
+                    
+                    fetchUnclaimedKinerjas();
+                    onPredikatChange();
+                } else {
+                    if (predikatKinerjaContainer) predikatKinerjaContainer.style.display = 'none';
+                    if (predikatSpacer) predikatSpacer.style.display = 'none';
+                    if (akTambahanHint) akTambahanHint.innerHTML = 'Masukkan jumlah angka kredit awal/baseline pegawai dari PAK fisik secara manual.';
+                    
+                    predikatSelect.value = '';
+                    if (konversiIndicator) konversiIndicator.style.display = 'none';
+                    if (autoBadge) autoBadge.style.display = 'none';
+                    if (skpSyncContainer) skpSyncContainer.style.display = 'none';
+                    
+                    predikatSelect.style.pointerEvents = 'auto';
+                    predikatSelect.classList.remove('bg-light');
+                    if (periodeAkhirInput) {
+                        periodeAkhirInput.style.pointerEvents = 'auto';
+                        periodeAkhirInput.classList.remove('bg-light');
+                    }
+                    
+                    updatePreview();
+                }
+            }
+
+            if (isKonversiBaruCheckbox) {
+                isKonversiBaruCheckbox.addEventListener('change', toggleKonversiFields);
+            }
+
             // Initialize on page load
             updateAkStatus();
+            if (isKonversiBaruCheckbox) {
+                toggleKonversiFields();
+            }
         });
     </script>
 @endpush

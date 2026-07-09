@@ -415,13 +415,16 @@
                                                     @if ($isLatest)
                                                         <span class="badge bg-primary">Terbaru</span>
                                                     @endif
+                                                    @if (!$pak->is_konversi_baru)
+                                                        <span class="badge" style="background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;" title="Angka Kredit Modal Awal / Baseline Konvensional">Baseline / Awal</span>
+                                                    @endif
                                                     @if ($isPreGolongan)
                                                         <span class="badge" style="background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a;" title="Tidak dihitung untuk proyeksi Pangkat">Pre-Golongan</span>
                                                     @endif
                                                     @if ($isPreJabatan)
                                                         <span class="badge" style="background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;" title="Tidak dihitung untuk proyeksi Jabatan">Pre-Jabatan</span>
                                                     @endif
-                                                    @if (!$isLatest && !$isPreGolongan && !$isPreJabatan)
+                                                    @if (!$isLatest && !$isPreGolongan && !$isPreJabatan && $pak->is_konversi_baru)
                                                         <span class="text-muted">-</span>
                                                     @endif
                                                 </div>

@@ -105,14 +105,22 @@
                                     </td>
                                     <td class="text-end">
                                         <strong>{{ number_format($akTotal, 3, ',', '.') }}</strong>
+                                    </td>                                    <td class="text-center">
+                                        <div class="d-flex flex-column gap-1 align-items-center justify-content-center">
+                                            @if ($isLatest)
+                                                <span class="badge bg-success">Terbaru</span>
+                                            @else
+                                                <span class="badge bg-secondary">Riwayat</span>
+                                            @endif
+                                            
+                                            @if (!$riwayatPak->is_konversi_baru)
+                                                <span class="badge" style="background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;" title="Angka Kredit Modal Awal / Baseline Konvensional">Baseline / Awal</span>
+                                            @else
+                                                <span class="badge" style="background-color: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe;" title="PAK Konversi Baru Permenpan-RB 1/2023">Konversi</span>
+                                            @endif
+                                        </div>
                                     </td>
-                                    <td class="text-center">
-                                        @if ($isLatest)
-                                            <span class="badge bg-success">Terbaru</span>
-                                        @else
-                                            <span class="badge bg-secondary">Riwayat</span>
-                                        @endif
-                                    </td>
+
                                     <td>
                                         <div class="d-flex justify-content-end gap-2">
                                             <x-action-button type="edit" href="{{ route('riwayat-paks.edit', $riwayatPak) }}" />

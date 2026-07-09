@@ -23,6 +23,7 @@ class StoreRiwayatPakRequest extends FormRequest
             'periode_akhir' => $this->input('periode_akhir'),
             'ak_tambahan' => $this->input('ak_tambahan'),
             'kinerja_tahunan_id' => $this->input('kinerja_tahunan_id'),
+            'is_konversi_baru' => $this->boolean('is_konversi_baru'),
         ]);
     }
 
@@ -37,6 +38,7 @@ class StoreRiwayatPakRequest extends FormRequest
             'ak_tambahan' => ['required', 'numeric', 'min:0', 'max:99999.999'],
             'predikat_kinerja' => ['nullable', Rule::in(KonversiPredikatKinerja::PREDIKAT_OPTIONS)],
             'kinerja_tahunan_id' => ['nullable', 'exists:kinerja_tahunans,id'],
+            'is_konversi_baru' => ['required', 'boolean'],
         ];
     }
 

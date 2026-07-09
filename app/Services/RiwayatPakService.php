@@ -115,6 +115,12 @@ class RiwayatPakService
 
             $isKonversi = $riwayatPak->is_konversi_baru ?? true;
 
+            // Unlink any associated Kinerja if updated to conventional
+            if (!$isKonversi) {
+                \App\Models\KinerjaTahunan::where('pak_id', $riwayatPak->id)
+                    ->update(['pak_id' => null]);
+            }
+
             // Case 2: Link explicit Kinerja
             if ($kinerjaTahunanId && $isKonversi) {
                 // First, unlink any currently linked Kinerja

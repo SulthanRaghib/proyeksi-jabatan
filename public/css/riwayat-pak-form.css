@@ -1,0 +1,243 @@
+/* ─── Status AK Panel ──────────────────────────────────────── */
+.ak-status-panel {
+    background: linear-gradient(135deg, #eef2ff 0%, #f0f9ff 50%, #f0fdf4 100%);
+    border: 1px solid #c7d2fe;
+    border-radius: 0.75rem;
+    overflow: hidden;
+}
+
+.ak-status-panel .panel-header {
+    background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+    color: white;
+    padding: 0.75rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ak-status-panel .panel-header h6 {
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+}
+
+.ak-stat-card {
+    background: white;
+    border-radius: 0.625rem;
+    padding: 0.875rem;
+    border: 1px solid #e5e7eb;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.ak-stat-card:hover {
+    border-color: #a5b4fc;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);
+}
+
+.ak-stat-card .stat-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ak-stat-card .stat-label {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b7280;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.ak-stat-card .stat-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.ak-progress-wrapper {
+    background: white;
+    border-radius: 0.625rem;
+    padding: 0.875rem;
+    border: 1px solid #e5e7eb;
+}
+
+.ak-progress-wrapper .progress {
+    height: 10px;
+    border-radius: 5px;
+    background: #e5e7eb;
+    overflow: hidden;
+}
+
+.ak-progress-wrapper .progress-bar {
+    border-radius: 5px;
+    background: linear-gradient(90deg, #4f46e5 0%, #6366f1 50%, #818cf8 100%);
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ak-progress-wrapper .progress-bar.bg-success {
+    background: linear-gradient(90deg, #059669 0%, #10b981 50%, #34d399 100%);
+}
+
+.ak-info-row {
+    background: white;
+    border-radius: 0.625rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.ak-info-row .info-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ak-info-row .info-icon {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ak-history-section {
+    background: white;
+    border-radius: 0.625rem;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+
+.ak-history-section .history-header {
+    padding: 0.625rem 1rem;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.ak-history-section table {
+    margin-bottom: 0;
+}
+
+.ak-history-section table thead th {
+    background: transparent;
+    border-top: none;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #6b7280;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+}
+
+.ak-history-section table tbody td {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+}
+
+/* ─── Konversi Indicator ───────────────────────────────────── */
+.konversi-indicator {
+    transition: all 0.3s ease;
+    border-radius: 0.5rem;
+}
+
+.konversi-indicator.active {
+    background: linear-gradient(135deg, #eef2ff 0%, #f0fdf4 100%);
+    border: 1px solid #c7d2fe;
+}
+
+.konversi-indicator .konversi-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #4f46e5;
+    transition: all 0.3s ease;
+}
+
+.konversi-indicator .konversi-source {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ─── AK Field & Auto Badge ───────────────────────────────── */
+.ak-field-wrapper {
+    position: relative;
+}
+
+.ak-field-wrapper .auto-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    transform: translateY(-50%);
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 1rem;
+    z-index: 2;
+    transition: opacity 0.3s ease;
+}
+
+.form-select-predikat option {
+    padding: 0.5rem;
+}
+
+.pulse-highlight {
+    animation: pulseHighlight 0.6s ease-out;
+}
+
+@keyframes pulseHighlight {
+    0% {
+        box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4);
+    }
+
+    70% {
+        box-shadow: 0 0 0 8px rgba(79, 70, 229, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+    }
+}
+
+/* ─── Predikat Chips ───────────────────────────────────────── */
+.predikat-info-strip {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+}
+
+.predikat-info-strip .predikat-chip {
+    font-size: 0.72rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 1rem;
+    border: 1px solid #e5e7eb;
+    background: #f9fafb;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.predikat-info-strip .predikat-chip:hover {
+    border-color: #a5b4fc;
+    background: #eef2ff;
+    color: #4338ca;
+}
+
+.predikat-info-strip .predikat-chip.selected {
+    border-color: #4f46e5;
+    background: #4f46e5;
+    color: white;
+}

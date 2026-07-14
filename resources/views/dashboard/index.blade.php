@@ -1,132 +1,25 @@
 @extends('layouts.dashboard')
 
 @section('title', 'Dashboard Proyeksi Jabatan')
-
-@push('styles')
-    <style>
-        /* Modern Stat Cards */
-        .stat-card {
-            border-radius: 1rem;
-            border: none;
-            overflow: hidden;
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #ffffff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            display: flex;
-            align-items: center;
-            padding: 1.5rem;
-            height: 100%;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 1rem;
-            flex-shrink: 0;
-            background: #f3f4f6;
-            color: #4b5563;
-        }
-
-        .stat-bg-icon {
-            position: absolute;
-            right: -15px;
-            bottom: -15px;
-            opacity: 0.04;
-            transform: rotate(-15deg);
-            transition: all 0.5s ease;
-        }
-
-        .stat-card:hover .stat-bg-icon {
-            transform: rotate(0) scale(1.2);
-            opacity: 0.08;
-        }
-
-        /* Modern Table Card */
-        .table-card {
-            border-radius: 1rem;
-            border: none;
-            background: #ffffff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
-        }
-        
-        .modern-table th {
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            color: #6b7280;
-            background-color: #f9fafb;
-            border-bottom: 1px solid #e5e7eb;
-            padding: 1rem;
-        }
-        
-        .modern-table td {
-            padding: 1rem;
-            vertical-align: middle;
-            border-bottom: 1px solid #f3f4f6;
-            color: #374151;
-        }
-        
-        .modern-card {
-            border-radius: 1rem;
-            border: none;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-            background: #ffffff;
-        }
-    </style>
-@endpush
-
 @section('content')
-    <div class="page-breadcrumb">
-        <div class="row">
-            <div class="col-7 align-self-center">
-                <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">Dashboard Proyeksi Jabatan</h3>
-                <div class="d-flex align-items-center">
-                    <nav aria-label="breadcrumb">
-                        <ol class="breadcrumb m-0 p-0">
-                            <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                            <li class="breadcrumb-item active" aria-current="page">Ringkasan</li>
-                        </ol>
-                    </nav>
-                </div>
-            </div>
-            <div class="col-5 align-self-center">
-                <div class="customize-input float-end">
-                    <select class="form-control bg-white border-0 shadow-sm rounded">
-                        <option selected>2026</option>
-                        <option value="1">2025</option>
-                        <option value="2">2024</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-    </div>
+    <x-page-header title="Dashboard Proyeksi Jabatan" :breadcrumbs="[
+        ['label' => 'Dashboard', 'url' => route('dashboard')],
+        ['label' => 'Ringkasan'],
+    ]">
+        <x-slot:action>
+            <select class="form-control bg-white border-0 shadow-sm rounded">
+                <option selected>2026</option>
+                <option value="1">2025</option>
+                <option value="2">2024</option>
+            </select>
+        </x-slot:action>
+    </x-page-header>
 
     <div class="container-fluid">
         <div class="row">
             @foreach ($summaryCards as $card)
                 <div class="col-sm-6 col-lg-3 mb-3">
-                    <div class="stat-card">
-                        <div class="stat-icon">
-                            <i data-feather="{{ $card['icon'] }}" width="24" height="24"></i>
-                        </div>
-                        <div>
-                            <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">{{ $card['title'] }}</p>
-                            <h3 class="mb-0 text-dark fw-bolder">{{ $card['value'] }}</h3>
-                        </div>
-                        <i data-feather="{{ $card['icon'] }}" width="100" height="100" class="stat-bg-icon"></i>
-                    </div>
+                    <x-stat-card :title="$card['title']" :value="$card['value']" :icon="$card['icon']" />
                 </div>
             @endforeach
         </div>

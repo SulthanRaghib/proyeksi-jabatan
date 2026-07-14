@@ -1,125 +1,32 @@
 @extends('layouts.dashboard')
 
 @section('title', 'Proyeksi Jabatan')
-
-@push('styles')
-    <style>
-        /* Modern Stat Cards */
-        .stat-card {
-            border-radius: 1rem;
-            border: none;
-            overflow: hidden;
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #ffffff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            display: flex;
-            align-items: center;
-            padding: 1.5rem;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 1rem;
-            flex-shrink: 0;
-        }
-
-        .stat-bg-icon {
-            position: absolute;
-            right: -15px;
-            bottom: -15px;
-            opacity: 0.04;
-            transform: rotate(-15deg);
-            transition: all 0.5s ease;
-        }
-
-        .stat-card:hover .stat-bg-icon {
-            transform: rotate(0) scale(1.2);
-            opacity: 0.08;
-        }
-
-    </style>
-@endpush
-
 @section('content')
-    <div class="page-breadcrumb">
-        <div class="row align-items-center">
-            <div class="col-12 col-md-7">
-                <h3 class="page-title text-dark font-weight-medium mb-1">Proyeksi Kenaikan Jabatan</h3>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb m-0 p-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-muted">Dashboard</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Proyeksi Jabatan</li>
-                    </ol>
-                </nav>
-            </div>
-            <div class="col-12 col-md-5 text-md-end mt-3 mt-md-0">
-                <span class="badge bg-light text-dark border py-2 px-3 me-2">Periodisasi BKN: 6 kali/tahun</span>
-                <span class="badge bg-light text-dark border py-2 px-3">Sumber AK: Riwayat PAK</span>
-            </div>
-        </div>
-    </div>
+    <x-page-header title="Proyeksi Kenaikan Jabatan" :breadcrumbs="[
+        ['label' => 'Dashboard', 'url' => route('dashboard')],
+        ['label' => 'Proyeksi Jabatan'],
+    ]">
+        <x-slot:action>
+            <span class="badge bg-light text-dark border py-2 px-3 me-2">Periodisasi BKN: 6 kali/tahun</span>
+            <span class="badge bg-light text-dark border py-2 px-3">Sumber AK: Riwayat PAK</span>
+        </x-slot:action>
+    </x-page-header>
 
     <div class="container-fluid">
+        <x-alert-flash />
         <!-- Stats Row -->
         <div class="row mb-4 g-3">
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-primary-subtle text-primary">
-                        <i data-feather="users" width="24" height="24"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Pegawai Dipantau</p>
-                        <h3 class="mb-0 text-dark fw-bolder">{{ $stats['total'] }}</h3>
-                    </div>
-                    <i data-feather="users" width="100" height="100" class="stat-bg-icon text-primary"></i>
-                </div>
+                <x-stat-card title="Pegawai Dipantau" :value="$stats['total']" icon="users" color="primary" />
             </div>
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-success-subtle text-success">
-                        <i data-feather="check-circle" width="24" height="24"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Siap Secara AK</p>
-                        <h3 class="mb-0 text-dark fw-bolder">{{ $stats['ready'] }}</h3>
-                    </div>
-                    <i data-feather="check-circle" width="100" height="100" class="stat-bg-icon text-success"></i>
-                </div>
+                <x-stat-card title="Siap Secara AK" :value="$stats['ready']" icon="check-circle" color="success" />
             </div>
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-warning-subtle text-warning">
-                        <i data-feather="clock" width="24" height="24"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Tertahan Waktu</p>
-                        <h3 class="mb-0 text-dark fw-bolder">{{ $stats['speedbump'] }}</h3>
-                    </div>
-                    <i data-feather="clock" width="100" height="100" class="stat-bg-icon text-warning"></i>
-                </div>
+                <x-stat-card title="Tertahan Waktu" :value="$stats['speedbump']" icon="clock" color="warning" />
             </div>
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-info-subtle text-info">
-                        <i data-feather="trending-up" width="24" height="24"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Rata-rata Progres</p>
-                        <h3 class="mb-0 text-info fw-bolder">{{ $stats['avg_progress'] }}%</h3>
-                    </div>
-                    <i data-feather="trending-up" width="100" height="100" class="stat-bg-icon text-info"></i>
-                </div>
+                <x-stat-card title="Rata-rata Progres" :value="$stats['avg_progress'] . '%'" icon="trending-up" color="info" />
             </div>
         </div>
 
@@ -275,9 +182,8 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="6" class="text-center py-5 text-muted">
-                                                <div class="mb-3"><i data-feather="inbox" width="48" height="48" class="text-secondary opacity-50"></i></div>
-                                                Tidak ada data yang cocok dengan filter pencarian Anda.
+                                            <td colspan="6">
+                                                <x-empty-state icon="inbox" title="Tidak ada data" description="Tidak ada data yang cocok dengan filter pencarian Anda." />
                                             </td>
                                         </tr>
                                     @endforelse

@@ -3,22 +3,15 @@
 @section('title', 'Tambah Unit Kerja')
 
 @section('content')
-    <div class="page-breadcrumb">
-        <div class="row align-items-center">
-            <div class="col-12">
-                <h3 class="page-title text-dark font-weight-medium mb-1">Tambah Unit Kerja</h3>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb m-0 p-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('unit-kerjas.index') }}">Unit Kerja</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Tambah</li>
-                    </ol>
-                </nav>
-            </div>
-        </div>
-    </div>
+    <x-page-header title="Tambah Unit Kerja" :breadcrumbs="[
+        ['label' => 'Dashboard', 'url' => route('dashboard')],
+        ['label' => 'Unit Kerja', 'url' => route('unit-kerjas.index')],
+        ['label' => 'Tambah'],
+    ]" />
 
     <div class="container-fluid">
+        <x-alert-flash />
+
         <div class="card">
             <div class="card-body">
                 <form action="{{ route('unit-kerjas.store') }}" method="POST" class="row g-3">

@@ -3,34 +3,17 @@
 @section('title', 'Edit Pegawai')
 
 @section('content')
-    <div class="page-breadcrumb">
-        <div class="row align-items-center">
-            <div class="col-12 col-md-6">
-                <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">Edit Data Pegawai</h3>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb m-0 p-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('pegawais.index') }}">Pegawai</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Edit</li>
-                    </ol>
-                </nav>
-            </div>
-        </div>
-    </div>
+    <x-page-header title="Edit Data Pegawai" :breadcrumbs="[
+        ['label' => 'Dashboard', 'url' => route('dashboard')],
+        ['label' => 'Pegawai', 'url' => route('pegawais.index')],
+        ['label' => 'Edit'],
+    ]" />
 
     <div class="container-fluid">
+        <x-alert-flash />
+
         <div class="card">
             <div class="card-body">
-                @if ($errors->any())
-                    <div class="alert alert-danger">
-                        <strong>Terjadi kesalahan:</strong>
-                        <ul class="mb-0">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
 
                 <form action="{{ route('pegawais.update', $pegawai) }}" method="POST" novalidate>
                     @csrf
@@ -184,17 +167,9 @@
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-12">
-                            <a href="{{ route('pegawais.index') }}" class="btn btn-outline-secondary me-2">
-                                <i data-feather="x" class="feather-icon me-1"></i>
-                                Batal
-                            </a>
-                            <button type="submit" class="btn btn-primary">
-                                <i data-feather="save" class="feather-icon me-1"></i>
-                                Perbarui
-                            </button>
-                        </div>
+                    <div class="col-12">
+                        <a href="{{ route('pegawais.index') }}" class="btn btn-light me-2">Batal</a>
+                        <button type="submit" class="btn btn-primary">Perbarui</button>
                     </div>
                 </form>
             </div>

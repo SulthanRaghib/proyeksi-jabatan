@@ -3,23 +3,16 @@
 @section('title', 'Edit Konversi Predikat Kinerja')
 
 @section('content')
-    <div class="page-breadcrumb">
-        <div class="row align-items-center">
-            <div class="col-12 col-md-6">
-                <h3 class="page-title text-dark font-weight-medium mb-1">Edit Konversi Predikat</h3>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb m-0 p-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-muted">Dashboard</a></li>
-                        <li class="breadcrumb-item"><a href="{{ route('konversi-predikats.index') }}" class="text-muted">Konversi Predikat</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Edit</li>
-                    </ol>
-                </nav>
-            </div>
-        </div>
-    </div>
+    <x-page-header title="Edit Konversi Predikat" :breadcrumbs="[
+        ['label' => 'Dashboard', 'url' => route('dashboard')],
+        ['label' => 'Konversi Predikat', 'url' => route('konversi-predikats.index')],
+        ['label' => 'Edit'],
+    ]" />
 
     <div class="container-fluid">
-        <div class="card shadow-sm border-0">
+        <x-alert-flash />
+
+        <div class="card">
             <div class="card-body">
                 <h4 class="card-title mb-4">Edit Konversi Predikat Kinerja</h4>
                 <div class="alert alert-light border mb-4">

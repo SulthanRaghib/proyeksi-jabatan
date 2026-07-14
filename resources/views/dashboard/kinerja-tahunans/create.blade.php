@@ -3,16 +3,21 @@
 @section('title', 'Tambah Kinerja Tahunan')
 
 @section('content')
-    <div class="container-fluid px-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0 text-gray-800">Tambah Kinerja Tahunan</h1>
-                <p class="text-muted">Pegawai: <strong>{{ $pegawai->nama_lengkap }}</strong></p>
-            </div>
-            <a href="{{ route('projections.show', $pegawai) }}" class="btn btn-outline-secondary">
+    <x-page-header title="Tambah Kinerja Tahunan" subtitle="Pegawai: {{ $pegawai->nama_lengkap }}" :breadcrumbs="[
+        ['label' => 'Dashboard', 'url' => route('dashboard')],
+        ['label' => 'Proyeksi Jabatan', 'url' => route('projections.index')],
+        ['label' => $pegawai->nama_lengkap, 'url' => route('projections.show', $pegawai)],
+        ['label' => 'Tambah Kinerja'],
+    ]">
+        <x-slot:action>
+            <a href="{{ route('projections.show', $pegawai) }}" class="btn btn-light">
                 <i data-feather="arrow-left" width="16" height="16" class="me-1"></i> Kembali
             </a>
-        </div>
+        </x-slot:action>
+    </x-page-header>
+
+    <div class="container-fluid">
+        <x-alert-flash />
 
         <div class="row">
             {{-- Info Pegawai Sidebar --}}
@@ -45,7 +50,7 @@
 
             {{-- Form Kinerja --}}
             <div class="col-md-7 col-lg-8 mb-4">
-                <div class="card shadow-sm border-0 h-100">
+                <div class="card h-100">
                     <div class="card-body p-4">
                         <div class="d-flex justify-content-between align-items-center mb-4">
                             <h4 class="card-title mb-0">Form Kinerja Tahunan</h4>
@@ -88,10 +93,9 @@
                                 </div>
                             </div>
 
-                            <div class="d-flex justify-content-end mt-4">
-                                <button type="submit" class="btn btn-primary px-4 py-2">
-                                    <i data-feather="save" width="16" height="16" class="me-1"></i> Simpan Kinerja
-                                </button>
+                            <div class="col-12 mt-4">
+                                <a href="{{ route('projections.show', $pegawai) }}" class="btn btn-light me-2">Batal</a>
+                                <button type="submit" class="btn btn-primary">Simpan Kinerja</button>
                             </div>
                         </form>
                     </div>

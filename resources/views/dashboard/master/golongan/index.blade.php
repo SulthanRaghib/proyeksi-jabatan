@@ -2,104 +2,55 @@
 
 @section('title', 'Data Master - Golongan')
 
-
-
-
 @section('content')
-    <div class="page-breadcrumb">
-        <div class="row align-items-center">
-            <div class="col-12 col-md-6">
-                <h3 class="page-title text-truncate text-dark font-weight-medium mb-1">Data Master Golongan</h3>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb m-0 p-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Golongan</li>
-                    </ol>
-                </nav>
-            </div>
-            <div class="col-12 col-md-6 mt-3 mt-md-0 text-md-end">
-                <a href="{{ route('golongans.create') }}" class="btn btn-primary">
-                    <i data-feather="plus" class="feather-icon me-1"></i>
-                    Tambah Golongan
-                </a>
-            </div>
-        </div>
-    </div>
+    <x-page-header title="Data Master Golongan" :breadcrumbs="[
+        ['label' => 'Dashboard', 'url' => route('dashboard')],
+        ['label' => 'Golongan'],
+    ]">
+        <x-slot:action>
+            <a href="{{ route('golongans.create') }}" class="btn btn-primary">
+                <i data-feather="plus" class="feather-icon me-1"></i>
+                Tambah Golongan
+            </a>
+        </x-slot:action>
+    </x-page-header>
 
     <div class="container-fluid">
-        @if (session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
+        <x-alert-flash />
 
-        {{-- Filter & Search --}}
-        <div class="filter-card mb-4">
-            <div class="card-body p-3">
-                <form method="GET" action="{{ route('golongans.index') }}" class="row g-2 align-items-center">
-                    <div class="col-12 col-md-9">
-                        <div class="input-group">
-                            <span class="input-group-text bg-transparent border-end-0 text-muted ps-3">
-                                <i data-feather="search" width="16" height="16"></i>
-                            </span>
-                            <input type="text" name="q" value="{{ $search }}" class="form-control custom-input border-start-0 ps-0"
-                                placeholder="Cari nama golongan atau pangkat...">
+        <x-filter-bar :action="route('golongans.index')" :searchValue="$search" placeholder="Cari nama golongan atau pangkat..." />
+
+        @php
+            $tableHeaders = [
+                ['label' => 'No', 'attrs' => 'width="80"'],
+                'Nama Golongan',
+                'Pangkat',
+                ['label' => 'Aksi', 'attrs' => 'width="220" class="text-end"']
+            ];
+        @endphp
+
+        <x-data-table 
+            :headers="$tableHeaders"
+            :paginator="$golongans"
+            :isEmpty="$golongans->isEmpty()"
+            emptyIcon="layers"
+            emptyTitle="Belum ada data golongan"
+            emptyDescription="Tambahkan data golongan untuk memulai.">
+            @foreach ($golongans as $golongan)
+                <tr>
+                    <td>{{ $loop->iteration + ($golongans->currentPage() - 1) * $golongans->perPage() }}</td>
+                    <td>{{ $golongan->nama_golongan }}</td>
+                    <td>{{ $golongan->pangkat }}</td>
+                    <td>
+                        <div class="d-flex justify-content-end gap-2">
+                            <x-action-button type="edit" :href="route('golongans.edit', $golongan)" />
+                            <x-action-button type="delete_modal" 
+                                action="{{ route('golongans.destroy', $golongan) }}" 
+                                message="Yakin ingin menghapus golongan {{ $golongan->nama_golongan }}?" />
                         </div>
-                    </div>
-                    <div class="col-12 col-md-3 d-grid">
-                        <button type="submit" class="btn btn-primary rounded-pill fw-medium shadow-sm">
-                            Terapkan Filter
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        {{-- Table Card --}}
-        <div class="table-card">
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table modern-table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th width="80">No</th>
-                                <th>Nama Golongan</th>
-                                <th>Pangkat</th>
-                                <th width="220" class="text-end">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse ($golongans as $golongan)
-                                <tr>
-                                    <td>{{ $loop->iteration + ($golongans->currentPage() - 1) * $golongans->perPage() }}
-                                    </td>
-                                    <td>{{ $golongan->nama_golongan }}</td>
-                                    <td>{{ $golongan->pangkat }}</td>
-                                    <td>
-                                        <div class="d-flex justify-content-end gap-2">
-                                            <x-action-button type="edit" :href="route('golongans.edit', $golongan)" />
-                                            <x-action-button type="delete_modal" 
-                                                action="{{ route('golongans.destroy', $golongan) }}" 
-                                                message="Yakin ingin menghapus golongan {{ $golongan->nama_golongan }}?" />
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">Belum ada data golongan.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-
-                </div>
-            </div>
-            
-            @if ($golongans->hasPages())
-                <div class="card-footer bg-white border-top p-3">
-                    {{ $golongans->links() }}
-                </div>
-            @endif
-        </div>
-        </div>
+                    </td>
+                </tr>
+            @endforeach
+        </x-data-table>
     </div>
 @endsection

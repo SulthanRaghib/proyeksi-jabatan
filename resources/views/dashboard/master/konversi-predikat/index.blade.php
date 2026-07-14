@@ -4,74 +4,7 @@
 
 @push('styles')
     <style>
-        /* Modern Stat Cards */
-        .stat-card {
-            border-radius: 1rem;
-            border: none;
-            overflow: hidden;
-            position: relative;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: #ffffff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-            display: flex;
-            align-items: center;
-            padding: 1.5rem;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 1rem;
-            flex-shrink: 0;
-        }
-
-        .stat-bg-icon {
-            position: absolute;
-            right: -15px;
-            bottom: -15px;
-            opacity: 0.04;
-            transform: rotate(-15deg);
-            transition: all 0.5s ease;
-        }
-
-        .stat-card:hover .stat-bg-icon {
-            transform: rotate(0) scale(1.2);
-            opacity: 0.08;
-        }
-
-        /* Modern Filters */
-        .filter-card {
-            border-radius: 1rem;
-            border: none;
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-        }
-        
-        .custom-input {
-            border-radius: 0.75rem;
-            padding: 0.6rem 1rem;
-            border: 1px solid #e5e7eb;
-            background-color: #f9fafb;
-            transition: all 0.2s;
-        }
-        
-        .custom-input:focus {
-            background-color: #ffffff;
-            border-color: #6366f1;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-        }
-
-        /* Jabatan Cards Overhaul */
+        /* Jabatan Cards — unique to this page */
         .jabatan-card {
             border: 1px solid #f3f4f6;
             border-radius: 1rem;
@@ -177,7 +110,6 @@
             font-weight: 600;
         }
 
-        /* Action buttons inherited from shared-styles, just add opacity hover effect */
         .konversi-item .d-flex.justify-content-center {
             opacity: 0.7;
             transition: opacity 0.2s;
@@ -190,117 +122,48 @@
 @endpush
 
 @section('content')
-    <div class="page-breadcrumb">
-        <div class="row align-items-center">
-            <div class="col-12 col-md-6">
-                <h3 class="page-title text-dark font-weight-medium mb-1">Konversi Predikat Kinerja</h3>
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb m-0 p-0">
-                        <li class="breadcrumb-item"><a href="{{ route('dashboard') }}" class="text-muted">Dashboard</a>
-                        </li>
-                        <li class="breadcrumb-item"><a href="#" class="text-muted">Data Master</a></li>
-                        <li class="breadcrumb-item active" aria-current="page">Konversi Predikat</li>
-                    </ol>
-                </nav>
-            </div>
-            <div class="col-12 col-md-6 mt-3 mt-md-0 text-md-end">
-                <a href="{{ route('konversi-predikats.create') }}" class="btn btn-primary">
-                    <i data-feather="plus" class="feather-icon me-1"></i>
-                    Tambah Konversi
-                </a>
-            </div>
-        </div>
-    </div>
+    <x-page-header title="Konversi Predikat Kinerja" :breadcrumbs="[
+        ['label' => 'Dashboard', 'url' => route('dashboard')],
+        ['label' => 'Data Master'],
+        ['label' => 'Konversi Predikat'],
+    ]">
+        <x-slot:action>
+            <a href="{{ route('konversi-predikats.create') }}" class="btn btn-primary">
+                <i data-feather="plus" class="feather-icon me-1"></i>
+                Tambah Konversi
+            </a>
+        </x-slot:action>
+    </x-page-header>
 
     <div class="container-fluid">
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <i data-feather="check-circle" class="me-2" width="18" height="18"></i>
-                {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-        @endif
+        <x-alert-flash />
 
         {{-- Stats Row --}}
         <div class="row mb-4 g-3">
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-primary-subtle text-primary">
-                        <i data-feather="repeat" width="24" height="24"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Total Konversi</p>
-                        <h3 class="mb-0 text-dark fw-bolder">{{ $stats['total_konversi'] }}</h3>
-                    </div>
-                    <i data-feather="repeat" width="100" height="100" class="stat-bg-icon text-primary"></i>
-                </div>
+                <x-stat-card title="Total Konversi" :value="$stats['total_konversi']" icon="repeat" color="primary" />
             </div>
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-info-subtle text-info">
-                        <i data-feather="briefcase" width="24" height="24"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Total Jabatan</p>
-                        <h3 class="mb-0 text-dark fw-bolder">{{ $stats['total_jabatan'] }}</h3>
-                    </div>
-                    <i data-feather="briefcase" width="100" height="100" class="stat-bg-icon text-info"></i>
-                </div>
+                <x-stat-card title="Total Jabatan" :value="$stats['total_jabatan']" icon="briefcase" color="info" />
             </div>
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-success-subtle text-success">
-                        <i data-feather="check-circle" width="24" height="24"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Jabatan Terisi</p>
-                        <h3 class="mb-0 text-success fw-bolder">{{ $stats['jabatan_terisi'] }}</h3>
-                    </div>
-                    <i data-feather="check-circle" width="100" height="100" class="stat-bg-icon text-success"></i>
-                </div>
+                <x-stat-card title="Jabatan Terisi" :value="$stats['jabatan_terisi']" icon="check-circle" color="success" />
             </div>
             <div class="col-12 col-sm-6 col-xl-3">
-                <div class="stat-card">
-                    <div class="stat-icon bg-warning-subtle text-warning">
-                        <i data-feather="alert-circle" width="24" height="24"></i>
-                    </div>
-                    <div>
-                        <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">Belum Terisi</p>
-                        <h3 class="mb-0 text-warning fw-bolder">{{ $stats['jabatan_belum_terisi'] }}</h3>
-                    </div>
-                    <i data-feather="alert-circle" width="100" height="100" class="stat-bg-icon text-warning"></i>
-                </div>
+                <x-stat-card title="Belum Terisi" :value="$stats['jabatan_belum_terisi']" icon="alert-circle" color="warning" />
             </div>
         </div>
 
         {{-- Filter & Search --}}
-        <div class="filter-card mb-4">
-            <div class="card-body p-3">
-                <form method="GET" action="{{ route('konversi-predikats.index') }}" class="row g-2 align-items-center">
-                    <div class="col-12 col-md-5">
-                        <div class="input-group">
-                            <span class="input-group-text bg-transparent border-end-0 text-muted ps-3">
-                                <i data-feather="search" width="16" height="16"></i>
-                            </span>
-                            <input type="text" name="q" value="{{ $search }}" class="form-control custom-input border-start-0 ps-0"
-                                placeholder="Cari nama jabatan atau jenjang...">
-                        </div>
-                    </div>
-                    <div class="col-12 col-md-4">
-                        <select name="kategori" class="form-select custom-input">
-                            <option value="" @selected($filterKategori === '')>Semua Kategori</option>
-                            <option value="keahlian" @selected($filterKategori === 'keahlian')>Keahlian</option>
-                            <option value="keterampilan" @selected($filterKategori === 'keterampilan')>Keterampilan</option>
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-3 d-grid">
-                        <button type="submit" class="btn btn-primary rounded-pill fw-medium shadow-sm">
-                            Terapkan Filter
-                        </button>
-                    </div>
-                </form>
+        <x-filter-bar :action="route('konversi-predikats.index')" :searchValue="$search" placeholder="Cari nama jabatan atau jenjang...">
+            <div class="col-12 col-md-3">
+                <select name="kategori" class="form-select custom-input">
+                    <option value="" @selected($filterKategori === '')>Semua Kategori</option>
+                    <option value="keahlian" @selected($filterKategori === 'keahlian')>Keahlian</option>
+                    <option value="keterampilan" @selected($filterKategori === 'keterampilan')>Keterampilan</option>
+                </select>
             </div>
-        </div>
+        </x-filter-bar>
 
         {{-- Konversi Cards per Jabatan --}}
         @php
@@ -352,18 +215,15 @@
                                 </div>
                                 <div class="d-flex gap-1">
                                     @if (!$hasKonversi)
-                                        <form action="{{ route('konversi-predikats.generate') }}" method="POST"
-                                            class="d-inline">
+                                        <form action="{{ route('konversi-predikats.generate') }}" method="POST" class="d-inline">
                                             @csrf
                                             <input type="hidden" name="jabatan_id" value="{{ $jabatan->id }}">
-                                            <button type="submit" class="btn btn-sm btn-success"
-                                                title="Generate otomatis dari koefisien">
+                                            <button type="submit" class="btn btn-sm btn-success" title="Generate otomatis dari koefisien">
                                                 <i data-feather="zap" width="14" height="14"></i>
                                             </button>
                                         </form>
                                     @else
-                                        <form action="{{ route('konversi-predikats.generate') }}" method="POST"
-                                            class="d-inline">
+                                        <form action="{{ route('konversi-predikats.generate') }}" method="POST" class="d-inline">
                                             @csrf
                                             <input type="hidden" name="jabatan_id" value="{{ $jabatan->id }}">
                                             <button type="submit" class="btn btn-sm btn-outline-secondary"
@@ -416,12 +276,7 @@
         @endforeach
 
         @if ($jabatans->isEmpty())
-            <div class="card shadow-sm border-0">
-                <div class="card-body text-center py-5">
-                    <i data-feather="inbox" class="text-muted mb-3" width="48" height="48"></i>
-                    <p class="text-muted mb-0">Tidak ada data yang cocok dengan filter pencarian Anda.</p>
-                </div>
-            </div>
+            <x-empty-state icon="inbox" title="Tidak ada data" description="Tidak ada data yang cocok dengan filter pencarian Anda." />
         @endif
     </div>
 @endsection

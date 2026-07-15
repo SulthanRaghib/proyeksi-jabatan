@@ -4,13 +4,21 @@
         <span class="text-muted small">AK Saat Ini</span>
     </div>
     <div class="col-3 border-end">
-        <h2 class="mb-0 text-dark">{{ number_format($proj['target_ak'], 0, ',', '.') }}</h2>
+        @if($type === 'Jenjang' && $proj['target_ak'] == 0 && $proj['next_target_name'] === 'Maksimal')
+            <h4 class="mb-0 text-dark mt-1">Maksimal</h4>
+        @else
+            <h2 class="mb-0 text-dark">{{ number_format($proj['target_ak'], 0, ',', '.') }}</h2>
+        @endif
         <span class="text-muted small">Target AK</span>
     </div>
     <div class="col-3 border-end">
-        <h2 class="mb-0 {{ $proj['deficit_ak'] <= 0 ? 'text-success' : 'text-danger' }}">
-            {{ number_format($proj['deficit_ak'], 2, ',', '.') }}
-        </h2>
+        @if($type === 'Jenjang' && $proj['target_ak'] == 0 && $proj['next_target_name'] === 'Maksimal')
+            <h4 class="mb-0 text-muted mt-1">-</h4>
+        @else
+            <h2 class="mb-0 {{ $proj['deficit_ak'] <= 0 ? 'text-success' : 'text-danger' }}">
+                {{ number_format($proj['deficit_ak'], 2, ',', '.') }}
+            </h2>
+        @endif
         <span class="text-muted small">Kebutuhan AK</span>
     </div>
     <div class="col-3">
@@ -24,13 +32,21 @@
 <div class="mb-4">
     <div class="d-flex justify-content-between mb-1">
         <span class="text-muted">Progres Pencapaian</span>
-        <span class="fw-medium">{{ number_format($proj['progress_percentage'], 1, ',', '.') }}%</span>
+        @if($type === 'Jenjang' && $proj['target_ak'] == 0 && $proj['next_target_name'] === 'Maksimal')
+            <span class="fw-medium text-success">Maksimal</span>
+        @else
+            <span class="fw-medium">{{ number_format($proj['progress_percentage'], 1, ',', '.') }}%</span>
+        @endif
     </div>
     <div class="progress" style="height: 10px;">
-        <div class="progress-bar {{ $proj['is_held_by_speedbump'] || $proj['is_held_by_ukom'] ? 'bg-warning' : ($proj['is_ready_mathematically'] ? 'bg-success' : 'bg-primary') }}"
-            role="progressbar" style="width: {{ min($proj['progress_percentage'], 100) }}%"
-            aria-valuenow="{{ min($proj['progress_percentage'], 100) }}" aria-valuemin="0"
-            aria-valuemax="100"></div>
+        @if($type === 'Jenjang' && $proj['target_ak'] == 0 && $proj['next_target_name'] === 'Maksimal')
+            <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+        @else
+            <div class="progress-bar {{ $proj['is_held_by_speedbump'] || $proj['is_held_by_ukom'] || ($proj['is_held_by_puncak'] ?? false) ? 'bg-warning' : ($proj['is_ready_mathematically'] ? 'bg-success' : 'bg-primary') }}"
+                role="progressbar" style="width: {{ min($proj['progress_percentage'], 100) }}%"
+                aria-valuenow="{{ min($proj['progress_percentage'], 100) }}" aria-valuemin="0"
+                aria-valuemax="100"></div>
+        @endif
     </div>
     
     @if($proj['surplus_ak'] > 0)
@@ -61,7 +77,22 @@
     $icon = $isFast ? 'zap' : 'calendar';
 @endphp
 
-@if($proj['is_fully_ready'])
+@if($type === 'Jenjang' && $proj['target_ak'] == 0 && $proj['next_target_name'] === 'Maksimal')
+    <div class="estimation-alert-box success mb-2">
+        <div class="icon-wrapper">
+            <i data-feather="award" width="24" height="24"></i>
+        </div>
+        <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start">
+                <h5 class="mb-1 text-dark fw-bold">Jenjang Puncak Kategori</h5>
+                <span class="badge bg-white text-dark border shadow-sm">Target: {{ $proj['current_target_name'] }}</span>
+            </div>
+            <div class="text-dark opacity-75 mt-1" style="font-size: 0.9rem; line-height: 1.5;">
+                ✨ Pegawai telah mencapai jenjang maksimal dalam kategori jabatannya saat ini. Tidak ada target kenaikan jenjang reguler selanjutnya.
+            </div>
+        </div>
+    </div>
+@elseif($proj['is_fully_ready'])
     <div class="estimation-alert-box success mb-2">
         <div class="icon-wrapper">
             <i data-feather="check-circle" width="24" height="24"></i>
@@ -73,6 +104,21 @@
             </div>
             <div class="text-dark opacity-75 mt-1" style="font-size: 0.9rem; line-height: 1.5;">
                 ✨ Target Angka Kredit telah tercapai, dan syarat masa jabatan telah terpenuhi.
+            </div>
+        </div>
+    </div>
+@elseif($proj['is_held_by_puncak'] ?? false)
+    <div class="estimation-alert-box warning mb-2">
+        <div class="icon-wrapper bg-warning text-dark">
+            <i data-feather="lock" width="24" height="24"></i>
+        </div>
+        <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                <h5 class="mb-1 text-dark fw-bold">Kenaikan Pangkat Terkunci</h5>
+                <span class="badge bg-white text-dark border shadow-sm">Target: {{ $proj['current_target_name'] }} <i data-feather="arrow-right" class="mx-1" width="10" height="10"></i> {{ $proj['next_target_name'] }}</span>
+            </div>
+            <div class="text-dark opacity-75 mt-1" style="font-size: 0.9rem; line-height: 1.5;">
+                Target AK kenaikan pangkat telah tercapai. Namun pegawai berada di pangkat puncak pada jenjangnya saat ini ({{ $pegawai->jabatan->jenjang ?? '-' }}). Pegawai wajib diusulkan dan lulus <strong>Kenaikan Jenjang</strong> terlebih dahulu sebelum pangkat dapat diproses.
             </div>
         </div>
     </div>

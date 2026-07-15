@@ -146,14 +146,81 @@ class UsulanKenaikanPangkatService
 
             // Update Pegawai Golongan and unlock
             $pegawai = $usulan->pegawai;
-            $pegawai->update([
+            
+            $updateFields = [
                 'golongan_id' => $usulan->golongan_baru_id,
                 'tmt_golongan' => $data['tmt_golongan_baru'],
                 'is_locked_usulan' => false,
-            ]);
+            ];
 
-            // Tidak ada lagi pemotongan AK (transaksi minus) di tabel riwayat_paks
-            // Saldo total_ak dipertahankan tetap utuh sesuai SPEK LOGIKA 1.2
+            // If it is a Kenaikan Jenjang, we also update the Jabatan and TMT Jabatan
+            $nextJabatan = null;
+            if ($usulan->is_lintas_jenjang) {
+                $currentJabatan = $pegawai->jabatan;
+                if ($currentJabatan) {
+                    $nextJabatan = \App\Models\Jabatan::where('kategori', $currentJabatan->kategori)
+                        ->where('id', '>', $currentJabatan->id)
+                        ->orderBy('id')
+                        ->first();
+                        
+                    if ($nextJabatan) {
+                        $updateFields['jabatan_id'] = $nextJabatan->id;
+                        $updateFields['tmt_jabatan'] = $data['tmt_golongan_baru'];
+                    }
+                }
+            }
+
+            $pegawai->update($updateFields);
+
+            // Create baseline/carry-over PAK records
+            if ($usulan->is_lintas_jenjang) {
+                // Kenaikan Jenjang: Reset AK, give AK Dasar
+                $newJenjang = $nextJabatan ? $nextJabatan->jenjang : '';
+                $newGolongan = \App\Models\Golongan::find($usulan->golongan_baru_id);
+                $newGolonganName = $newGolongan ? $newGolongan->nama_golongan : '';
+                
+                $akDasar = $this->getAkDasar($newJenjang, $newGolonganName);
+                
+                \App\Models\RiwayatPak::create([
+                    'pegawai_id' => $pegawai->id,
+                    'no_pak' => 'DASAR-KJ-' . $usulan->id,
+                    'tanggal_pak' => $data['tmt_golongan_baru'],
+                    'ak_tambahan' => $akDasar,
+                    'ak_total' => $akDasar,
+                    'is_konversi_baru' => true,
+                    'periode_awal' => $data['tmt_golongan_baru'],
+                    'periode_akhir' => $data['tmt_golongan_baru'],
+                ]);
+            } else {
+                // Kenaikan Pangkat: Carry over surplus AK
+                if ($usulan->sisa_ak > 0) {
+                    \App\Models\RiwayatPak::create([
+                        'pegawai_id' => $pegawai->id,
+                        'no_pak' => 'SURPLUS-KP-' . $usulan->id,
+                        'tanggal_pak' => $data['tmt_golongan_baru'],
+                        'ak_tambahan' => $usulan->sisa_ak,
+                        'ak_total' => $usulan->sisa_ak,
+                        'is_konversi_baru' => true,
+                        'periode_awal' => $data['tmt_golongan_baru'],
+                        'periode_akhir' => $data['tmt_golongan_baru'],
+                    ]);
+                }
+            }
+
+            // Recalculate all records sequentially to ensure chronological correctness
+            $allRecords = \App\Models\RiwayatPak::query()
+                ->where('pegawai_id', $pegawai->id)
+                ->orderBy('tanggal_pak')
+                ->orderBy('id')
+                ->get();
+
+            $runningTotal = 0;
+            foreach ($allRecords as $record) {
+                $runningTotal += (float) $record->ak_tambahan;
+                if (round((float) $record->ak_total, 3) !== round($runningTotal, 3)) {
+                    $record->updateQuietly(['ak_total' => $runningTotal]);
+                }
+            }
 
             DB::commit();
             return ['success' => true, 'message' => 'Persetujuan Kenaikan Pangkat berhasil dieksekusi. Data AK dan Golongan telah diperbarui.'];
@@ -161,5 +228,46 @@ class UsulanKenaikanPangkatService
             DB::rollBack();
             throw $e;
         }
+    }
+
+    /**
+     * Mendapatkan Angka Kredit Dasar sesuai Lampiran II PerBKN 3/2023.
+     */
+    public function getAkDasar(string $jenjang, string $golongan): float
+    {
+        $jenjang = strtolower(trim($jenjang));
+        $golongan = trim($golongan);
+        
+        // Keahlian
+        if ($jenjang === 'pertama' || $jenjang === 'ahli pertama') {
+            return $golongan === 'III/b' ? 50.0 : 0.0;
+        }
+        if ($jenjang === 'muda' || $jenjang === 'ahli muda') {
+            return $golongan === 'III/d' ? 50.0 : 0.0;
+        }
+        if ($jenjang === 'madya' || $jenjang === 'ahli madya') {
+            if ($golongan === 'IV/b') return 150.0;
+            if ($golongan === 'IV/c') return 300.0;
+            return 0.0;
+        }
+        if ($jenjang === 'utama' || $jenjang === 'ahli utama') {
+            return $golongan === 'IV/e' ? 200.0 : 0.0;
+        }
+        
+        // Keterampilan
+        if ($jenjang === 'pemula') {
+            return 0.0;
+        }
+        if ($jenjang === 'terampil') {
+            return $golongan === 'II/d' ? 20.0 : 0.0;
+        }
+        if ($jenjang === 'mahir') {
+            return $golongan === 'III/b' ? 50.0 : 0.0;
+        }
+        if ($jenjang === 'penyelia') {
+            return $golongan === 'III/d' ? 100.0 : 0.0;
+        }
+        
+        return 0.0;
     }
 }

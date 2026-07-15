@@ -10,7 +10,8 @@ use Carbon\Carbon;
 
 class ProjectionService
 {
-    private const MINIMUM_YEARS_IN_RANK = 2; // For both Pangkat and Jenjang
+    private const MINIMUM_YEARS_PANGKAT = 2;
+    private const MINIMUM_YEARS_JENJANG = 1;
 
     /**
      * Calculates the full projection for an employee, returning both 'pangkat' and 'jenjang'.
@@ -56,6 +57,10 @@ class ProjectionService
         // 1. Add AK from PAKs that happened ON or AFTER the TMT
         if ($pegawai->relationLoaded('riwayatPaks') && $tmtDate) {
             foreach ($pegawai->riwayatPaks as $pak) {
+                if ($targetType === 'jenjang' && str_starts_with($pak->no_pak, 'SURPLUS-KP-')) {
+                    continue;
+                }
+
                 if (Carbon::parse($pak->tanggal_pak)->gte($tmtDate)) {
                     $currentAk += (float) $pak->ak_tambahan;
                 } else {
@@ -68,7 +73,10 @@ class ProjectionService
         $lastPak = null;
         if ($pegawai->relationLoaded('riwayatPaks') && $tmtDate) {
             $lastPak = $pegawai->riwayatPaks
-                ->filter(function($pak) use ($tmtDate) {
+                ->filter(function($pak) use ($tmtDate, $targetType) {
+                    if ($targetType === 'jenjang' && str_starts_with($pak->no_pak, 'SURPLUS-KP-')) {
+                        return false;
+                    }
                     return Carbon::parse($pak->tanggal_pak)->gte($tmtDate);
                 })
                 ->sortByDesc('tanggal_pak')
@@ -119,7 +127,7 @@ class ProjectionService
 
         // Regulatory constraints
         // Pangkat: min 2 years from tmt_golongan
-        // Jenjang: min 2 years from tmt_jabatan
+        // Jenjang: min 1 year from tmt_jabatan
         $tmt = $targetType === 'pangkat' ? $pegawai->tmt_golongan : $pegawai->tmt_jabatan;
         
         $monthsServed = 0;
@@ -130,8 +138,9 @@ class ProjectionService
             $yearsServed = (int) $tmtDate->diffInYears(now());
         }
         
-        $remainingMinimumMonths = max(0, (self::MINIMUM_YEARS_IN_RANK * 12) - $monthsServed);
-        $remainingMinimumYears = max(0, self::MINIMUM_YEARS_IN_RANK - $yearsServed);
+        $minYears = $targetType === 'pangkat' ? self::MINIMUM_YEARS_PANGKAT : self::MINIMUM_YEARS_JENJANG;
+        $remainingMinimumMonths = max(0, ($minYears * 12) - $monthsServed);
+        $remainingMinimumYears = max(0, $minYears - $yearsServed);
 
         $actualMonthsNeeded = max($totalMonthsNeeded, $remainingMinimumMonths);
         $actualYearsNeeded = (int) ceil($actualMonthsNeeded / 12);
@@ -147,9 +156,40 @@ class ProjectionService
         $targetMonth = $projectedDate->month;
         $targetYear = $projectedDate->year;
         
+        // Resolve target names
+        $currentTargetName = '-';
+        $nextTargetName = '-';
+        $nextGolonganId = null;
+        $isPangkatPuncak = false;
+        
+        if ($targetType === 'pangkat' && $pegawai->golongan) {
+            $currentTargetName = $pegawai->golongan->nama_golongan;
+            $nextGolongan = \App\Models\Golongan::where('id', '>', $pegawai->golongan_id)->orderBy('id')->first();
+            $nextTargetName = $nextGolongan ? $nextGolongan->nama_golongan : 'Maksimal';
+            $nextGolonganId = $nextGolongan ? $nextGolongan->id : null;
+            
+            // Cek Pangkat Puncak berdasarkan Pangkat/Golongan
+            $pangkatPuncakList = ['III/b', 'III/d', 'IV/c', 'IV/e', 'II/d'];
+            if (in_array($pegawai->golongan->pangkat, $pangkatPuncakList)) {
+                $isPangkatPuncak = true;
+            }
+        } elseif ($targetType === 'jenjang' && $jabatan) {
+            $currentTargetName = $jabatan->jenjang;
+            $nextJabatan = \App\Models\Jabatan::where('kategori', $jabatan->kategori)->where('id', '>', $jabatan->id)->orderBy('id')->first();
+            $nextTargetName = $nextJabatan ? $nextJabatan->jenjang : 'Maksimal';
+        }
+
         $isReadyMathematically = $deficitAk <= 0;
+        
+        // If it's Jenjang Maksimal and target is 0, they are not really 'ready', they are maxed out
+        if ($targetType === 'jenjang' && $targetAk == 0 && $nextTargetName === 'Maksimal') {
+            $isReadyMathematically = false; 
+            $deficitAk = 0;
+        }
+
         $isHeldBySpeedbump = $isReadyMathematically && $remainingMinimumYears > 0;
         $isHeldByUkom = false;
+        $isHeldByPuncak = false;
 
         // Jenjang requires Ukom
         if ($targetType === 'jenjang' && $isReadyMathematically && !$isHeldBySpeedbump) {
@@ -157,8 +197,13 @@ class ProjectionService
                 $isHeldByUkom = true;
             }
         }
+        
+        // Pangkat blocked by Jenjang if at Pangkat Puncak
+        if ($targetType === 'pangkat' && $isReadyMathematically && !$isHeldBySpeedbump && $isPangkatPuncak) {
+            $isHeldByPuncak = true;
+        }
 
-        $isFullyReady = $isReadyMathematically && !$isHeldBySpeedbump && !$isHeldByUkom;
+        $isFullyReady = $isReadyMathematically && !$isHeldBySpeedbump && !$isHeldByUkom && !$isHeldByPuncak;
 
         if ($isFullyReady) {
             $periodLabel = "Sudah Memenuhi";
@@ -187,29 +232,6 @@ class ProjectionService
             $estimatedTimeText = count($timeStringParts) > 0 ? implode(" ", $timeStringParts) : "0 bulan";
         }
 
-        // Resolve target names
-        $currentTargetName = '-';
-        $nextTargetName = '-';
-        $nextGolonganId = null;
-        $isPangkatPuncak = false;
-        
-        if ($targetType === 'pangkat' && $pegawai->golongan) {
-            $currentTargetName = $pegawai->golongan->nama_golongan;
-            $nextGolongan = \App\Models\Golongan::where('id', '>', $pegawai->golongan_id)->orderBy('id')->first();
-            $nextTargetName = $nextGolongan ? $nextGolongan->nama_golongan : 'Maksimal';
-            $nextGolonganId = $nextGolongan ? $nextGolongan->id : null;
-            
-            // Cek Pangkat Puncak berdasarkan Pangkat/Golongan
-            $pangkatPuncakList = ['III/b', 'III/d', 'IV/c', 'IV/e', 'II/d'];
-            if (in_array($pegawai->golongan->pangkat, $pangkatPuncakList)) {
-                $isPangkatPuncak = true;
-            }
-        } elseif ($targetType === 'jenjang' && $jabatan) {
-            $currentTargetName = $jabatan->jenjang;
-            $nextJabatan = \App\Models\Jabatan::where('kategori', $jabatan->kategori)->where('id', '>', $jabatan->id)->orderBy('id')->first();
-            $nextTargetName = $nextJabatan ? $nextJabatan->jenjang : 'Maksimal';
-        }
-
         return [
             'current_ak' => round($currentAk, 3),
             'target_ak' => round($targetAk, 3),
@@ -226,6 +248,7 @@ class ProjectionService
             'is_ready_mathematically' => $isReadyMathematically,
             'is_held_by_speedbump' => $isHeldBySpeedbump,
             'is_held_by_ukom' => $isHeldByUkom,
+            'is_held_by_puncak' => $isHeldByPuncak,
             'is_fully_ready' => $isFullyReady,
             'progress_percentage' => round($progressPercentage, 2),
             'tmt_used' => $tmt ? $tmt->format('d/m/Y') : '-',

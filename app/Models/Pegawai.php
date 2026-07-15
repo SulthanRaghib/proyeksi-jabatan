@@ -85,7 +85,7 @@ class Pegawai extends Model
     public function activeUsulan(): HasOne
     {
         return $this->hasOne(UsulanKenaikanPangkat::class)
-            ->whereIn('status', ['draft', 'sedang_diproses'])
+            ->whereIn('status', ['draft', 'sedang_diproses', 'PROSES_KP_REGULER', 'PROSES_KENAIKAN_JENJANG'])
             ->latestOfMany();
     }
 

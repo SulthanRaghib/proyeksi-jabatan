@@ -73,11 +73,11 @@ class RiwayatPakService
                 $koefisien = $riwayatPak->pegawai->jabatan->koefisien_tahunan ?? null;
 
                 \App\Models\KinerjaTahunan::updateOrCreate([
-                        'pegawai_id' => $riwayatPak->pegawai_id,
-                        'tahun' => $tahun,
+                        'pak_id' => $riwayatPak->id,
                     ],
                     [
-                        'pak_id' => $riwayatPak->id,
+                        'pegawai_id' => $riwayatPak->pegawai_id,
+                        'tahun' => $tahun,
                         'predikat' => $predikat,
                         'koefisien_saat_itu' => $koefisien,
                         'ak_didapat' => $riwayatPak->ak_tambahan,
@@ -147,11 +147,11 @@ class RiwayatPakService
                 $koefisien = $riwayatPak->pegawai->jabatan->koefisien_tahunan ?? null;
 
                 \App\Models\KinerjaTahunan::updateOrCreate([
-                        'pegawai_id' => $riwayatPak->pegawai_id,
-                        'tahun' => $tahun,
+                        'pak_id' => $riwayatPak->id,
                     ],
                     [
-                        'pak_id' => $riwayatPak->id,
+                        'pegawai_id' => $riwayatPak->pegawai_id,
+                        'tahun' => $tahun,
                         'predikat' => $predikat,
                         'koefisien_saat_itu' => $koefisien,
                         'ak_didapat' => $riwayatPak->ak_tambahan,
@@ -176,6 +176,9 @@ class RiwayatPakService
     {
         DB::transaction(function () use ($riwayatPak) {
             $pegawaiId = $riwayatPak->pegawai_id;
+
+            // Delete associated KinerjaTahunan records
+            \App\Models\KinerjaTahunan::where('pak_id', $riwayatPak->id)->delete();
 
             $riwayatPak->delete();
 

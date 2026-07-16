@@ -27,7 +27,13 @@
                                 <tbody>
                                     @forelse($pegawai->kinerjaTahunans as $kinerja)
                                         <tr>
-                                            <td class="fw-medium">{{ $kinerja->tahun }}</td>
+                                            <td class="fw-medium">
+                                                @if($kinerja->pak)
+                                                    {{ $kinerja->pak->periode_penilaian_label }}
+                                                @else
+                                                    {{ $kinerja->tahun }}
+                                                @endif
+                                            </td>
                                             <td>
                                                 <span class="badge border {{ $predikatBadgeClasses[$kinerja->predikat] ?? 'bg-secondary' }} px-2 py-1">
                                                     {{ $predikatLabels[$kinerja->predikat] ?? $kinerja->predikat }}

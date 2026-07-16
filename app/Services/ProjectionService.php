@@ -90,12 +90,17 @@ class ProjectionService
                 $lastKinerjaYear = Carbon::parse($lastPak->tanggal_pak)->year;
             }
         } else {
-            $lastKinerjaYear = $tmtDate ? (int) $tmtDate->year : ((int) now()->year - 1);
+            $lastKinerjaYear = $tmtDate ? (int) $tmtDate->year - 1 : ((int) now()->year - 1);
         }
 
-        // 2. Add AK from Kinerja Tahunan that happened AFTER the last calculated year
+        // 2. Add AK from Kinerja Tahunan that happened AFTER the last calculated year and are NOT linked to any PAK
         if ($pegawai->relationLoaded('kinerjaTahunans')) {
-            $kinerjas = $pegawai->kinerjaTahunans->where('tahun', '>', $lastKinerjaYear)->sortBy('tahun');
+            $kinerjas = $pegawai->kinerjaTahunans
+                ->filter(function($kinerja) use ($lastKinerjaYear) {
+                    return $kinerja->tahun > $lastKinerjaYear && is_null($kinerja->pak_id);
+                })
+                ->sortBy('tahun');
+
             foreach ($kinerjas as $kinerja) {
                 $currentAk += (float) $kinerja->ak_didapat;
                 $lastKinerjaYear = $kinerja->tahun;

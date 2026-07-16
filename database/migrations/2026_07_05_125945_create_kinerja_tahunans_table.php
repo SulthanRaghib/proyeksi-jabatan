@@ -14,14 +14,13 @@ return new class extends Migration
         Schema::create('kinerja_tahunans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pegawai_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('pak_id')->nullable()->constrained('riwayat_paks')->nullOnDelete();
+            // Link directly with unique constraint on pak_id (allowing multiple triwulanan records per year)
+            $table->foreignId('pak_id')->nullable()->unique()->constrained('riwayat_paks')->nullOnDelete();
             $table->integer('tahun');
             $table->string('predikat', 50);
             $table->decimal('koefisien_saat_itu', 8, 3)->nullable();
             $table->decimal('ak_didapat', 8, 3);
             $table->timestamps();
-            
-            $table->unique(['pegawai_id', 'tahun']);
         });
     }
 

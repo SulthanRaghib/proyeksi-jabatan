@@ -24,12 +24,13 @@ class KinerjaTahunanController extends Controller
     public function create(Request $request)
     {
         $pegawaiId = $request->input('pegawai_id');
-        $pegawai = Pegawai::with(['jabatan.konversiPredikat', 'golongan', 'unitKerja'])->findOrFail($pegawaiId);
+        $pegawai = Pegawai::with(['jabatan.konversiPredikat', 'golongan', 'unitKerja', 'kinerjaTahunans', 'riwayatPaks'])->findOrFail($pegawaiId);
         
         return view('dashboard.kinerja-tahunans.create', [
             'pegawai' => $pegawai,
             'predikatOptions' => KonversiPredikatKinerja::PREDIKAT_OPTIONS,
             'predikatLabels' => KonversiPredikatKinerja::PREDIKAT_LABELS,
+            'predikatBadgeClasses' => KonversiPredikatKinerja::PREDIKAT_BADGE_CLASSES,
             'menuGroups' => DashboardUiData::menuGroups(),
             'notifications' => DashboardUiData::notifications(),
         ]);
@@ -48,13 +49,14 @@ class KinerjaTahunanController extends Controller
 
     public function edit(KinerjaTahunan $kinerjaTahunan)
     {
-        $kinerjaTahunan->load('pegawai.jabatan');
+        $kinerjaTahunan->load(['pegawai.jabatan', 'pegawai.kinerjaTahunans', 'pegawai.riwayatPaks']);
         
         return view('dashboard.kinerja-tahunans.edit', [
             'kinerjaTahunan' => $kinerjaTahunan,
             'pegawai' => $kinerjaTahunan->pegawai,
             'predikatOptions' => KonversiPredikatKinerja::PREDIKAT_OPTIONS,
             'predikatLabels' => KonversiPredikatKinerja::PREDIKAT_LABELS,
+            'predikatBadgeClasses' => KonversiPredikatKinerja::PREDIKAT_BADGE_CLASSES,
             'menuGroups' => DashboardUiData::menuGroups(),
             'notifications' => DashboardUiData::notifications(),
         ]);

@@ -45,6 +45,68 @@
                         ];
                     @endphp
                     <x-info-card title="Informasi Pegawai" :items="$infoItems" />
+
+                    {{-- Tahun Terdaftar Card --}}
+                    <div class="card shadow-sm border-0 mt-4">
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-3 text-dark d-flex align-items-center">
+                                <i data-feather="calendar" class="me-2 text-primary" style="width: 20px; height: 20px;"></i>
+                                Tahun Terdaftar
+                            </h5>
+                            <p class="text-muted small mb-3">Daftar tahun evaluasi kinerja/PAK yang sudah diinput untuk pegawai ini:</p>
+                            
+                            <div class="d-flex flex-column gap-2" style="max-height: 320px; overflow-y: auto;">
+                                @php
+                                    $evaluatedYears = collect();
+                                    foreach($pegawai->riwayatPaks as $pak) {
+                                        $label = $pak->periode_penilaian_label;
+                                        $evaluatedYears->push([
+                                            'year' => $pak->tanggal_pak ? \Carbon\Carbon::parse($pak->tanggal_pak)->year : null,
+                                            'label' => $label,
+                                            'type' => 'PAK',
+                                            'predikat' => $pak->predikat_kinerja,
+                                            'badge_class' => $pak->predikat_badge_class
+                                        ]);
+                                    }
+                                    foreach($pegawai->kinerjaTahunans as $kinerja) {
+                                        if (!$kinerja->pak_id) {
+                                            $evaluatedYears->push([
+                                                'year' => $kinerja->tahun,
+                                                'label' => (string) $kinerja->tahun,
+                                                'type' => 'Kinerja',
+                                                'predikat' => $kinerja->predikat,
+                                                'badge_class' => $predikatBadgeClasses[$kinerja->predikat] ?? 'bg-secondary-subtle text-secondary'
+                                            ]);
+                                        }
+                                    }
+                                    $sortedYears = $evaluatedYears->sortByDesc(function($item) {
+                                        return $item['year'] . '_' . $item['label'];
+                                    });
+                                @endphp
+                                
+                                @forelse($sortedYears as $item)
+                                    <div class="d-flex align-items-center justify-content-between p-2 rounded bg-light border border-secondary-subtle" style="font-size: 0.85rem;">
+                                        <div>
+                                            <span class="fw-bold text-dark">{{ $item['label'] }}</span>
+                                            <span class="badge bg-white text-muted border ms-1" style="font-size: 0.7rem; padding: 0.15rem 0.35rem;">{{ $item['type'] }}</span>
+                                        </div>
+                                        @if($item['predikat'])
+                                            <span class="badge border {{ $item['badge_class'] }} px-2 py-1" style="font-size: 0.75rem;">
+                                                {{ $predikatLabels[$item['predikat']] ?? $item['predikat'] }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted small">-</span>
+                                        @endif
+                                    </div>
+                                @empty
+                                    <div class="text-center py-3 text-muted w-100">
+                                        <i data-feather="info" width="24" height="24" class="mb-2 opacity-50"></i>
+                                        <p class="small mb-0">Belum ada riwayat tahun terdaftar</p>
+                                    </div>
+                                @endforelse
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 

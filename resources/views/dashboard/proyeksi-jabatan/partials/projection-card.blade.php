@@ -174,18 +174,25 @@
                 <i data-feather="slash" width="16" height="16" class="me-1"></i> Terblokir Hukuman Disiplin
             </button>
         @else
-            <button class="btn btn-primary shadow px-4 py-2" data-bs-toggle="modal" data-bs-target="#usulanModal" 
-                data-type="{{ $type }}"
-                data-current="{{ $proj['current_target_name'] }}"
-                data-next="{{ $proj['next_target_name'] }}"
-                data-ak="{{ $proj['current_ak'] }}"
-                data-target-ak="{{ $proj['target_ak'] }}"
-                data-surplus="{{ $proj['surplus_ak'] }}"
-                data-golongan-baru="{{ $proj['next_golongan_id'] ?? '' }}"
-                data-is-pangkat-puncak="{{ $proj['is_pangkat_puncak'] ? '1' : '0' }}">
-                <i data-feather="upload-cloud" width="18" height="18" class="me-1"></i>
-                Usulkan Kenaikan {{ ucfirst($type) }}
-            </button>
+            @if($proj['is_held_by_ukom'])
+                <button class="btn btn-secondary px-4 py-2" disabled title="Pegawai belum lulus Uji Kompetensi (Ukom)">
+                    <i data-feather="slash" width="18" height="18" class="me-1"></i>
+                    Usulkan Kenaikan {{ ucfirst($type) }} (Menunggu Ukom)
+                </button>
+            @else
+                <button class="btn btn-primary shadow px-4 py-2" data-bs-toggle="modal" data-bs-target="#usulanModal" 
+                    data-type="{{ $type }}"
+                    data-current="{{ $proj['current_target_name'] }}"
+                    data-next="{{ $proj['next_target_name'] }}"
+                    data-ak="{{ $proj['current_ak'] }}"
+                    data-target-ak="{{ $proj['target_ak'] }}"
+                    data-surplus="{{ $proj['surplus_ak'] }}"
+                    data-golongan-baru="{{ $proj['next_golongan_id'] ?? '' }}"
+                    data-is-pangkat-puncak="{{ $proj['is_pangkat_puncak'] ? '1' : '0' }}">
+                    <i data-feather="upload-cloud" width="18" height="18" class="me-1"></i>
+                    Usulkan Kenaikan {{ ucfirst($type) }}
+                </button>
+            @endif
         @endif
     </div>
 @endif

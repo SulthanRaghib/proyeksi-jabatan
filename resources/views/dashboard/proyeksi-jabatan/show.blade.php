@@ -44,6 +44,7 @@
     </div>
 
     <div class="container-fluid">
+        <x-alert-flash />
         {{-- Employee Header with Status Badge --}}
         <div class="row mb-4 align-items-center">
             <div class="col-12">

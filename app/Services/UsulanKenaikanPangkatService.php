@@ -30,6 +30,10 @@ class UsulanKenaikanPangkatService
             throw new Exception('Pegawai ini sudah memiliki draf tertunda atau usulan yang sedang diproses. Silakan selesaikan atau hapus usulan tersebut terlebih dahulu.');
         }
 
+        if (isset($data['is_lintas_jenjang']) && $data['is_lintas_jenjang'] && !$pegawai->status_ukom) {
+            throw new Exception('Pegawai belum dinyatakan lulus Uji Kompetensi (Ukom) untuk Kenaikan Jenjang.');
+        }
+
         DB::beginTransaction();
         try {
             $usulan = UsulanKenaikanPangkat::create([

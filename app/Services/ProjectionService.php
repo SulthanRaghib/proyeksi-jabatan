@@ -175,7 +175,9 @@ class ProjectionService
             
             // Cek Pangkat Puncak berdasarkan Pangkat/Golongan
             $pangkatPuncakList = ['III/b', 'III/d', 'IV/c', 'IV/e', 'II/d'];
-            if (in_array($pegawai->golongan->pangkat, $pangkatPuncakList)) {
+            if ($pegawai->jabatan && strtolower($pegawai->jabatan->jenjang) === 'pemula' && $pegawai->golongan->nama_golongan === 'II/a') {
+                $isPangkatPuncak = true;
+            } elseif (in_array($pegawai->golongan->pangkat, $pangkatPuncakList)) {
                 $isPangkatPuncak = true;
             }
         } elseif ($targetType === 'jenjang' && $jabatan) {

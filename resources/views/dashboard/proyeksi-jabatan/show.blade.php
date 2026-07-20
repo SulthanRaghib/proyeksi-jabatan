@@ -492,7 +492,7 @@
                                 
                                 <div class="row g-3">
                                     <div class="col-md-6">
-                                        <div class="text-muted small mb-1">Target Pangkat/Golongan</div>
+                                        <div class="text-muted small mb-1" id="modal_label_target_type">Target Pangkat/Golongan</div>
                                         <div class="fw-bold fs-5 text-dark"><span id="modal_text_current">-</span> <i data-feather="arrow-right" width="16" height="16" class="mx-1 text-muted"></i> <span id="modal_text_next" class="text-primary">-</span></div>
                                     </div>
                                     <div class="col-md-6">
@@ -710,15 +710,21 @@
                     const golonganBaruId = button.getAttribute('data-golongan-baru');
                     const isPangkatPuncak = button.getAttribute('data-is-pangkat-puncak') === '1';
                     
-                    // Update Modal Title based on isPangkatPuncak
-                    const modalTitle = usulanModal.querySelector('.modal-title');
-                    if (isPangkatPuncak) {
-                        modalTitle.textContent = "Usulan Kenaikan Jenjang Jabatan & Kenaikan Pangkat";
-                    } else {
-                        modalTitle.textContent = "Lengkapi Dokumen Usulan Kenaikan " + (type === 'jenjang' ? 'Jenjang' : 'Pangkat');
-                    }
+                    const isLintasJenjang = (type.toLowerCase() === 'jenjang') ? 1 : 0;
                     
-                    const isLintasJenjang = (type === 'jenjang') ? 1 : 0;
+                    // Update Modal Title & Target Label dynamically
+                    const modalTitle = usulanModal.querySelector('.modal-title');
+                    const targetTypeLabel = document.getElementById('modal_label_target_type');
+                    
+                    if (isPangkatPuncak || isLintasJenjang) {
+                        modalTitle.textContent = isPangkatPuncak 
+                            ? "Usulan Kenaikan Jenjang Jabatan & Kenaikan Pangkat" 
+                            : "Lengkapi Dokumen Usulan Kenaikan Jenjang Jabatan";
+                        if (targetTypeLabel) targetTypeLabel.textContent = "Target Jenjang Jabatan";
+                    } else {
+                        modalTitle.textContent = "Lengkapi Dokumen Usulan Kenaikan Pangkat";
+                        if (targetTypeLabel) targetTypeLabel.textContent = "Target Pangkat/Golongan";
+                    }
                     
                     let potongan = 0;
                     let sisa = currentAk;

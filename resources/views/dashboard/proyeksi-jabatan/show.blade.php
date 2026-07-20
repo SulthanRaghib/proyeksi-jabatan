@@ -544,7 +544,7 @@
 
                         <div id="lintasJenjangDocs" class="row g-3 mt-1" style="display: none;">
                             <div class="col-12"><hr class="my-1 border-secondary-subtle border-dashed"></div>
-                            <div class="col-12"><span class="badge bg-warning-subtle text-warning-emphasis">Usulan Lintas Jenjang Terdeteksi</span></div>
+                            <div class="col-12"><span class="badge bg-warning-subtle text-warning-emphasis">Kenaikan Jenjang Jabatan Terdeteksi</span></div>
                             <div class="col-md-6">
                                 <label class="form-label small fw-medium">Sertifikat Lulus Ukom <span class="text-danger">*</span></label>
                                 <input class="form-control form-control-sm" type="file" name="ukom" id="input_ukom" accept="application/pdf">
@@ -734,15 +734,15 @@
                     const surplusLabelElement = document.getElementById('modal_label_surplus');
                     
                     if (isPangkatPuncak || isLintasJenjang) {
-                        potongan = targetAk;
-                        sisa = surplus;
+                        potongan = currentAk; // reset all current AK
+                        sisa = 0; // new baseline is 0
                         
                         targetAkElement.textContent = '-' + potongan.toFixed(2);
                         targetAkElement.className = "fw-bold fs-5 text-danger";
                         
-                        surplusElement.textContent = '+' + sisa.toFixed(2);
-                        surplusElement.className = "fw-bold fs-5 text-success";
-                        if (surplusLabelElement) surplusLabelElement.textContent = "Sisa Modal Baru";
+                        surplusElement.textContent = '0,00 (Reset Baru)';
+                        surplusElement.className = "fw-bold fs-5 text-secondary";
+                        if (surplusLabelElement) surplusLabelElement.textContent = "Saldo Awal Baru";
                     } else {
                         potongan = 0;
                         sisa = currentAk;

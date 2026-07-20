@@ -1,11 +1,11 @@
 @extends('layouts.dashboard')
 
-@section('title', 'Daftar Usulan Kenaikan Pangkat')
+@section('title', 'Daftar Usulan Kenaikan Pangkat & Jenjang')
 
 @section('content')
-    <x-page-header title="Manajemen Usulan Kenaikan Pangkat" :breadcrumbs="[
+    <x-page-header title="Manajemen Usulan Kenaikan Pangkat & Jenjang" :breadcrumbs="[
         ['label' => 'Dashboard', 'url' => route('dashboard')],
-        ['label' => 'Usulan Kenaikan Pangkat'],
+        ['label' => 'Usulan Pangkat & Jenjang'],
     ]" />
 
     <div class="container-fluid">

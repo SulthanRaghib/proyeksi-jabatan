@@ -135,12 +135,19 @@
             <div class="text-dark opacity-75 mt-1" style="font-size: 0.9rem; line-height: 1.5;">
                 Target AK sudah tercapai, namun pegawai belum dinyatakan lulus Uji Kompetensi (Ukom) untuk kenaikan jenjang.
             </div>
-            <form action="{{ route('pegawais.lulus-ukom', $pegawai) }}" method="POST" class="mt-2 mb-0">
-                @csrf
-                <button type="submit" class="btn btn-xs btn-success text-white shadow-sm px-3 py-1 fw-medium" style="font-size: 0.8rem; border-radius: 4px;">
-                    <i data-feather="check-circle" width="12" height="12" class="me-1"></i> Nyatakan Lulus Ukom
-                </button>
-            </form>
+            <button type="button" 
+                class="btn btn-xs btn-success text-white shadow-sm px-3 py-1 fw-medium mt-2" 
+                style="font-size: 0.8rem; border-radius: 4px;"
+                data-bs-toggle="modal" 
+                data-bs-target="#globalConfirmModal"
+                data-bs-action="{{ route('pegawais.lulus-ukom', $pegawai) }}"
+                data-bs-method="POST"
+                data-bs-btn-text="Ya, Nyatakan Lulus"
+                data-bs-btn-class="btn-success"
+                data-bs-show-subtext="false"
+                data-bs-message="Apakah Anda yakin ingin menyatakan bahwa pegawai {{ $pegawai->nama_lengkap }} telah lulus Uji Kompetensi (Ukom)?">
+                <i data-feather="check-circle" width="12" height="12" class="me-1"></i> Nyatakan Lulus Ukom
+            </button>
         </div>
     </div>
 @else

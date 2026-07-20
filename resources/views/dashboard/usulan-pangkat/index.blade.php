@@ -39,7 +39,7 @@
         @php
             $tableHeaders = [
                 'NIP / Nama Pegawai', 
-                ['label' => 'Usulan Pangkat', 'attrs' => 'class="text-center"'], 
+                ['label' => 'Target Kenaikan', 'attrs' => 'class="text-center"'], 
                 ['label' => 'Status', 'attrs' => 'class="text-center"'], 
                 ['label' => 'Sisa Saldo Baru', 'attrs' => 'class="text-end"'], 
                 ['label' => 'Aksi', 'attrs' => 'class="text-center"']
@@ -52,7 +52,7 @@
             :isEmpty="$usulans->isEmpty()"
             emptyIcon="inbox"
             emptyTitle="Tidak ada usulan ditemukan"
-            emptyDescription="Belum ada usulan kenaikan pangkat pada tab ini.">
+            emptyDescription="Belum ada usulan kenaikan pangkat atau jenjang pada tab ini.">
             @foreach($usulans as $usulan)
                 <tr>
                     <td>
@@ -60,9 +60,23 @@
                         <div class="small text-muted">{{ $usulan->pegawai->nip }}</div>
                     </td>
                     <td class="text-center">
-                        <span class="badge bg-light text-dark border">{{ $usulan->golonganLama->nama_golongan ?? '-' }}</span>
-                        <i data-feather="arrow-right" class="mx-1 text-muted" width="14" height="14"></i>
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ $usulan->golonganBaru->nama_golongan ?? '-' }}</span>
+                        @if($usulan->is_lintas_jenjang)
+                            @php
+                                $nextJabatan = \App\Models\Jabatan::where('kategori', $usulan->pegawai->jabatan->kategori)
+                                    ->where('id', '>', $usulan->pegawai->jabatan_id)
+                                    ->orderBy('id')
+                                    ->first();
+                            @endphp
+                            <span class="badge bg-light text-dark border">{{ $usulan->pegawai->jabatan->jenjang ?? '-' }}</span>
+                            <i data-feather="arrow-right" class="mx-1 text-muted" width="14" height="14"></i>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">{{ $nextJabatan ? $nextJabatan->jenjang : 'Maksimal' }}</span>
+                            <div class="small text-muted mt-1" style="font-size: 0.75rem;">Kenaikan Jenjang</div>
+                        @else
+                            <span class="badge bg-light text-dark border">{{ $usulan->golonganLama->nama_golongan ?? '-' }}</span>
+                            <i data-feather="arrow-right" class="mx-1 text-muted" width="14" height="14"></i>
+                            <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ $usulan->golonganBaru->nama_golongan ?? '-' }}</span>
+                            <div class="small text-muted mt-1" style="font-size: 0.75rem;">Kenaikan Pangkat</div>
+                        @endif
                     </td>
                     <td class="text-center">
                         @if(in_array($usulan->status, ['sedang_diproses', 'PROSES_KP_REGULER', 'PROSES_KENAIKAN_JENJANG']))
@@ -155,38 +169,80 @@
                         </div>
                     </div>
                 @elseif(in_array($usulan->status, ['sedang_diproses', 'PROSES_KP_REGULER', 'PROSES_KENAIKAN_JENJANG']))
+                    @php
+                        $nextJabatan = null;
+                        if ($usulan->is_lintas_jenjang) {
+                            $nextJabatan = \App\Models\Jabatan::where('kategori', $usulan->pegawai->jabatan->kategori)
+                                ->where('id', '>', $usulan->pegawai->jabatan_id)
+                                ->orderBy('id')
+                                ->first();
+                        }
+                    @endphp
                     <!-- Approve Modal -->
-                    <div class="modal fade" id="approveModal{{ $usulan->id }}" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal fade" id="approveModal{{ $usulan->id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+                        <div class="modal-dialog modal-dialog-centered modal-lg">
                             <div class="modal-content border-0 shadow">
                                 <form action="{{ route('usulan-pangkat.approve', $usulan) }}" method="POST">
                                     @csrf
                                     <div class="modal-header border-bottom-0 pb-0">
-                                        <h5 class="modal-title fw-bold text-dark">Persetujuan SK Kenaikan Pangkat</h5>
+                                        <h5 class="modal-title fw-bold text-dark">
+                                            @if($usulan->is_lintas_jenjang)
+                                                Persetujuan SK Kenaikan Jenjang Jabatan
+                                            @else
+                                                Persetujuan SK Kenaikan Pangkat
+                                            @endif
+                                        </h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                     </div>
-                                    <div class="modal-body py-4">
+                                    <div class="modal-body py-4 text-start">
                                         <div class="alert alert-info border-0 mb-4">
                                             <i data-feather="info" width="16" height="16" class="me-1"></i> 
-                                            @if($usulan->potongan_ak > 0)
-                                                Menyetujui usulan ini akan memotong AK pegawai sebesar <strong>{{ number_format($usulan->potongan_ak, 2, ',', '.') }}</strong> dan memperbarui golongan pegawai menjadi <strong>{{ $usulan->golonganBaru->nama_golongan }}</strong>.
+                                            @if($usulan->is_lintas_jenjang)
+                                                Menyetujui usulan ini akan me-reset AK pegawai (memotong <strong>{{ number_format($usulan->potongan_ak, 2, ',', '.') }}</strong> AK saat ini) dan memperbarui jenjang jabatan pegawai menjadi <strong>{{ $nextJabatan ? $nextJabatan->jenjang : 'Maksimal' }}</strong> (Golongan tetap <strong>{{ $usulan->golonganLama->nama_golongan }}</strong>).
                                             @else
                                                 Menyetujui usulan ini akan memperbarui golongan pegawai menjadi <strong>{{ $usulan->golonganBaru->nama_golongan }}</strong> tanpa memotong Angka Kredit (akumulasi terus berlanjut).
                                             @endif
                                         </div>
                                         
-                                        <div class="mb-3 text-start">
-                                            <label class="form-label fw-medium">Nomor SK Baru <span class="text-danger">*</span></label>
-                                            <div class="input-group">
-                                                <input type="text" class="form-control" name="nomor_sk_baru" id="nomor_sk_{{ $usulan->id }}" required placeholder="Contoh: Kpts-001/B.2/KP.01.01/07/2026">
-                                                <button class="btn btn-outline-primary" type="button" onclick="generateNoSk('{{ $usulan->id }}')">
-                                                    <i data-feather="refresh-cw" width="14" height="14" class="me-1"></i> Generate
-                                                </button>
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-medium">
+                                                    @if($usulan->is_lintas_jenjang)
+                                                        Nomor SK Kenaikan Jenjang Jabatan Baru <span class="text-danger">*</span>
+                                                    @else
+                                                        Nomor SK Baru <span class="text-danger">*</span>
+                                                    @endif
+                                                </label>
+                                                <div class="input-group">
+                                                    <input type="text" class="form-control form-control-sm" name="nomor_sk_baru" id="nomor_sk_{{ $usulan->id }}" required placeholder="Contoh: Kpts-001/B.2/KP.01.01/07/2026">
+                                                    <button class="btn btn-outline-primary btn-sm" type="button" onclick="generateNoSk('{{ $usulan->id }}')">
+                                                        <i data-feather="refresh-cw" width="12" height="12" class="me-1"></i> Generate
+                                                    </button>
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div class="mb-3 text-start">
-                                            <label class="form-label fw-medium">TMT Golongan Baru <span class="text-danger">*</span></label>
-                                            <input type="date" class="form-control" name="tmt_golongan_baru" required value="{{ date('Y-m-d') }}">
+                                            
+                                            <div class="col-md-6">
+                                                <label class="form-label fw-medium">
+                                                    @if($usulan->is_lintas_jenjang)
+                                                        TMT Jabatan Baru <span class="text-danger">*</span>
+                                                    @else
+                                                        TMT Golongan Baru <span class="text-danger">*</span>
+                                                    @endif
+                                                </label>
+                                                <input type="date" class="form-control form-control-sm" name="tmt_golongan_baru" required value="{{ date('Y-m-d') }}">
+                                            </div>
+
+                                            @if($usulan->is_lintas_jenjang)
+                                                <div class="col-12"><hr class="my-1 border-secondary-subtle border-dashed"></div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-medium">Nomor Sertifikat Kelulusan Ukom <span class="text-danger">*</span></label>
+                                                    <input type="text" class="form-control form-control-sm" name="no_sertifikat_ukom" required placeholder="Contoh: Cert-Ukom/2026/089">
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <label class="form-label fw-medium">Tanggal Kelulusan Ukom <span class="text-danger">*</span></label>
+                                                    <input type="date" class="form-control form-control-sm" name="tgl_lulus_ukom" required value="{{ date('Y-m-d') }}">
+                                                </div>
+                                            @endif
                                         </div>
                                     </div>
                                     <div class="modal-footer border-top-0 bg-light">

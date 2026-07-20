@@ -236,7 +236,12 @@
                                                 <div class="col-12"><hr class="my-1 border-secondary-subtle border-dashed"></div>
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-medium">Nomor Sertifikat Kelulusan Ukom <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control form-control-sm" name="no_sertifikat_ukom" required placeholder="Contoh: Cert-Ukom/2026/089">
+                                                    <div class="input-group">
+                                                        <input type="text" class="form-control form-control-sm" name="no_sertifikat_ukom" id="nomor_ukom_{{ $usulan->id }}" required placeholder="Contoh: Cert-Ukom/BAPETEN/07/2026/001">
+                                                        <button class="btn btn-outline-primary btn-sm" type="button" onclick="generateNoUkom('{{ $usulan->id }}')">
+                                                            <i data-feather="refresh-cw" width="12" height="12" class="me-1"></i> Generate
+                                                        </button>
+                                                    </div>
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-medium">Tanggal Kelulusan Ukom <span class="text-danger">*</span></label>
@@ -282,6 +287,33 @@
                 } else {
                     input.value = '';
                     alert('Gagal menghasilkan nomor SK.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                input.value = '';
+                alert('Terjadi kesalahan koneksi.');
+            })
+            .finally(() => {
+                input.disabled = false;
+            });
+    }
+
+    function generateNoUkom(id) {
+        const input = document.getElementById('nomor_ukom_' + id);
+        if (!input) return;
+        
+        input.value = 'Mencari...';
+        input.disabled = true;
+
+        fetch('{{ route('api.generate-no-ukom') }}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    input.value = data.nomor_ukom;
+                } else {
+                    input.value = '';
+                    alert('Gagal menghasilkan nomor sertifikat.');
                 }
             })
             .catch(error => {

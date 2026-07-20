@@ -104,4 +104,31 @@ class UsulanKenaikanPangkatController extends Controller
             'nomor_sk' => $generatedNo,
         ]);
     }
+
+    public function generateNoUkom()
+    {
+        $year = date('Y');
+        $month = date('m');
+        $kodeLembaga = 'BAPETEN';
+        
+        $latestUsulan = UsulanKenaikanPangkat::where('no_sertifikat_ukom', 'like', "Cert-Ukom/$kodeLembaga/$month/$year/%")
+            ->orderByRaw('CAST(SUBSTRING_INDEX(no_sertifikat_ukom, "/", -1) AS UNSIGNED) DESC')
+            ->first();
+            
+        $nextNumber = 1;
+        if ($latestUsulan) {
+            $parts = explode('/', $latestUsulan->no_sertifikat_ukom);
+            $lastPart = end($parts);
+            if (is_numeric($lastPart)) {
+                $nextNumber = (int) $lastPart + 1;
+            }
+        }
+
+        $generatedNo = sprintf("Cert-Ukom/%s/%s/%s/%03d", $kodeLembaga, $month, $year, $nextNumber);
+
+        return response()->json([
+            'success' => true,
+            'nomor_ukom' => $generatedNo,
+        ]);
+    }
 }

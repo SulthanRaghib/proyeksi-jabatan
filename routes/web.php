@@ -55,6 +55,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
         
     Route::get('/api/generate-no-sk', [App\Http\Controllers\UsulanKenaikanPangkatController::class, 'generateNoSk'])
         ->name('api.generate-no-sk');
+        
+    Route::get('/api/generate-no-ukom', [App\Http\Controllers\UsulanKenaikanPangkatController::class, 'generateNoUkom'])
+        ->name('api.generate-no-ukom');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

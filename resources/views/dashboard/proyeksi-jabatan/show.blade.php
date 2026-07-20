@@ -370,8 +370,8 @@
                                             $akTambahan = (float) $pak->ak_tambahan;
                                             $difference = $pak->calculated_difference;
                                             $isLatest = $pak->id === $latestId;
-                                            $isPreGolongan = \Carbon\Carbon::parse($pak->tanggal_pak)->lt(\Carbon\Carbon::parse($pegawai->tmt_golongan));
-                                            $isPreJabatan = \Carbon\Carbon::parse($pak->tanggal_pak)->lt(\Carbon\Carbon::parse($pegawai->tmt_jabatan));
+                                            $isPreJenjang = \Carbon\Carbon::parse($pak->tanggal_pak)->lt(\Carbon\Carbon::parse($pegawai->tmt_jabatan));
+                                            $isSurplusKp = str_starts_with($pak->no_pak, 'SURPLUS-KP-');
                                         @endphp
                                         <tr class="{{ $isLatest ? 'table-primary' : '' }}">
                                             <td>{{ $pak->periode_penilaian_label }}</td>
@@ -418,13 +418,13 @@
                                                     @if (!$pak->is_konversi_baru)
                                                         <span class="badge" style="background-color: #f0fdf4; color: #166534; border: 1px solid #bbf7d0;" title="Angka Kredit Modal Awal / Baseline Konvensional">Baseline / Awal</span>
                                                     @endif
-                                                    @if ($isPreGolongan)
-                                                        <span class="badge" style="background-color: #fffbeb; color: #b45309; border: 1px solid #fde68a;" title="Tidak dihitung untuk proyeksi Pangkat">Pre-Golongan</span>
+                                                    @if ($isPreJenjang)
+                                                        <span class="badge" style="background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;" title="Tidak dihitung karena diperoleh sebelum TMT Jabatan saat ini">Pre-Jenjang</span>
                                                     @endif
-                                                    @if ($isPreJabatan)
-                                                        <span class="badge" style="background-color: #fef2f2; color: #b91c1c; border: 1px solid #fecaca;" title="Tidak dihitung untuk proyeksi Jabatan">Pre-Jabatan</span>
+                                                    @if ($isSurplusKp)
+                                                        <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle" title="Hanya dihitung untuk proyeksi Pangkat, diabaikan untuk proyeksi Jenjang">Surplus Pangkat</span>
                                                     @endif
-                                                    @if (!$isLatest && !$isPreGolongan && !$isPreJabatan && $pak->is_konversi_baru)
+                                                    @if (!$isLatest && !$isPreJenjang && !$isSurplusKp && $pak->is_konversi_baru)
                                                         <span class="text-muted">-</span>
                                                     @endif
                                                 </div>

@@ -62,7 +62,7 @@
         <i data-feather="alert-circle" width="16" height="16" class="flex-shrink-0" style="color: #d97706;"></i>
         <span class="small">
             Terdapat nilai <strong style="color: #92400e;">{{ number_format($proj['discarded_ak'], 3, ',', '.') }} AK</strong> dari riwayat lama yang tidak diakumulasikan karena diperoleh sebelum 
-            TMT {{ $type }} ({{ $proj['tmt_used'] }}).
+            TMT Jabatan ({{ $proj['tmt_used'] }}).
         </span>
     </div>
     @endif

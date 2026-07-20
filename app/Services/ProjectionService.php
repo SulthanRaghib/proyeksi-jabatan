@@ -42,13 +42,13 @@ class ProjectionService
             return $this->emptyProjection();
         }
 
-        $targetAk = (float) (($targetType === 'jenjang'
-            ? $jabatan->target_ak_kenaikan_jenjang
-            : $jabatan->target_ak_kenaikan_pangkat) ?? 0);
+        $targetAk = (float) ($targetType === 'jenjang'
+            ? ($jabatan->target_ak_kenaikan_jenjang ?? 0)
+            : $this->getCumulativePangkatTarget($pegawai, $jabatan));
 
-        // SPEK LOGIKA 1.2: Opsi A - Menghitung AK secara dinamis sejak TMT terakhir
-        $tmt = $targetType === 'pangkat' ? $pegawai->tmt_golongan : $pegawai->tmt_jabatan;
-        $tmtDate = $tmt ? Carbon::parse($tmt) : null;
+        // Ralat Sistem: AK untuk pangkat dan jenjang diakumulasikan sejak TMT Jabatan (Jenjang) saat ini.
+        // Kecuali jika naik jenjang baru, barulah AK di-reset dimulai dari 0.
+        $tmtDate = $pegawai->tmt_jabatan ? Carbon::parse($pegawai->tmt_jabatan) : null;
         
         $currentAk = 0.0;
 
@@ -133,14 +133,14 @@ class ProjectionService
         // Regulatory constraints
         // Pangkat: min 2 years from tmt_golongan
         // Jenjang: min 1 year from tmt_jabatan
-        $tmt = $targetType === 'pangkat' ? $pegawai->tmt_golongan : $pegawai->tmt_jabatan;
+        $timeTmt = $targetType === 'pangkat' ? $pegawai->tmt_golongan : $pegawai->tmt_jabatan;
         
         $monthsServed = 0;
         $yearsServed = 0;
-        if ($tmt) {
-            $tmtDate = Carbon::parse($tmt);
-            $monthsServed = (int) $tmtDate->diffInMonths(now());
-            $yearsServed = (int) $tmtDate->diffInYears(now());
+        if ($timeTmt) {
+            $timeTmtDate = Carbon::parse($timeTmt);
+            $monthsServed = (int) $timeTmtDate->diffInMonths(now());
+            $yearsServed = (int) $timeTmtDate->diffInYears(now());
         }
         
         $minYears = $targetType === 'pangkat' ? self::MINIMUM_YEARS_PANGKAT : self::MINIMUM_YEARS_JENJANG;
@@ -256,7 +256,7 @@ class ProjectionService
             'is_held_by_puncak' => $isHeldByPuncak,
             'is_fully_ready' => $isFullyReady,
             'progress_percentage' => round($progressPercentage, 2),
-            'tmt_used' => $tmt ? $tmt->format('d/m/Y') : '-',
+            'tmt_used' => $tmtDate ? $tmtDate->format('d/m/Y') : '-',
             'years_served' => $yearsServed,
             'current_target_name' => $currentTargetName,
             'next_target_name' => $nextTargetName,
@@ -266,6 +266,46 @@ class ProjectionService
             'is_locked_usulan' => $pegawai->is_locked_usulan,
             'discarded_ak' => round($discardedAk, 3),
         ];
+    }
+
+    private function getPangkatListInJenjang(string $jenjang, string $kategori): array
+    {
+        $jenjang = strtolower(trim($jenjang));
+        $kategori = strtolower(trim($kategori));
+
+        if ($kategori === 'keahlian') {
+            if (str_contains($jenjang, 'pertama')) return ['III/a', 'III/b'];
+            if (str_contains($jenjang, 'muda')) return ['III/c', 'III/d'];
+            if (str_contains($jenjang, 'madya')) return ['IV/a', 'IV/b', 'IV/c'];
+            if (str_contains($jenjang, 'utama')) return ['IV/d', 'IV/e'];
+        } else { // keterampilan
+            if ($jenjang === 'pemula') return ['II/a'];
+            if ($jenjang === 'terampil') return ['II/b', 'II/c', 'II/d'];
+            if ($jenjang === 'mahir') return ['III/a', 'III/b'];
+            if ($jenjang === 'penyelia') return ['III/c', 'III/d'];
+        }
+        return [];
+    }
+
+    private function getCumulativePangkatTarget(Pegawai $pegawai, \App\Models\Jabatan $jabatan): float
+    {
+        $pangkats = $this->getPangkatListInJenjang($jabatan->jenjang, $jabatan->kategori);
+        if (empty($pangkats)) {
+            return (float) ($jabatan->target_ak_kenaikan_pangkat ?? 0);
+        }
+
+        $currentGolonganName = $pegawai->golongan ? $pegawai->golongan->nama_golongan : '';
+        $currentIndex = array_search($currentGolonganName, $pangkats);
+
+        if ($currentIndex === false) {
+            return (float) ($jabatan->target_ak_kenaikan_pangkat ?? 0);
+        }
+
+        // e.g. IV/a is index 0 -> next is index 1 -> target is 1 * 150 = 150
+        // e.g. IV/b is index 1 -> next is index 2 -> target is 2 * 150 = 300
+        // e.g. IV/c is index 2 -> next is index 3 (out of bounds) -> target is 3 * 150 = 450
+        $nextIndex = $currentIndex + 1;
+        return (float) ($nextIndex * ($jabatan->target_ak_kenaikan_pangkat ?? 0));
     }
 
     private function getLatestPak(Pegawai $pegawai)

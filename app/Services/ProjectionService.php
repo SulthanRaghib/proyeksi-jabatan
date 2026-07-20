@@ -184,6 +184,16 @@ class ProjectionService
             $currentTargetName = $jabatan->jenjang;
             $nextJabatan = \App\Models\Jabatan::where('kategori', $jabatan->kategori)->where('id', '>', $jabatan->id)->orderBy('id')->first();
             $nextTargetName = $nextJabatan ? $nextJabatan->jenjang : 'Maksimal';
+            
+            // Tentukan target golongan masuk untuk jenjang baru
+            if ($nextJabatan) {
+                $pangkats = $this->getPangkatListInJenjang($nextJabatan->jenjang, $nextJabatan->kategori);
+                if (!empty($pangkats)) {
+                    $entryPangkat = $pangkats[0];
+                    $nextGolongan = \App\Models\Golongan::where('pangkat', $entryPangkat)->first();
+                    $nextGolonganId = $nextGolongan ? $nextGolongan->id : null;
+                }
+            }
         }
 
         $isReadyMathematically = $deficitAk <= 0;

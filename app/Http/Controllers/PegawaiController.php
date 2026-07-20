@@ -90,4 +90,11 @@ class PegawaiController extends Controller
             ->route('pegawais.index')
             ->with('success', 'Data pegawai berhasil dihapus.');
     }
+
+    public function lulusUkom(Pegawai $pegawai): RedirectResponse
+    {
+        $pegawai->update(['status_ukom' => true]);
+
+        return back()->with('success', 'Pegawai ' . $pegawai->nama_lengkap . ' berhasil dinyatakan lulus Uji Kompetensi (Ukom).');
+    }
 }

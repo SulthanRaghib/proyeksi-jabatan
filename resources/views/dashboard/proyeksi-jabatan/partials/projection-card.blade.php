@@ -135,6 +135,12 @@
             <div class="text-dark opacity-75 mt-1" style="font-size: 0.9rem; line-height: 1.5;">
                 Target AK sudah tercapai, namun pegawai belum dinyatakan lulus Uji Kompetensi (Ukom) untuk kenaikan jenjang.
             </div>
+            <form action="{{ route('pegawais.lulus-ukom', $pegawai) }}" method="POST" class="mt-2 mb-0">
+                @csrf
+                <button type="submit" class="btn btn-xs btn-success text-white shadow-sm px-3 py-1 fw-medium" style="font-size: 0.8rem; border-radius: 4px;">
+                    <i data-feather="check-circle" width="12" height="12" class="me-1"></i> Nyatakan Lulus Ukom
+                </button>
+            </form>
         </div>
     </div>
 @else

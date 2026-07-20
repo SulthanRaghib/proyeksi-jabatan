@@ -24,6 +24,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::resource('golongans', GolonganController::class)->except('show');
     Route::resource('jabatans', JabatanController::class)->except('show');
     Route::resource('pegawais', PegawaiController::class)->except('show');
+    Route::post('/pegawais/{pegawai}/lulus-ukom', [PegawaiController::class, 'lulusUkom'])->name('pegawais.lulus-ukom');
     Route::resource('riwayat-paks', RiwayatPakController::class)->except('show');
     Route::resource('kinerja-tahunans', KinerjaTahunanController::class)->except(['index', 'show']);
 

@@ -153,9 +153,12 @@ class UsulanKenaikanPangkatService
             
             $updateFields = [
                 'golongan_id' => $usulan->golongan_baru_id,
-                'tmt_golongan' => $data['tmt_golongan_baru'],
                 'is_locked_usulan' => false,
             ];
+
+            if (!$usulan->is_lintas_jenjang) {
+                $updateFields['tmt_golongan'] = $data['tmt_golongan_baru'];
+            }
 
             // If it is a Kenaikan Jenjang, we also update the Jabatan and TMT Jabatan
             $nextJabatan = null;

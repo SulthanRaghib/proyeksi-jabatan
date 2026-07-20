@@ -192,19 +192,9 @@ class UsulanKenaikanPangkatService
                     'periode_akhir' => $data['tmt_golongan_baru'],
                 ]);
             } else {
-                // Kenaikan Pangkat: Carry over surplus AK
-                if ($usulan->sisa_ak > 0) {
-                    \App\Models\RiwayatPak::create([
-                        'pegawai_id' => $pegawai->id,
-                        'no_pak' => 'SURPLUS-KP-' . $usulan->id,
-                        'tanggal_pak' => $data['tmt_golongan_baru'],
-                        'ak_tambahan' => $usulan->sisa_ak,
-                        'ak_total' => $usulan->sisa_ak,
-                        'is_konversi_baru' => true,
-                        'periode_awal' => $data['tmt_golongan_baru'],
-                        'periode_akhir' => $data['tmt_golongan_baru'],
-                    ]);
-                }
+                // Kenaikan Pangkat dalam Jenjang yang sama: Tidak ada potongan Angka Kredit.
+                // Seluruh riwayat PAK & Kinerja asli tetap dipertahankan dan diakumulasi dinamis dari TMT Jabatan.
+                // Oleh karena itu, kita TIDAK membuat dokumen PAK "SURPLUS-KP-" virtual agar tidak terjadi double-counting.
             }
 
             // Recalculate all records sequentially to ensure chronological correctness

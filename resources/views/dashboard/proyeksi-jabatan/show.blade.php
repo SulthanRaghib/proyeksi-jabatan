@@ -513,7 +513,7 @@
                                         <div class="fw-bold fs-5 text-danger" id="modal_text_target_ak">-</div>
                                     </div>
                                     <div class="col-4">
-                                        <div class="text-muted small">Sisa Modal Baru</div>
+                                        <div class="text-muted small" id="modal_label_surplus">Sisa Modal Baru</div>
                                         <div class="fw-bold fs-5 text-success" id="modal_text_surplus">-</div>
                                     </div>
                                 </div>
@@ -720,17 +720,44 @@
                     
                     const isLintasJenjang = (type === 'jenjang') ? 1 : 0;
                     
+                    let potongan = 0;
+                    let sisa = currentAk;
+                    
+                    const targetAkElement = document.getElementById('modal_text_target_ak');
+                    const surplusElement = document.getElementById('modal_text_surplus');
+                    const surplusLabelElement = document.getElementById('modal_label_surplus');
+                    
+                    if (isPangkatPuncak || isLintasJenjang) {
+                        potongan = targetAk;
+                        sisa = surplus;
+                        
+                        targetAkElement.textContent = '-' + potongan.toFixed(2);
+                        targetAkElement.className = "fw-bold fs-5 text-danger";
+                        
+                        surplusElement.textContent = '+' + sisa.toFixed(2);
+                        surplusElement.className = "fw-bold fs-5 text-success";
+                        if (surplusLabelElement) surplusLabelElement.textContent = "Sisa Modal Baru";
+                    } else {
+                        potongan = 0;
+                        sisa = currentAk;
+                        
+                        targetAkElement.textContent = '0,00 (Tanpa Potongan)';
+                        targetAkElement.className = "fw-bold fs-5 text-muted";
+                        
+                        surplusElement.textContent = '+' + sisa.toFixed(2);
+                        surplusElement.className = "fw-bold fs-5 text-success";
+                        if (surplusLabelElement) surplusLabelElement.textContent = "Saldo Terakumulasi";
+                    }
+                    
                     // Populating read-only UI
                     document.getElementById('modal_text_current').textContent = currentName;
                     document.getElementById('modal_text_next').textContent = nextName;
                     document.getElementById('modal_text_ak').textContent = currentAk.toFixed(2);
-                    document.getElementById('modal_text_target_ak').textContent = '-' + targetAk.toFixed(2);
-                    document.getElementById('modal_text_surplus').textContent = '+' + surplus.toFixed(2);
                     
                     // Populating hidden inputs
                     document.getElementById('modal_saldo_ak_awal').value = currentAk;
-                    document.getElementById('modal_potongan_ak').value = targetAk;
-                    document.getElementById('modal_sisa_ak').value = surplus;
+                    document.getElementById('modal_potongan_ak').value = potongan;
+                    document.getElementById('modal_sisa_ak').value = sisa;
                     document.getElementById('modal_is_lintas_jenjang').value = isPangkatPuncak ? 1 : isLintasJenjang;
                     document.getElementById('modal_golongan_baru_id').value = golonganBaruId;
                     

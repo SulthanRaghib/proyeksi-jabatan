@@ -168,7 +168,11 @@
                                     <div class="modal-body py-4">
                                         <div class="alert alert-info border-0 mb-4">
                                             <i data-feather="info" width="16" height="16" class="me-1"></i> 
-                                            Menyetujui usulan ini akan memotong AK pegawai sebesar <strong>{{ number_format($usulan->potongan_ak, 2, ',', '.') }}</strong> dan memperbarui golongan pegawai menjadi <strong>{{ $usulan->golonganBaru->nama_golongan }}</strong>.
+                                            @if($usulan->potongan_ak > 0)
+                                                Menyetujui usulan ini akan memotong AK pegawai sebesar <strong>{{ number_format($usulan->potongan_ak, 2, ',', '.') }}</strong> dan memperbarui golongan pegawai menjadi <strong>{{ $usulan->golonganBaru->nama_golongan }}</strong>.
+                                            @else
+                                                Menyetujui usulan ini akan memperbarui golongan pegawai menjadi <strong>{{ $usulan->golonganBaru->nama_golongan }}</strong> tanpa memotong Angka Kredit (akumulasi terus berlanjut).
+                                            @endif
                                         </div>
                                         
                                         <div class="mb-3 text-start">

@@ -498,7 +498,9 @@
                                     </div>
                                     <div class="col-md-6">
                                         <div class="text-muted small mb-1">Status Saldo Sisa</div>
-                                        <div class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i data-feather="lock" width="12" height="12" class="me-1"></i> Diakumulasikan Otomatis</div>
+                                        <div id="modal_badge_saldo_sisa">
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i data-feather="lock" width="12" height="12" class="me-1"></i> Diakumulasikan Otomatis</span>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -733,6 +735,7 @@
                     const targetAkElement = document.getElementById('modal_text_target_ak');
                     const surplusElement = document.getElementById('modal_text_surplus');
                     const surplusLabelElement = document.getElementById('modal_label_surplus');
+                    const badgeContainer = document.getElementById('modal_badge_saldo_sisa');
                     
                     if (isPangkatPuncak || isLintasJenjang) {
                         potongan = currentAk; // reset all current AK
@@ -744,6 +747,10 @@
                         surplusElement.textContent = '0,00 (Reset Baru)';
                         surplusElement.className = "fw-bold fs-5 text-secondary";
                         if (surplusLabelElement) surplusLabelElement.textContent = "Saldo Awal Baru";
+                        
+                        if (badgeContainer) {
+                            badgeContainer.innerHTML = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i data-feather="slash" width="12" height="12" class="me-1"></i> Tidak Diakumulasikan</span>';
+                        }
                     } else {
                         potongan = 0;
                         sisa = currentAk;
@@ -754,6 +761,14 @@
                         surplusElement.textContent = '+' + sisa.toFixed(2);
                         surplusElement.className = "fw-bold fs-5 text-success";
                         if (surplusLabelElement) surplusLabelElement.textContent = "Saldo Terakumulasi";
+                        
+                        if (badgeContainer) {
+                            badgeContainer.innerHTML = '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i data-feather="lock" width="12" height="12" class="me-1"></i> Diakumulasikan Otomatis</span>';
+                        }
+                    }
+                    
+                    if (window.feather) {
+                        window.feather.replace();
                     }
                     
                     // Populating read-only UI

@@ -31,6 +31,8 @@ return new class extends Migration
             // Resolution fields (when approved by BKN)
             $table->string('nomor_sk_baru')->nullable();
             $table->date('tmt_golongan_baru')->nullable();
+            $table->string('no_sertifikat_ukom')->nullable();
+            $table->date('tgl_lulus_ukom')->nullable();
             $table->text('keterangan_admin')->nullable();
             
             $table->timestamps();

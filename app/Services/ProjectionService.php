@@ -46,22 +46,21 @@ class ProjectionService
             ? ($jabatan->target_ak_kenaikan_jenjang ?? 0)
             : $this->getCumulativePangkatTarget($pegawai, $jabatan));
 
-        // Ralat Sistem: AK untuk pangkat dan jenjang diakumulasikan sejak TMT Jabatan (Jenjang) saat ini.
-        // Kecuali jika naik jenjang baru, barulah AK di-reset dimulai dari 0.
-        $tmtDate = $pegawai->tmt_jabatan ? Carbon::parse($pegawai->tmt_jabatan) : null;
+        // Ralat Sistem: AK diakumulasikan sejak batas awal akumulasi dinamis.
+        $tmtDate = $this->getAkAccumulationStartDate($pegawai);
         
         $currentAk = 0.0;
 
         $discardedAk = 0.0;
 
         // 1. Add AK from PAKs that happened ON or AFTER the TMT
-        if ($pegawai->relationLoaded('riwayatPaks') && $tmtDate) {
+        if ($pegawai->relationLoaded('riwayatPaks')) {
             foreach ($pegawai->riwayatPaks as $pak) {
                 if ($targetType === 'jenjang' && str_starts_with($pak->no_pak, 'SURPLUS-KP-')) {
                     continue;
                 }
 
-                if (Carbon::parse($pak->tanggal_pak)->gte($tmtDate)) {
+                if (!$tmtDate || Carbon::parse($pak->tanggal_pak)->gte($tmtDate)) {
                     $currentAk += (float) $pak->ak_tambahan;
                 } else {
                     $discardedAk += (float) $pak->ak_tambahan;
@@ -71,13 +70,13 @@ class ProjectionService
 
         // Logika Pengunci Teraman (Anti-Null Bug) untuk Tahun SKP
         $lastPak = null;
-        if ($pegawai->relationLoaded('riwayatPaks') && $tmtDate) {
+        if ($pegawai->relationLoaded('riwayatPaks')) {
             $lastPak = $pegawai->riwayatPaks
                 ->filter(function($pak) use ($tmtDate, $targetType) {
                     if ($targetType === 'jenjang' && str_starts_with($pak->no_pak, 'SURPLUS-KP-')) {
                         return false;
                     }
-                    return Carbon::parse($pak->tanggal_pak)->gte($tmtDate);
+                    return !$tmtDate || Carbon::parse($pak->tanggal_pak)->gte($tmtDate);
                 })
                 ->sortByDesc('tanggal_pak')
                 ->first();
@@ -166,6 +165,17 @@ class ProjectionService
         $nextTargetName = '-';
         $nextGolonganId = null;
         $isPangkatPuncak = false;
+        $isPangkatLintasJenjang = false;
+        
+        // Selalu tentukan apakah golongan pegawai saat ini adalah pangkat puncak untuk jenjang aktifnya
+        if ($pegawai->golongan) {
+            $pangkatPuncakList = ['III/b', 'III/d', 'IV/c', 'IV/e', 'II/d'];
+            if ($pegawai->jabatan && strtolower($pegawai->jabatan->jenjang) === 'pemula' && $pegawai->golongan->nama_golongan === 'II/a') {
+                $isPangkatPuncak = true;
+            } elseif (in_array($pegawai->golongan->pangkat, $pangkatPuncakList)) {
+                $isPangkatPuncak = true;
+            }
+        }
         
         if ($targetType === 'pangkat' && $pegawai->golongan) {
             $currentTargetName = $pegawai->golongan->nama_golongan;
@@ -173,19 +183,15 @@ class ProjectionService
             $nextTargetName = $nextGolongan ? $nextGolongan->nama_golongan : 'Maksimal';
             $nextGolonganId = $nextGolongan ? $nextGolongan->id : null;
             
-            // Cek Pangkat Puncak berdasarkan Pangkat/Golongan
-            $pangkatPuncakList = ['III/b', 'III/d', 'IV/c', 'IV/e', 'II/d'];
-            if ($pegawai->jabatan && strtolower($pegawai->jabatan->jenjang) === 'pemula' && $pegawai->golongan->nama_golongan === 'II/a') {
-                $isPangkatPuncak = true;
-            } elseif (in_array($pegawai->golongan->pangkat, $pangkatPuncakList)) {
-                $isPangkatPuncak = true;
-            }
+            // Deteksi apakah pangkat saat ini BUKAN dalam daftar pangkat jenjang aktif
+            // Contoh: II/a bukan dalam Terampil (II/b-II/d) → kenaikan pangkat berikutnya = lintas jenjang
+            $isPangkatLintasJenjang = !$this->isPangkatInCurrentJenjang($pegawai);
         } elseif ($targetType === 'jenjang' && $jabatan) {
             $currentTargetName = $jabatan->jenjang;
             $nextJabatan = \App\Models\Jabatan::where('kategori', $jabatan->kategori)->where('id', '>', $jabatan->id)->orderBy('id')->first();
             $nextTargetName = $nextJabatan ? $nextJabatan->jenjang : 'Maksimal';
             
-            // Kenaikan Jenjang preserves current golongan (does not promote pangkat automatically)
+            // Kenaikan Jenjang tidak membutuhkan target golongan (hanya jabatan yang berubah)
             $nextGolonganId = $pegawai->golongan_id;
         }
 
@@ -200,11 +206,15 @@ class ProjectionService
         $isHeldBySpeedbump = $isReadyMathematically && $remainingMinimumYears > 0;
         $isHeldByUkom = false;
         $isHeldByPuncak = false;
+        $isHeldByNotPuncak = false;
 
-        // Jenjang requires Ukom
-        if ($targetType === 'jenjang' && $isReadyMathematically && !$isHeldBySpeedbump) {
-            if (!$pegawai->status_ukom) {
+        // Jenjang requires Ukom and must be at Pangkat Puncak of current jenjang
+        if ($targetType === 'jenjang') {
+            if ($isReadyMathematically && !$isHeldBySpeedbump && !$pegawai->status_ukom) {
                 $isHeldByUkom = true;
+            }
+            if (!$isPangkatPuncak) {
+                $isHeldByNotPuncak = true;
             }
         }
         
@@ -213,7 +223,7 @@ class ProjectionService
             $isHeldByPuncak = true;
         }
 
-        $isFullyReady = $isReadyMathematically && !$isHeldBySpeedbump && !$isHeldByUkom && !$isHeldByPuncak;
+        $isFullyReady = $isReadyMathematically && !$isHeldBySpeedbump && !$isHeldByUkom && !$isHeldByPuncak && !$isHeldByNotPuncak;
 
         if ($isFullyReady) {
             $periodLabel = "Sudah Memenuhi";
@@ -259,6 +269,7 @@ class ProjectionService
             'is_held_by_speedbump' => $isHeldBySpeedbump,
             'is_held_by_ukom' => $isHeldByUkom,
             'is_held_by_puncak' => $isHeldByPuncak,
+            'is_held_by_not_puncak' => $isHeldByNotPuncak,
             'is_fully_ready' => $isFullyReady,
             'progress_percentage' => round($progressPercentage, 2),
             'tmt_used' => $tmtDate ? $tmtDate->format('d/m/Y') : '-',
@@ -267,10 +278,20 @@ class ProjectionService
             'next_target_name' => $nextTargetName,
             'next_golongan_id' => $nextGolonganId,
             'is_pangkat_puncak' => $isPangkatPuncak,
+            'is_pangkat_lintas_jenjang' => $isPangkatLintasJenjang,
             'is_sedang_hukuman' => $pegawai->sedang_hukuman_disiplin,
             'is_locked_usulan' => $pegawai->is_locked_usulan,
             'discarded_ak' => round($discardedAk, 3),
         ];
+    }
+
+    /**
+     * Mendapatkan daftar pangkat/golongan dalam suatu jenjang jabatan.
+     * Public alias untuk diakses oleh service lain.
+     */
+    public function getPangkatListForJenjang(string $jenjang, string $kategori): array
+    {
+        return $this->getPangkatListInJenjang($jenjang, $kategori);
     }
 
     private function getPangkatListInJenjang(string $jenjang, string $kategori): array
@@ -292,6 +313,55 @@ class ProjectionService
         return [];
     }
 
+    /**
+     * Mendeteksi apakah pangkat pegawai saat ini termasuk dalam daftar pangkat jenjang aktifnya.
+     * Jika false, maka kenaikan pangkat berikutnya bersifat "lintas jenjang" dan AK harus di-reset.
+     */
+    private function isPangkatInCurrentJenjang(Pegawai $pegawai): bool
+    {
+        $jabatan = $pegawai->jabatan;
+        $golongan = $pegawai->golongan;
+        if (!$jabatan || !$golongan) return true;
+
+        $pangkats = $this->getPangkatListInJenjang($jabatan->jenjang, $jabatan->kategori);
+        return in_array($golongan->nama_golongan, $pangkats);
+    }
+
+    /**
+     * Menentukan tanggal batas awal akumulasi Angka Kredit (AK) pegawai.
+     * AK di-reset hanya ketika pegawai naik pangkat lintas-jenjang.
+     */
+    private function getAkAccumulationStartDate(Pegawai $pegawai): ?Carbon
+    {
+        // Cari PAK reset lintas jenjang terakhir (DASAR-KP-LJ-)
+        $lastResetPak = null;
+        if ($pegawai->relationLoaded('riwayatPaks')) {
+            $lastResetPak = $pegawai->riwayatPaks
+                ->filter(function($pak) {
+                    return str_starts_with($pak->no_pak, 'DASAR-KP-LJ-');
+                })
+                ->sortByDesc('tanggal_pak')
+                ->first();
+        }
+
+        if ($lastResetPak) {
+            return Carbon::parse($lastResetPak->tanggal_pak);
+        }
+
+        // Jika tidak ada reset pangkat lintas jenjang, cek apakah pegawai dalam masa transisi lintas jenjang
+        // (yaitu pangkatnya tidak ada dalam jenjang aktifnya saat ini)
+        $isTransisi = !$this->isPangkatInCurrentJenjang($pegawai);
+
+        if ($isTransisi) {
+            // Dalam masa transisi: akumulasi dari awal karir (tanpa filter batas bawah TMT)
+            return null;
+        }
+
+        // Jika dalam kondisi normal (pangkatnya sesuai di dalam jenjang aktif):
+        // Akumulasi dibatasi sejak ia menduduki jenjang aktif tersebut (tmt_jabatan)
+        return $pegawai->tmt_jabatan ? Carbon::parse($pegawai->tmt_jabatan) : null;
+    }
+
     private function getCumulativePangkatTarget(Pegawai $pegawai, \App\Models\Jabatan $jabatan): float
     {
         $pangkats = $this->getPangkatListInJenjang($jabatan->jenjang, $jabatan->kategori);
@@ -303,9 +373,26 @@ class ProjectionService
         $currentIndex = array_search($currentGolonganName, $pangkats);
 
         if ($currentIndex === false) {
+            // Masa transisi: golongan pegawai tidak termasuk dalam daftar pangkat jenjang aktifnya.
+            // Contoh: Terampil II/a → II/a bukan di daftar Terampil (II/b-II/d).
+            // Gunakan target AK kumulatif pangkat puncak dari jenjang sebelumnya.
+            $previousJabatan = \App\Models\Jabatan::where('kategori', $jabatan->kategori)
+                ->where('id', '<', $jabatan->id)
+                ->orderBy('id', 'desc')
+                ->first();
+
+            if ($previousJabatan) {
+                $prevPangkats = $this->getPangkatListInJenjang($previousJabatan->jenjang, $previousJabatan->kategori);
+                // Target kumulatif di pangkat puncak jenjang sebelumnya
+                // Contoh Pemula: count(['II/a']) × 15 = 15
+                // Contoh Pertama: count(['III/a','III/b']) × 50 = 100
+                return (float) (count($prevPangkats) * ($previousJabatan->target_ak_kenaikan_pangkat ?? 0));
+            }
+
             return (float) ($jabatan->target_ak_kenaikan_pangkat ?? 0);
         }
 
+        // Kondisi normal: golongan ada dalam daftar pangkat jenjang aktif
         // e.g. IV/a is index 0 -> next is index 1 -> target is 1 * 150 = 150
         // e.g. IV/b is index 1 -> next is index 2 -> target is 2 * 150 = 300
         // e.g. IV/c is index 2 -> next is index 3 (out of bounds) -> target is 3 * 150 = 450

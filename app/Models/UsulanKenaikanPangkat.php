@@ -17,6 +17,7 @@ class UsulanKenaikanPangkat extends Model
         'sisa_ak' => 'float',
         'is_lintas_jenjang' => 'boolean',
         'tmt_golongan_baru' => 'date',
+        'tgl_lulus_ukom' => 'date',
     ];
 
     public function pegawai()

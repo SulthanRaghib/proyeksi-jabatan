@@ -122,6 +122,21 @@
             </div>
         </div>
     </div>
+@elseif($proj['is_held_by_not_puncak'] ?? false)
+    <div class="estimation-alert-box warning mb-2">
+        <div class="icon-wrapper bg-warning text-dark">
+            <i data-feather="lock" width="24" height="24"></i>
+        </div>
+        <div class="flex-grow-1">
+            <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                <h5 class="mb-1 text-dark fw-bold">Kenaikan Jenjang Terkunci</h5>
+                <span class="badge bg-white text-dark border shadow-sm">Target: {{ $proj['current_target_name'] }} <i data-feather="arrow-right" class="mx-1" width="10" height="10"></i> {{ $proj['next_target_name'] }}</span>
+            </div>
+            <div class="text-dark opacity-75 mt-1" style="font-size: 0.9rem; line-height: 1.5;">
+                Pegawai belum mencapai pangkat puncak pada jenjang saat ini (<strong>{{ $pegawai->golongan->nama_golongan }}</strong>). Pegawai wajib diusulkan dan lulus <strong>Kenaikan Pangkat</strong> terlebih dahulu hingga mencapai pangkat puncak sebelum Kenaikan Jenjang dapat diproses.
+            </div>
+        </div>
+    </div>
 @elseif($proj['is_held_by_ukom'])
     <div class="estimation-alert-box warning mb-2">
         <div class="icon-wrapper bg-warning text-dark">
@@ -201,7 +216,8 @@
                     data-target-ak="{{ $proj['target_ak'] }}"
                     data-surplus="{{ $proj['surplus_ak'] }}"
                     data-golongan-baru="{{ $proj['next_golongan_id'] ?? '' }}"
-                    data-is-pangkat-puncak="{{ $proj['is_pangkat_puncak'] ? '1' : '0' }}">
+                    data-is-pangkat-puncak="{{ $proj['is_pangkat_puncak'] ? '1' : '0' }}"
+                    data-is-pangkat-lintas-jenjang="{{ ($proj['is_pangkat_lintas_jenjang'] ?? false) ? '1' : '0' }}">
                     <i data-feather="upload-cloud" width="18" height="18" class="me-1"></i>
                     Usulkan Kenaikan {{ ucfirst($type) }}
                 </button>

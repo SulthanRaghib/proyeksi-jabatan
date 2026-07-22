@@ -228,48 +228,52 @@
                                 @foreach ($estimationScenarios['scenarios'] as $predikat => $scenario)
                                     <div class="col-12 col-md-6 col-xl">
                                         <div class="estimation-card p-3 {{ $scenario['is_active'] ? 'active' : '' }} h-100 d-flex flex-column">
+                                            {{-- Header: Badge + Status --}}
                                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <div>
-                                                    <span class="badge border {{ $scenario['badge_class'] }} px-2 py-1 mb-1">{{ $scenario['label'] }}</span>
+                                                <div class="d-flex flex-wrap align-items-center gap-1">
+                                                    <span class="badge border {{ $scenario['badge_class'] }} px-2 py-1">{{ $scenario['label'] }}</span>
                                                     @if ($scenario['is_fastest'])
-                                                        <span class="timeline-badge bg-success-subtle text-success ms-1">Tercepat</span>
+                                                        <span class="timeline-badge bg-success-subtle text-success">Tercepat</span>
                                                     @endif
                                                     @if ($scenario['is_slowest'])
-                                                        <span class="timeline-badge bg-danger-subtle text-danger ms-1">Terlama</span>
+                                                        <span class="timeline-badge bg-danger-subtle text-danger">Terlama</span>
                                                     @endif
                                                 </div>
                                                 @if ($scenario['is_active'])
-                                                    <span class="badge bg-primary rounded-pill"><i data-feather="check" width="12" height="12"></i> Aktif</span>
+                                                    <span class="badge bg-primary rounded-pill" style="font-size: 0.65rem;"><i data-feather="check" width="10" height="10"></i> Aktif</span>
                                                 @endif
                                             </div>
 
-                                            <div class="mb-auto mt-2">
+                                            {{-- Body: Status Content --}}
+                                            <div class="mb-auto mt-1">
                                                 @if ($scenario['years_needed'] === null)
-                                                    <div class="text-danger small fw-bold">
-                                                        <i data-feather="alert-circle" width="14" height="14" class="me-1"></i>
-                                                        Tidak Dapat Diproyeksikan
+                                                    <div class="d-flex align-items-center gap-1 text-danger small fw-bold">
+                                                        <i data-feather="alert-circle" width="14" height="14"></i>
+                                                        <span>Tidak Dapat Diproyeksikan</span>
                                                     </div>
                                                     <div class="text-muted small mt-1">Nilai AK tahunan 0.</div>
                                                 @elseif ($scenario['is_ready'])
-                                                    <div class="text-success small fw-bold">
-                                                        <i data-feather="check-circle" width="14" height="14" class="me-1"></i>
-                                                        Target Telah Tercapai
+                                                    <div class="d-flex align-items-center gap-1 text-success small fw-bold">
+                                                        <i data-feather="check-circle" width="14" height="14"></i>
+                                                        <span>Target Telah Tercapai</span>
                                                     </div>
                                                     <div class="text-muted small mt-1">Siap untuk diusulkan.</div>
                                                 @else
                                                     <div class="text-dark small">
-                                                        Target tercapai pada <span class="timeline-year-highlight text-primary">{{ $scenario['projected_period_label'] }}</span>
+                                                        Estimasi tercapai pada:
+                                                    </div>
+                                                    <div class="fw-bold text-primary mt-1" style="font-size: 0.85rem; line-height: 1.3;">
+                                                        {{ $scenario['projected_period_label'] }}
                                                     </div>
                                                     <div class="text-muted small mt-1">
-                                                        Dibutuhkan <span class="fw-bold">{{ $scenario['estimated_time_text'] }}</span> lagi.
+                                                        ≈ {{ $scenario['estimated_time_text'] }} lagi
                                                     </div>
                                                 @endif
                                             </div>
 
+                                            {{-- Progress Bar --}}
                                             @if ($scenario['years_needed'] !== null && !$scenario['is_ready'])
                                                 @php
-                                                    // Calculate width percentage relative to the max years in all scenarios
-                                                    // We give a min width of 15% so it's visible, and max 100%
                                                     $widthPercent = min(100, max(15, ($scenario['years_needed'] / $estimationScenarios['max_years']) * 100));
                                                 @endphp
                                                 <div class="scenario-bar-container mt-3">
@@ -279,23 +283,24 @@
                                                     </div>
                                                 </div>
                                                 <div class="d-flex justify-content-between mt-1">
-                                                    <span class="timeline-year-label">Sekarang</span>
-                                                    <span class="timeline-year-label">{{ $scenario['projected_period_label'] }}</span>
+                                                    <span class="timeline-year-label">{{ now()->year }}</span>
+                                                    <span class="timeline-year-label">{{ $scenario['projected_year'] }}</span>
                                                 </div>
                                             @elseif ($scenario['is_ready'])
                                                 <div class="scenario-bar-container mt-3">
                                                     <div class="scenario-bar active-scenario" style="width: 100%; background-color: #10b981;"></div>
                                                 </div>
                                                 <div class="d-flex justify-content-between mt-1">
-                                                    <span class="timeline-year-label">Sekarang</span>
-                                                    <span class="timeline-year-label">Tercapai</span>
+                                                    <span class="timeline-year-label">{{ now()->year }}</span>
+                                                    <span class="timeline-year-label text-success fw-bold">Tercapai ✓</span>
                                                 </div>
                                             @endif
                                             
+                                            {{-- Footer: AK Tahunan --}}
                                             <div class="mt-3 pt-2 border-top">
                                                 <div class="d-flex justify-content-between align-items-center">
                                                     <span class="small text-muted">AK Tahunan:</span>
-                                                    <span class="fw-bold fs-6">{{ number_format($scenario['annual_ak'], 3, ',', '.') }}</span>
+                                                    <span class="fw-bold" style="font-size: 0.9rem;">{{ number_format($scenario['annual_ak'], 3, ',', '.') }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -512,7 +517,7 @@
                                         <div class="fw-bold fs-5" id="modal_text_ak">-</div>
                                     </div>
                                     <div class="col-4 border-end border-secondary-subtle">
-                                        <div class="text-muted small">Potongan Syarat</div>
+                                        <div class="text-muted small" id="modal_label_potongan">Potongan Syarat</div>
                                         <div class="fw-bold fs-5 text-danger" id="modal_text_target_ak">-</div>
                                     </div>
                                     <div class="col-4">
@@ -712,6 +717,7 @@
                     const surplus = parseFloat(button.getAttribute('data-surplus'));
                     const golonganBaruId = button.getAttribute('data-golongan-baru');
                     const isPangkatPuncak = button.getAttribute('data-is-pangkat-puncak') === '1';
+                    const isPangkatLintasJenjang = button.getAttribute('data-is-pangkat-lintas-jenjang') === '1';
                     
                     const isLintasJenjang = (type.toLowerCase() === 'jenjang') ? 1 : 0;
                     
@@ -719,15 +725,16 @@
                     const modalTitle = usulanModal.querySelector('.modal-title');
                     const targetTypeLabel = document.getElementById('modal_label_target_type');
                     
-                    if (isPangkatPuncak || isLintasJenjang) {
-                        modalTitle.textContent = isPangkatPuncak 
-                            ? "Usulan Kenaikan Jenjang Jabatan & Kenaikan Pangkat" 
-                            : "Lengkapi Dokumen Usulan Kenaikan Jenjang Jabatan";
+                    if (isLintasJenjang) {
+                        modalTitle.textContent = "Lengkapi Dokumen Usulan Kenaikan Jenjang Jabatan";
                         if (targetTypeLabel) targetTypeLabel.textContent = "Target Jenjang Jabatan";
                     } else {
                         modalTitle.textContent = "Lengkapi Dokumen Usulan Kenaikan Pangkat";
                         if (targetTypeLabel) targetTypeLabel.textContent = "Target Pangkat/Golongan";
                     }
+                    
+                    // Reset AK hanya terjadi jika kenaikan Pangkat Lintas Jenjang (golongan lama tidak ada di jenjang baru)
+                    const shouldResetAk = isPangkatLintasJenjang;
                     
                     let potongan = 0;
                     let sisa = currentAk;
@@ -735,21 +742,23 @@
                     const targetAkElement = document.getElementById('modal_text_target_ak');
                     const surplusElement = document.getElementById('modal_text_surplus');
                     const surplusLabelElement = document.getElementById('modal_label_surplus');
+                    const targetAkLabelElement = document.getElementById('modal_label_potongan');
                     const badgeContainer = document.getElementById('modal_badge_saldo_sisa');
                     
-                    if (isPangkatPuncak || isLintasJenjang) {
+                    if (shouldResetAk) {
                         potongan = currentAk; // reset all current AK
                         sisa = 0; // new baseline is 0
                         
                         targetAkElement.textContent = '-' + potongan.toFixed(2);
                         targetAkElement.className = "fw-bold fs-5 text-danger";
+                        if (targetAkLabelElement) targetAkLabelElement.textContent = "Pengurangan (Reset)";
                         
-                        surplusElement.textContent = '0,00 (Reset Baru)';
+                        surplusElement.textContent = '0,00';
                         surplusElement.className = "fw-bold fs-5 text-secondary";
-                        if (surplusLabelElement) surplusLabelElement.textContent = "Saldo Awal Baru";
+                        if (surplusLabelElement) surplusLabelElement.textContent = "Saldo AK Baru";
                         
                         if (badgeContainer) {
-                            badgeContainer.innerHTML = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i data-feather="slash" width="12" height="12" class="me-1"></i> Tidak Diakumulasikan</span>';
+                            badgeContainer.innerHTML = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle px-2 py-1"><i data-feather="refresh-cw" width="12" height="12" class="me-1"></i> Saldo AK Direset (Mulai 0)</span>';
                         }
                     } else {
                         potongan = 0;
@@ -757,13 +766,17 @@
                         
                         targetAkElement.textContent = '0,00 (Tanpa Potongan)';
                         targetAkElement.className = "fw-bold fs-5 text-muted";
+                        if (targetAkLabelElement) targetAkLabelElement.textContent = "Potongan Saldo";
                         
                         surplusElement.textContent = '+' + sisa.toFixed(2);
                         surplusElement.className = "fw-bold fs-5 text-success";
-                        if (surplusLabelElement) surplusLabelElement.textContent = "Saldo Terakumulasi";
+                        
+                        if (surplusLabelElement) {
+                            surplusLabelElement.textContent = isLintasJenjang ? "Saldo AK Dipertahankan" : "Saldo Terakumulasi";
+                        }
                         
                         if (badgeContainer) {
-                            badgeContainer.innerHTML = '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i data-feather="lock" width="12" height="12" class="me-1"></i> Diakumulasikan Otomatis</span>';
+                            badgeContainer.innerHTML = '<span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1"><i data-feather="check-circle" width="12" height="12" class="me-1"></i> Saldo AK Dipertahankan</span>';
                         }
                     }
                     
@@ -780,8 +793,8 @@
                     document.getElementById('modal_saldo_ak_awal').value = currentAk;
                     document.getElementById('modal_potongan_ak').value = potongan;
                     document.getElementById('modal_sisa_ak').value = sisa;
-                    document.getElementById('modal_is_lintas_jenjang').value = isPangkatPuncak ? 1 : isLintasJenjang;
-                    document.getElementById('modal_golongan_baru_id').value = golonganBaruId;
+                    document.getElementById('modal_is_lintas_jenjang').value = isLintasJenjang;
+                    document.getElementById('modal_golongan_baru_id').value = golonganBaruId || '';
                     
                     // Simpan flag pangkat puncak untuk validasi
                     document.getElementById('modal_action_type').setAttribute('data-is-pangkat-puncak', isPangkatPuncak ? '1' : '0');
@@ -790,7 +803,7 @@
                     const inputUkom = document.getElementById('input_ukom');
                     const inputFormasi = document.getElementById('input_formasi');
                     
-                    if (isPangkatPuncak || isLintasJenjang) {
+                    if (isLintasJenjang) {
                         lintasJenjangDocs.style.display = 'flex';
                         inputUkom.required = true;
                         inputFormasi.required = true;

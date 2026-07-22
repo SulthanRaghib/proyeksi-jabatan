@@ -62,14 +62,26 @@
                     <td class="text-center">
                         @if($usulan->is_lintas_jenjang)
                             @php
-                                $nextJabatan = \App\Models\Jabatan::where('kategori', $usulan->pegawai->jabatan->kategori)
-                                    ->where('id', '>', $usulan->pegawai->jabatan_id)
-                                    ->orderBy('id')
-                                    ->first();
+                                if ($usulan->status === 'selesai') {
+                                    $targetJabatan = $usulan->pegawai->jabatan;
+                                    $oldJabatan = $targetJabatan ? \App\Models\Jabatan::where('kategori', $targetJabatan->kategori)
+                                        ->where('id', '<', $targetJabatan->id)
+                                        ->orderBy('id', 'desc')
+                                        ->first() : null;
+                                    $oldJenjang = $oldJabatan ? $oldJabatan->jenjang : '-';
+                                    $targetJenjang = $targetJabatan ? $targetJabatan->jenjang : '-';
+                                } else {
+                                    $oldJenjang = $usulan->pegawai->jabatan->jenjang ?? '-';
+                                    $nextJabatan = $usulan->pegawai->jabatan ? \App\Models\Jabatan::where('kategori', $usulan->pegawai->jabatan->kategori)
+                                        ->where('id', '>', $usulan->pegawai->jabatan_id)
+                                        ->orderBy('id')
+                                        ->first() : null;
+                                    $targetJenjang = $nextJabatan ? $nextJabatan->jenjang : 'Maksimal';
+                                }
                             @endphp
-                            <span class="badge bg-light text-dark border">{{ $usulan->pegawai->jabatan->jenjang ?? '-' }}</span>
+                            <span class="badge bg-light text-dark border">{{ $oldJenjang }}</span>
                             <i data-feather="arrow-right" class="mx-1 text-muted" width="14" height="14"></i>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle">{{ $nextJabatan ? $nextJabatan->jenjang : 'Maksimal' }}</span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">{{ $targetJenjang }}</span>
                             <div class="small text-muted mt-1" style="font-size: 0.75rem;">Kenaikan Jenjang</div>
                         @else
                             <span class="badge bg-light text-dark border">{{ $usulan->golonganLama->nama_golongan ?? '-' }}</span>
@@ -177,6 +189,16 @@
                                 ->orderBy('id')
                                 ->first();
                         }
+                        
+                        $isLintasJenjangPangkat = false;
+                        if (!$usulan->is_lintas_jenjang && $usulan->pegawai) {
+                            $projectionService = app(\App\Services\ProjectionService::class);
+                            $pangkats = $projectionService->getPangkatListForJenjang(
+                                $usulan->pegawai->jabatan->jenjang ?? '',
+                                $usulan->pegawai->jabatan->kategori ?? ''
+                            );
+                            $isLintasJenjangPangkat = $usulan->golonganLama && !in_array($usulan->golonganLama->nama_golongan, $pangkats);
+                        }
                     @endphp
                     <!-- Approve Modal -->
                     <div class="modal fade" id="approveModal{{ $usulan->id }}" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
@@ -198,9 +220,11 @@
                                         <div class="alert alert-info border-0 mb-4">
                                             <i data-feather="info" width="16" height="16" class="me-1"></i> 
                                             @if($usulan->is_lintas_jenjang)
-                                                Menyetujui usulan ini akan me-reset AK pegawai (memotong <strong>{{ number_format($usulan->potongan_ak, 2, ',', '.') }}</strong> AK saat ini) dan memperbarui jenjang jabatan pegawai menjadi <strong>{{ $nextJabatan ? $nextJabatan->jenjang : 'Maksimal' }}</strong> (Golongan tetap <strong>{{ $usulan->golonganLama->nama_golongan }}</strong>).
+                                                Menyetujui usulan ini akan memperbarui jenjang jabatan pegawai menjadi <strong>{{ $nextJabatan ? $nextJabatan->jenjang : 'Maksimal' }}</strong>. Sesuai regulasi BAPETEN, Angka Kredit (AK) pegawai <strong>dipertahankan sepenuhnya</strong> (tidak ada pemotongan) dan golongan tetap <strong>{{ $usulan->golonganLama->nama_golongan }}</strong>.
+                                            @elseif($isLintasJenjangPangkat)
+                                                Menyetujui usulan ini akan memperbarui golongan pegawai menjadi <strong>{{ $usulan->golonganBaru->nama_golongan }}</strong>. Karena ini merupakan kenaikan pangkat lintas-jenjang pertama, Angka Kredit (AK) pegawai akan <strong>direset menjadi 0,00</strong> (memotong <strong>{{ number_format($usulan->potongan_ak, 2, ',', '.') }}</strong> AK saat ini).
                                             @else
-                                                Menyetujui usulan ini akan memperbarui golongan pegawai menjadi <strong>{{ $usulan->golonganBaru->nama_golongan }}</strong> tanpa memotong Angka Kredit (akumulasi terus berlanjut).
+                                                Menyetujui usulan ini akan memperbarui golongan pegawai menjadi <strong>{{ $usulan->golonganBaru->nama_golongan }}</strong>. Angka Kredit (AK) pegawai <strong>dipertahankan sepenuhnya</strong> (tidak ada pemotongan) dan akumulasi berjalan tetap berlanjut.
                                             @endif
                                         </div>
                                         

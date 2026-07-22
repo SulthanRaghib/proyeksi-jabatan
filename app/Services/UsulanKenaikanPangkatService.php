@@ -30,8 +30,24 @@ class UsulanKenaikanPangkatService
             throw new Exception('Pegawai ini sudah memiliki draf tertunda atau usulan yang sedang diproses. Silakan selesaikan atau hapus usulan tersebut terlebih dahulu.');
         }
 
-        if (isset($data['is_lintas_jenjang']) && $data['is_lintas_jenjang'] && !$pegawai->status_ukom) {
-            throw new Exception('Pegawai belum dinyatakan lulus Uji Kompetensi (Ukom) untuk Kenaikan Jenjang.');
+        if (isset($data['is_lintas_jenjang']) && $data['is_lintas_jenjang']) {
+            if (!$pegawai->status_ukom) {
+                throw new Exception('Pegawai belum dinyatakan lulus Uji Kompetensi (Ukom) untuk Kenaikan Jenjang.');
+            }
+            
+            $currentGolonganName = $pegawai->golongan ? $pegawai->golongan->nama_golongan : '';
+            $isPangkatPuncak = false;
+            
+            $pangkatPuncakList = ['III/b', 'III/d', 'IV/c', 'IV/e', 'II/d'];
+            if ($pegawai->jabatan && strtolower($pegawai->jabatan->jenjang) === 'pemula' && $currentGolonganName === 'II/a') {
+                $isPangkatPuncak = true;
+            } elseif (in_array($pegawai->golongan->pangkat ?? '', $pangkatPuncakList)) {
+                $isPangkatPuncak = true;
+            }
+            
+            if (!$isPangkatPuncak) {
+                throw new Exception('Pegawai belum mencapai pangkat puncak pada jenjang saat ini untuk dapat mengusulkan Kenaikan Jenjang.');
+            }
         }
 
         DB::beginTransaction();
@@ -141,28 +157,29 @@ class UsulanKenaikanPangkatService
 
         DB::beginTransaction();
         try {
-            // Update the usulan
-            $usulan->update([
+            $updateData = [
                 'status' => 'selesai',
                 'nomor_sk_baru' => $data['nomor_sk_baru'],
                 'tmt_golongan_baru' => $data['tmt_golongan_baru'],
-            ]);
-
-            // Update Pegawai Golongan and unlock
-            $pegawai = $usulan->pegawai;
-            
-            $updateFields = [
-                'golongan_id' => $usulan->golongan_baru_id,
-                'is_locked_usulan' => false,
             ];
 
-            if (!$usulan->is_lintas_jenjang) {
-                $updateFields['tmt_golongan'] = $data['tmt_golongan_baru'];
+            if ($usulan->is_lintas_jenjang) {
+                $updateData['no_sertifikat_ukom'] = $data['no_sertifikat_ukom'] ?? null;
+                $updateData['tgl_lulus_ukom'] = $data['tgl_lulus_ukom'] ?? null;
             }
 
-            // If it is a Kenaikan Jenjang, we also update the Jabatan and TMT Jabatan
-            $nextJabatan = null;
+            $usulan->update($updateData);
+
+            // Update Pegawai and unlock
+            $pegawai = $usulan->pegawai;
+            
             if ($usulan->is_lintas_jenjang) {
+                // === KENAIKAN JENJANG ===
+                // Hanya update jabatan & tmt_jabatan. Golongan & AK TIDAK berubah.
+                $updateFields = [
+                    'is_locked_usulan' => false,
+                ];
+
                 $currentJabatan = $pegawai->jabatan;
                 if ($currentJabatan) {
                     $nextJabatan = \App\Models\Jabatan::where('kategori', $currentJabatan->kategori)
@@ -175,33 +192,48 @@ class UsulanKenaikanPangkatService
                         $updateFields['tmt_jabatan'] = $data['tmt_golongan_baru'];
                     }
                 }
-            }
 
-            $pegawai->update($updateFields);
-
-            // Create baseline/carry-over PAK records
-            if ($usulan->is_lintas_jenjang) {
-                // Kenaikan Jenjang: Reset AK, give AK Dasar
-                $newJenjang = $nextJabatan ? $nextJabatan->jenjang : '';
-                $newGolongan = \App\Models\Golongan::find($usulan->golongan_baru_id);
-                $newGolonganName = $newGolongan ? $newGolongan->nama_golongan : '';
-                
-                $akDasar = $this->getAkDasar($newJenjang, $newGolonganName);
-                
-                \App\Models\RiwayatPak::create([
-                    'pegawai_id' => $pegawai->id,
-                    'no_pak' => 'DASAR-KJ-' . $usulan->id,
-                    'tanggal_pak' => $data['tmt_golongan_baru'],
-                    'ak_tambahan' => $akDasar,
-                    'ak_total' => $akDasar,
-                    'is_konversi_baru' => true,
-                    'periode_awal' => $data['tmt_golongan_baru'],
-                    'periode_akhir' => $data['tmt_golongan_baru'],
-                ]);
+                $pegawai->update($updateFields);
+                // Tidak membuat PAK reset apapun — AK tetap utuh.
             } else {
-                // Kenaikan Pangkat dalam Jenjang yang sama: Tidak ada potongan Angka Kredit.
-                // Seluruh riwayat PAK & Kinerja asli tetap dipertahankan dan diakumulasi dinamis dari TMT Jabatan.
-                // Oleh karena itu, kita TIDAK membuat dokumen PAK "SURPLUS-KP-" virtual agar tidak terjadi double-counting.
+                // === KENAIKAN PANGKAT ===
+                $updateFields = [
+                    'golongan_id' => $usulan->golongan_baru_id,
+                    'tmt_golongan' => $data['tmt_golongan_baru'],
+                    'is_locked_usulan' => false,
+                ];
+
+                // Deteksi apakah ini kenaikan pangkat lintas jenjang
+                // (pangkat lama BUKAN dalam daftar pangkat jenjang aktif)
+                $projectionService = app(ProjectionService::class);
+                $pangkats = $projectionService->getPangkatListForJenjang(
+                    $pegawai->jabatan->jenjang ?? '',
+                    $pegawai->jabatan->kategori ?? ''
+                );
+                $golonganLama = \App\Models\Golongan::find($usulan->golongan_lama_id);
+                $isLintasJenjangPangkat = $golonganLama && !in_array($golonganLama->nama_golongan, $pangkats);
+
+                if ($isLintasJenjangPangkat) {
+                    // Pangkat lintas jenjang: Reset AK, update tmt_jabatan sebagai baseline baru
+                    $updateFields['tmt_jabatan'] = $data['tmt_golongan_baru'];
+                }
+
+                $pegawai->update($updateFields);
+
+                if ($isLintasJenjangPangkat) {
+                    // Buat PAK baseline reset untuk pangkat lintas jenjang
+                    \App\Models\RiwayatPak::create([
+                        'pegawai_id' => $pegawai->id,
+                        'no_pak' => 'DASAR-KP-LJ-' . $usulan->id,
+                        'tanggal_pak' => $data['tmt_golongan_baru'],
+                        'ak_tambahan' => 0,
+                        'ak_total' => 0,
+                        'is_konversi_baru' => true,
+                        'periode_awal' => $data['tmt_golongan_baru'],
+                        'periode_akhir' => $data['tmt_golongan_baru'],
+                    ]);
+                }
+                // Kenaikan pangkat dalam jenjang sama: AK diakumulasi, tidak ada PAK virtual.
             }
 
             // Recalculate all records sequentially to ensure chronological correctness

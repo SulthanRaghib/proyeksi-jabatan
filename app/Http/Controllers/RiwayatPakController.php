@@ -31,7 +31,7 @@ class RiwayatPakController extends Controller
                             ->orWhere('nip', 'like', "%{$search}%");
                     });
             })
-            ->orderByDesc('tanggal_pak')
+            ->orderByDesc('updated_at')
             ->orderByDesc('id')
             ->paginate(10)
             ->withQueryString();

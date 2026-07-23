@@ -19,11 +19,11 @@
 
 <div class="stat-card">
     <div class="stat-icon {{ $iconColorClass }}">
-        <i data-feather="{{ $icon }}" width="24" height="24"></i>
+        <i data-feather="{{ $icon }}" width="22" height="22"></i>
     </div>
     <div>
-        <p class="text-muted mb-0 small fw-medium text-uppercase letter-spacing-1">{{ $title }}</p>
-        <h3 class="mb-0 text-dark fw-bolder">{{ $value }}</h3>
+        <p class="text-muted mb-1 small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">{{ $title }}</p>
+        <h3 class="mb-0 text-dark fw-extrabold" style="font-size: 1.45rem; font-weight: 800;">{{ $value }}</h3>
     </div>
-    <i data-feather="{{ $icon }}" width="100" height="100" class="stat-bg-icon text-{{ $color }}"></i>
+    <i data-feather="{{ $icon }}" width="80" height="80" class="stat-bg-icon"></i>
 </div>

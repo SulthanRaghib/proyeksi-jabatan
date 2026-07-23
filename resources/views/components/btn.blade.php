@@ -7,7 +7,7 @@
 ])
 
 @php
-    $baseClass = 'btn btn-modern d-inline-flex align-items-center justify-content-center gap-2 fw-medium rounded-pill transition-all';
+    $baseClass = 'btn btn-modern d-inline-flex align-items-center justify-content-center gap-2 fw-bold rounded-pill transition-all';
     
     $sizeClass = match($size) {
         'sm' => 'btn-sm px-3 py-1.5 fs-7',

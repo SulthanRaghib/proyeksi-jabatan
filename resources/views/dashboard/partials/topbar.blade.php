@@ -6,8 +6,9 @@
             </a>
 
             <div class="navbar-brand">
-                <a href="{{ route('dashboard') }}">
-                    <img src="{{ asset('assets/images/freedashDark.svg') }}" alt="logo" class="img-fluid">
+                <a href="{{ route('dashboard') }}" class="d-flex align-items-center text-decoration-none py-1">
+                    <span class="badge bg-primary text-dark rounded-pill px-3 py-2 me-2" style="font-size: 0.9rem; font-weight: 900; letter-spacing: -0.5px;">Sim-AK</span>
+                    <span class="fw-bolder fs-4 text-dark d-none d-sm-inline" style="letter-spacing: -0.5px; font-weight: 900;">BAPETEN</span>
                 </a>
             </div>
 

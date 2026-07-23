@@ -1,4 +1,3 @@
-<footer class="footer text-center text-muted">
-    All Rights Reserved by Freedash. Designed and Developed by
-    <a href="https://adminmart.com/" target="_blank" rel="noopener">Adminmart</a>.
+<footer class="footer text-center text-muted small py-3">
+    © {{ date('Y') }} <strong>Sim-AK BAPETEN</strong> — Sistem Informasi Proyeksi Jabatan & Perhitungan Angka Kredit.
 </footer>

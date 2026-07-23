@@ -1,31 +1,39 @@
-<div class="row text-center mb-4">
-    <div class="col-3 border-end">
-        <h2 class="mb-0 text-dark">{{ number_format($proj['current_ak'], 2, ',', '.') }}</h2>
-        <span class="text-muted small">AK Saat Ini</span>
+<div class="row text-center g-2 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="p-3 bg-light rounded-3 border">
+            <h2 class="mb-1 text-dark fw-extrabold" style="font-size: 1.5rem;">{{ number_format($proj['current_ak'], 2, ',', '.') }}</h2>
+            <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.04em;">AK Saat Ini</span>
+        </div>
     </div>
-    <div class="col-3 border-end">
-        @if($type === 'Jenjang' && $proj['target_ak'] == 0 && $proj['next_target_name'] === 'Maksimal')
-            <h4 class="mb-0 text-dark mt-1">Maksimal</h4>
-        @else
-            <h2 class="mb-0 text-dark">{{ number_format($proj['target_ak'], 0, ',', '.') }}</h2>
-        @endif
-        <span class="text-muted small">Target AK</span>
+    <div class="col-6 col-md-3">
+        <div class="p-3 bg-light rounded-3 border">
+            @if($type === 'Jenjang' && $proj['target_ak'] == 0 && $proj['next_target_name'] === 'Maksimal')
+                <h2 class="mb-1 text-dark fw-extrabold" style="font-size: 1.3rem;">Maksimal</h2>
+            @else
+                <h2 class="mb-1 text-dark fw-extrabold" style="font-size: 1.5rem;">{{ number_format($proj['target_ak'], 0, ',', '.') }}</h2>
+            @endif
+            <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.04em;">Target AK</span>
+        </div>
     </div>
-    <div class="col-3 border-end">
-        @if($type === 'Jenjang' && $proj['target_ak'] == 0 && $proj['next_target_name'] === 'Maksimal')
-            <h4 class="mb-0 text-muted mt-1">-</h4>
-        @else
-            <h2 class="mb-0 {{ $proj['deficit_ak'] <= 0 ? 'text-success' : 'text-danger' }}">
-                {{ number_format($proj['deficit_ak'], 2, ',', '.') }}
+    <div class="col-6 col-md-3">
+        <div class="p-3 bg-light rounded-3 border">
+            @if($type === 'Jenjang' && $proj['target_ak'] == 0 && $proj['next_target_name'] === 'Maksimal')
+                <h2 class="mb-1 text-dark fw-extrabold" style="font-size: 1.5rem;">-</h2>
+            @else
+                <h2 class="mb-1 fw-extrabold {{ $proj['deficit_ak'] <= 0 ? 'text-success' : 'text-danger' }}" style="font-size: 1.5rem;">
+                    {{ number_format($proj['deficit_ak'], 2, ',', '.') }}
+                </h2>
+            @endif
+            <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.04em;">Kebutuhan AK</span>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="p-3 bg-light rounded-3 border">
+            <h2 class="mb-1 text-dark fw-extrabold" style="font-size: 1.5rem;">
+                {{ number_format($proj['annual_ak'], 3, ',', '.') }}
             </h2>
-        @endif
-        <span class="text-muted small">Kebutuhan AK</span>
-    </div>
-    <div class="col-3">
-        <h2 class="mb-0 text-primary">
-            {{ number_format($proj['annual_ak'], 3, ',', '.') }}
-        </h2>
-        <span class="text-muted small">AK/Tahun ({{ $proj['predikat_label'] }})</span>
+            <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.04em;">AK/Thn ({{ $proj['predikat_label'] }})</span>
+        </div>
     </div>
 </div>
 

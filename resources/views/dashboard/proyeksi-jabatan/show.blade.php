@@ -102,7 +102,7 @@
                             ['label' => 'TMT Golongan', 'value' => \Carbon\Carbon::parse($pegawai->tmt_golongan)->format('d F Y')],
                             [
                                 'label' => 'Koefisien AK Tahunan',
-                                'value' => '<span class="text-primary fs-5 fw-bold">' .
+                                'value' => '<span class="text-dark fs-5 fw-bold">' .
                                     number_format((float)($pegawai->jabatan->koefisien_tahunan ?? 0), 2, ',', '.') .
                                     '</span>'
                             ],
@@ -259,13 +259,13 @@
                                                     </div>
                                                     <div class="text-muted small mt-1">Siap untuk diusulkan.</div>
                                                 @else
-                                                    <div class="text-dark small">
+                                                    <div class="text-dark small font-weight-medium">
                                                         Estimasi tercapai pada:
                                                     </div>
-                                                    <div class="fw-bold text-primary mt-1" style="font-size: 0.85rem; line-height: 1.3;">
+                                                    <div class="fw-bold text-dark mt-1" style="font-size: 0.9rem; line-height: 1.3;">
                                                         {{ $scenario['projected_period_label'] }}
                                                     </div>
-                                                    <div class="text-muted small mt-1">
+                                                    <div class="text-dark opacity-75 small mt-1 fw-medium">
                                                         ≈ {{ $scenario['estimated_time_text'] }} lagi
                                                     </div>
                                                 @endif

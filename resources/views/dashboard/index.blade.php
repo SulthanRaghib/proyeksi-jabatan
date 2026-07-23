@@ -5,15 +5,7 @@
     <x-page-header title="Dashboard Proyeksi Jabatan" :breadcrumbs="[
         ['label' => 'Dashboard', 'url' => route('dashboard')],
         ['label' => 'Ringkasan'],
-    ]">
-        <x-slot:action>
-            <select class="form-control bg-white border-0 shadow-sm rounded">
-                <option selected>2026</option>
-                <option value="1">2025</option>
-                <option value="2">2024</option>
-            </select>
-        </x-slot:action>
-    </x-page-header>
+    ]" />
 
     <div class="container-fluid">
         <div class="row">

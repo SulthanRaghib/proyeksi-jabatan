@@ -13,25 +13,25 @@
 
         <!-- Tabs -->
         @php $currentTab = request('tab', 'sedang_diproses'); @endphp
-        <ul class="nav nav-tabs mb-4 border-bottom-0 gap-2" role="tablist">
+        <ul class="nav nav-tabs mb-4 gap-2" role="tablist">
             <li class="nav-item" role="presentation">
-                <a href="{{ route('usulan-pangkat.index', ['tab' => 'sedang_diproses']) }}" class="nav-link {{ $currentTab === 'sedang_diproses' ? 'active fw-bold shadow-sm border-bottom-0 rounded-top' : 'text-muted bg-light border-0' }}">
-                    <i data-feather="loader" width="16" height="16" class="me-1"></i> Sedang Diproses
+                <a href="{{ route('usulan-pangkat.index', ['tab' => 'sedang_diproses']) }}" class="nav-link {{ $currentTab === 'sedang_diproses' ? 'active' : '' }}">
+                    <i data-feather="clock" width="15" height="15" class="me-1"></i> Sedang Diproses
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a href="{{ route('usulan-pangkat.index', ['tab' => 'draft']) }}" class="nav-link {{ $currentTab === 'draft' ? 'active fw-bold shadow-sm border-bottom-0 rounded-top' : 'text-muted bg-light border-0' }}">
-                    <i data-feather="edit-3" width="16" height="16" class="me-1"></i> Draf Tertunda
+                <a href="{{ route('usulan-pangkat.index', ['tab' => 'draft']) }}" class="nav-link {{ $currentTab === 'draft' ? 'active' : '' }}">
+                    <i data-feather="edit-3" width="15" height="15" class="me-1"></i> Draf Tertunda
                 </a>
             </li>
             <li class="nav-item" role="presentation">
-                <a href="{{ route('usulan-pangkat.index', ['tab' => 'selesai']) }}" class="nav-link {{ $currentTab === 'selesai' ? 'active fw-bold shadow-sm border-bottom-0 rounded-top' : 'text-muted bg-light border-0' }}">
-                    <i data-feather="check-circle" width="16" height="16" class="me-1"></i> Selesai
+                <a href="{{ route('usulan-pangkat.index', ['tab' => 'selesai']) }}" class="nav-link {{ $currentTab === 'selesai' ? 'active' : '' }}">
+                    <i data-feather="check-circle" width="15" height="15" class="me-1"></i> Selesai
                 </a>
             </li>
             <li class="nav-item ms-auto" role="presentation">
-                <a href="{{ route('usulan-pangkat.index', ['tab' => 'semua']) }}" class="nav-link {{ $currentTab === 'semua' ? 'active fw-bold shadow-sm border-bottom-0 rounded-top' : 'text-muted bg-light border-0' }}">
-                    Semua
+                <a href="{{ route('usulan-pangkat.index', ['tab' => 'semua']) }}" class="nav-link {{ $currentTab === 'semua' ? 'active' : '' }}">
+                    Semua Usulan
                 </a>
             </li>
         </ul>

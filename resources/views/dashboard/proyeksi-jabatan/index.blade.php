@@ -46,19 +46,19 @@
                         <div class="filter-card mb-4">
                             <div class="card-body p-3">
                                 <form method="GET" action="{{ route('projections.index') }}" class="row g-2 align-items-center">
-                                    <div class="col-12 col-md-5">
+                                    <div class="col-12 col-md-3">
                                         <div class="input-group">
                                             <span class="input-group-text bg-transparent border-end-0 text-muted ps-3">
                                                 <i data-feather="search" width="16" height="16"></i>
                                             </span>
                                             <input type="text" name="q" value="{{ $search }}" class="form-control custom-input border-start-0 ps-0"
-                                                placeholder="Cari nama atau NIP...">
+                                                placeholder="Nama / NIP...">
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-3">
                                         <select name="target" class="form-select custom-input">
-                                            <option value="pangkat" @selected(request('target', 'pangkat') === 'pangkat')>Proyeksi: Kenaikan Pangkat</option>
-                                            <option value="jenjang" @selected(request('target') === 'jenjang')>Proyeksi: Kenaikan Jenjang</option>
+                                            <option value="pangkat" @selected(request('target', 'pangkat') === 'pangkat')>Kenaikan Pangkat</option>
+                                            <option value="jenjang" @selected(request('target') === 'jenjang')>Kenaikan Jenjang</option>
                                         </select>
                                     </div>
                                     <div class="col-12 col-md-2">
@@ -77,9 +77,9 @@
                                             @endforeach
                                         </select>
                                     </div>
-                                    <div class="col-12 col-md-1 d-grid">
+                                    <div class="col-12 col-md-2 d-grid">
                                         <button type="submit" class="btn btn-primary rounded-pill fw-medium shadow-sm">
-                                            Cari
+                                            Terapkan Filter
                                         </button>
                                     </div>
                                 </form>
